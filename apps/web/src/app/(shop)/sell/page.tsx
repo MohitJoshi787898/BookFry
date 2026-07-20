@@ -49,7 +49,7 @@ const BOOK_CATEGORIES = [
 
 export default function SellBookPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingIsbn, setIsFetchingIsbn] = useState(false);
@@ -222,9 +222,15 @@ export default function SellBookPage() {
       localStorage.removeItem('bookfry_sell_draft');
       alert('Congratulations! Your book listing is live on BookFry.');
       router.push('/seller/dashboard');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Listing creation error:', err);
-      alert('Failed to post book listing. Please verify your authentication.');
+      const apiErr = err as { status?: number; code?: string; message?: string };
+      if (apiErr.status === 401 || apiErr.code === 'UNAUTHORIZED' || !isAuthenticated) {
+        alert('Please sign in to publish your book listing to the marketplace.');
+        router.push('/login?redirectTo=/sell');
+      } else {
+        alert(apiErr.message || 'Failed to post book listing. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -269,6 +275,24 @@ export default function SellBookPage() {
             </div>
           )}
         </div>
+
+        {/* Unauthenticated Sign In Banner */}
+        {!isAuthenticated && (
+          <div className="p-4 bg-brand/10 border border-brand/20 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-sans">
+            <div className="space-y-1">
+              <span className="font-bold text-brand block uppercase tracking-wider">Authentication Required</span>
+              <p className="text-text-secondary font-medium">
+                You are currently browsing as a guest. Please sign in to publish your book listing to the marketplace.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/login?redirectTo=/sell')}
+              className="px-4 py-2 bg-brand text-white font-bold rounded-md hover:bg-brand-hover transition-colors shadow shrink-0"
+            >
+              Sign In to Post Book
+            </button>
+          </div>
+        )}
 
         {/* Responsive Mobile Top Progress Bar */}
         <div className="lg:hidden w-full bg-surface border border-border rounded-lg p-4 shadow-sm space-y-2">

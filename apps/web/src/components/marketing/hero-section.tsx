@@ -4,10 +4,15 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Search, ArrowRight, BookOpen, Tag } from 'lucide-react';
+import { Search, ArrowRight, BookOpen } from 'lucide-react';
+
+import { HeroBookStackIllustration } from '@/components/illustrations/book-illustrations';
+import { useAuthStore } from '@/stores/auth.store';
+import { useAuthModalStore } from '@/stores/auth-modal.store';
 
 export function HeroSection() {
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
   const [query, setQuery] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -18,10 +23,10 @@ export function HeroSection() {
   };
 
   const quickTags = [
-    { label: 'Bestsellers', href: '/books?filter=bestseller' },
-    { label: 'Fiction', href: '/books?category=fiction' },
-    { label: 'Used Books', href: '/books?condition=good' },
-    { label: 'Exams & Study', href: '/books?category=exams' },
+    { label: 'Engineering & Tech', href: '/books?category=engineering' },
+    { label: 'Exams & Study Prep', href: '/books?category=exams' },
+    { label: 'Used Textbooks', href: '/books?condition=good' },
+    { label: 'Medical & Science', href: '/books?category=medical' },
   ];
 
   return (
@@ -35,13 +40,15 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
-              <span className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-bold uppercase tracking-wider mb-4 border border-brand/20">
-                <BookOpen className="h-3.5 w-3.5" />
-                <span>The Premier Book Marketplace</span>
-              </span>
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-brand/10 text-brand text-xs font-bold uppercase tracking-wider mb-4 border border-brand/20">
+                <BookOpen className="h-4 w-4 text-secondary" />
+                <span className="font-serif italic text-secondary tracking-wide text-xs">
+                  &quot;क्योंकि.. पढ़ाई रुकनी नहीं चाहिए&quot;
+                </span>
+              </div>
               <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-text-primary leading-[1.1]">
-                Find your next story, <br />
-                <span className="text-brand italic font-serif">or sell your last.</span>
+                Discover Your Next Book, <br />
+                <span className="text-brand italic font-serif">Exchange Knowledge & Grow.</span>
               </h1>
             </motion.div>
 
@@ -51,7 +58,7 @@ export function HeroSection() {
               transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               className="text-base sm:text-lg text-text-secondary font-sans leading-relaxed max-w-2xl mx-auto lg:mx-0"
             >
-              Discover hundreds of thousands of new and gently used books from certified sellers and fellow readers. Fast shipping, guaranteed condition, fair payouts.
+              India&apos;s leading student marketplace for buying, selling, and reusing textbooks. Save up to 80% on college study guides, competitive exam prep, and novels while giving books a second life.
             </motion.p>
 
             <motion.div
@@ -69,27 +76,52 @@ export function HeroSection() {
               </Link>
               <Link
                 href="/sell"
+                onClick={(e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault();
+                    useAuthModalStore.getState().openModal('login', '/sell');
+                  }
+                }}
                 className="w-full sm:w-auto rounded-md bg-secondary px-6 py-3.5 text-sm font-bold text-white shadow-md hover:bg-secondary-600 transition-all duration-120 flex items-center justify-center space-x-2"
               >
                 <span>💰 Sell Your Books</span>
               </Link>
             </motion.div>
+
+            {/* Impact Stats */}
+            <div className="pt-6 border-t border-border/60 grid grid-cols-3 gap-4 text-center lg:text-left">
+              <div>
+                <span className="font-serif text-xl sm:text-2xl font-bold text-brand font-mono">50,000+</span>
+                <p className="text-[11px] text-text-muted uppercase font-bold tracking-wider">Books Listed</p>
+              </div>
+              <div>
+                <span className="font-serif text-xl sm:text-2xl font-bold text-secondary font-mono">₹1.2Cr+</span>
+                <p className="text-[11px] text-text-muted uppercase font-bold tracking-wider">Saved by Students</p>
+              </div>
+              <div>
+                <span className="font-serif text-xl sm:text-2xl font-bold text-brand font-mono">99.4%</span>
+                <p className="text-[11px] text-text-muted uppercase font-bold tracking-wider">Verified Quality</p>
+              </div>
+            </div>
           </div>
 
-          {/* Right Floating Search & ISBN Card */}
+          {/* Right Vector Illustration & Search Box */}
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-5"
+            className="lg:col-span-5 space-y-6"
           >
-            <div className="rounded-lg border border-border bg-surface p-6 shadow-lg space-y-6 relative overflow-hidden backdrop-blur-sm">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full blur-2xl pointer-events-none" />
+            {/* Custom Book Stack Illustration */}
+            <div className="w-full max-w-md mx-auto">
+              <HeroBookStackIllustration className="w-full h-auto max-h-72 drop-shadow-md" />
+            </div>
 
+            <div className="rounded-lg border border-border bg-surface p-6 shadow-lg space-y-4 relative overflow-hidden backdrop-blur-sm">
               <div className="space-y-1">
-                <h3 className="font-serif text-xl font-bold text-text-primary">Instant Catalog Search</h3>
+                <h3 className="font-serif text-lg font-bold text-text-primary">Instant Catalog Search</h3>
                 <p className="text-xs text-text-secondary font-sans">
-                  Enter book title, author, or 13-digit ISBN to check live availability & price.
+                  Search by title, author, or 13-digit ISBN to check availability & best prices.
                 </p>
               </div>
 
@@ -100,14 +132,14 @@ export function HeroSection() {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="e.g. 9780143127741 or Atomic Habits"
+                    placeholder="e.g. Engineering Mathematics or 9780143127741"
                     aria-label="Instant catalog search by title, author, or ISBN"
-                    className="w-full pl-10 pr-4 py-3 text-sm bg-background border border-border rounded-md text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-brand focus:border-brand"
+                    className="w-full pl-10 pr-4 py-2.5 text-sm bg-background border border-border rounded-md text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-brand focus:border-brand"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 bg-brand hover:bg-brand-hover text-white font-bold rounded-md text-xs uppercase tracking-wider transition-colors shadow"
+                  className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white font-bold rounded-md text-xs uppercase tracking-wider transition-colors shadow"
                 >
                   Search Books
                 </button>
@@ -115,9 +147,6 @@ export function HeroSection() {
 
               {/* Quick Tags */}
               <div className="pt-2 border-t border-border/60">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block mb-2 font-sans flex items-center gap-1">
-                  <Tag className="h-3 w-3" /> Quick Filter Topics:
-                </span>
                 <div className="flex flex-wrap gap-2 font-sans">
                   {quickTags.map((tag) => (
                     <Link

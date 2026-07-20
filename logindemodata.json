@@ -1,0 +1,40 @@
+{
+  "adminAccounts": [
+    {
+      "role": "admin",
+      "name": "BookFry System Admin",
+      "email": "admin@bookfry.com",
+      "password": "AdminBookFry123!",
+      "userId": "6a5e78809dc756b107f10318",
+      "storeName": "BookFry Official Admin Store"
+    },
+    {
+      "role": "admin",
+      "name": "Senior Moderator Admin",
+      "email": "moderator@bookfry.com",
+      "password": "ModBookFry123!",
+      "userId": "6a5e78809dc756b107f1031d",
+      "storeName": "BookFry Moderator Portal"
+    }
+  ],
+  "demoUser": {
+    "userId": "6a5e6aebeb43c21dd04ccabd",
+    "name": "Mohit Joshi (Demo User)",
+    "email": "demouser@bookfry.com",
+    "password": "DemoUser123!",
+    "roles": ["customer", "seller"],
+    "storeName": "Mohit's Book Fry Store"
+  },
+  "defaultTestAccounts": [
+    {
+      "role": "seller",
+      "email": "seller@example.com",
+      "password": "password123"
+    },
+    {
+      "role": "customer",
+      "email": "customer@example.com",
+      "password": "password123"
+    }
+  ]
+}

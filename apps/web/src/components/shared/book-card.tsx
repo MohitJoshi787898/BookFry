@@ -57,7 +57,7 @@ export function BookCard({ book, compact = false }: BookCardProps) {
   };
 
   return (
-    <div className="group relative flex flex-col h-full rounded-md border border-border bg-surface overflow-hidden transition-all duration-200 hover:scale-[1.015] hover:shadow-md hover:border-border/80">
+    <div className="group relative flex flex-col h-full rounded-md border border-border bg-surface overflow-hidden hover-page-turn">
       {/* 2:3 Cover Image Container */}
       <Link href={`/books/${book.slug}`} className="relative w-full aspect-[2/3] bg-background-subtle overflow-hidden block">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -68,9 +68,16 @@ export function BookCard({ book, compact = false }: BookCardProps) {
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             (e.target as HTMLImageElement).src =
-              'https://placehold.co/400x600/16523d/ffffff?text=' + encodeURIComponent(book.title);
+              'https://placehold.co/400x600/1A3B5C/ffffff?text=' + encodeURIComponent(book.title);
           }}
         />
+
+        {/* Bookmark ribbon discount tag on top right */}
+        {discountPercentage > 0 && (
+          <div className="absolute top-0 right-3 bg-secondary text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 bookmark-badge shadow">
+            {discountPercentage}% OFF
+          </div>
+        )}
 
         {/* Quick Add to Cart Button Overlay */}
         {book.stock > 0 && (
@@ -87,23 +94,17 @@ export function BookCard({ book, compact = false }: BookCardProps) {
 
       {/* Content */}
       <div className={`flex flex-col flex-grow ${compact ? 'p-3' : 'p-4'}`}>
-        {/* Condition & Discount Row */}
+        {/* Condition Badge */}
         <div className="flex items-center justify-between gap-1 mb-2">
           <span
-            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${conditionColors}`}
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${conditionColors}`}
           >
             {displayCondition}
           </span>
-
-          {discountPercentage > 0 && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-full border border-accent/20">
-              {discountPercentage}% off
-            </span>
-          )}
         </div>
 
         {/* Title */}
-        <h3 className="font-sans text-sm font-semibold text-text-primary group-hover:text-brand transition-colors line-clamp-1 mb-0.5">
+        <h3 className="font-serif text-sm font-bold text-text-primary group-hover:text-brand transition-colors line-clamp-1 mb-0.5">
           <Link href={`/books/${book.slug}`}>{book.title}</Link>
         </h3>
 
@@ -114,10 +115,10 @@ export function BookCard({ book, compact = false }: BookCardProps) {
         <div className="mt-auto flex items-center justify-between pt-2 border-t border-border/50">
           {/* Price */}
           <div className="flex items-baseline space-x-1.5 font-sans">
-            <span className="text-sm font-bold text-text-primary">${book.price.toFixed(2)}</span>
+            <span className="text-sm font-bold font-mono text-text-primary">₹{book.price.toFixed(0)}</span>
             {book.discountPrice && book.discountPrice > book.price && (
-              <span className="text-xs text-text-muted line-through">
-                ${book.discountPrice.toFixed(2)}
+              <span className="text-xs text-text-muted line-through font-mono">
+                ₹{book.discountPrice.toFixed(0)}
               </span>
             )}
           </div>
@@ -129,7 +130,7 @@ export function BookCard({ book, compact = false }: BookCardProps) {
               <span>{book.ratingAvg.toFixed(1)}</span>
             </div>
           ) : (
-            <span className="text-[10px] text-text-muted font-sans font-medium">New Listing</span>
+            <span className="text-[10px] text-brand font-sans font-bold uppercase tracking-wider">Verified Book</span>
           )}
         </div>
       </div>

@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
+import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
-import { BookOpen, Search, ArrowLeft, ShieldAlert, EyeOff, CheckCircle } from 'lucide-react';
+import { BookOpen, ShieldAlert, EyeOff, CheckCircle, ExternalLink, Filter } from 'lucide-react';
 import Link from 'next/link';
 
 interface AdminListing {
@@ -25,7 +25,6 @@ export default function AdminListingsPage() {
   const isAdmin = currentUser?.roles.includes('admin');
   const queryClient = useQueryClient();
 
-  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
 
@@ -35,9 +34,9 @@ export default function AdminListingsPage() {
     isError,
     refetch,
   } = useQuery<{ data: AdminListing[]; meta: { page: number; limit: number; total: number; pages: number } }>({
-    queryKey: ['admin-listings', page, search, statusFilter],
+    queryKey: ['admin-listings', page, statusFilter],
     queryFn: () =>
-      apiClient(`/admin/listings?page=${page}&limit=15&search=${encodeURIComponent(search)}&status=${statusFilter}`),
+      apiClient(`/admin/listings?page=${page}&limit=15&status=${statusFilter}`),
     enabled: isAuthenticated && isAdmin,
   });
 
@@ -58,178 +57,160 @@ export default function AdminListingsPage() {
   };
 
   const listings = responseData?.data || [];
-  const meta = responseData?.meta || { page: 1, limit: 15, total: 0, pages: 1 };
+
+  if (!isAdmin) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-16 border border-border bg-surface rounded-md font-sans space-y-4">
+          <ShieldAlert className="h-12 w-12 text-danger mx-auto" />
+          <h2 className="font-serif text-2xl font-bold text-text-primary">Access Restricted</h2>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const columns: Column<AdminListing>[] = [
+    {
+      header: 'Book Title & Author',
+      cell: (b) => (
+        <div className="font-sans">
+          <Link
+            href={`/books/${b.slug}`}
+            target="_blank"
+            className="font-bold text-text-primary hover:text-brand transition-colors inline-flex items-center space-x-1"
+          >
+            <span>{b.title}</span>
+            <ExternalLink className="h-3 w-3 text-text-muted shrink-0" />
+          </Link>
+          <p className="text-[11px] text-text-muted font-medium">by {b.author}</p>
+        </div>
+      ),
+    },
+    {
+      header: 'Category',
+      cell: (b) => (
+        <span className="text-xs font-semibold text-text-secondary capitalize">
+          {b.category ? b.category.replace('-', ' ') : 'General'}
+        </span>
+      ),
+    },
+    {
+      header: 'Price',
+      cell: (b) => (
+        <span className="font-bold font-mono text-text-primary">₹{b.price.toFixed(0)}</span>
+      ),
+    },
+    {
+      header: 'Stock',
+      cell: (b) => (
+        <span className={`font-mono font-bold ${b.stock > 0 ? 'text-text-primary' : 'text-danger'}`}>
+          {b.stock} copies
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      cell: (b) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+            b.status === 'active'
+              ? 'bg-success/10 text-success border border-success/20'
+              : b.status === 'removed'
+              ? 'bg-danger/10 text-danger border border-danger/20'
+              : 'bg-warning/10 text-warning border border-warning/20'
+          }`}
+        >
+          {b.status}
+        </span>
+      ),
+    },
+    {
+      header: 'Moderation Action',
+      className: 'text-right',
+      cell: (b) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggleStatus(b.id, b.status);
+          }}
+          disabled={moderateMutation.isPending}
+          className={`px-3 py-1.5 text-xs font-bold rounded flex items-center space-x-1 ml-auto transition-all shadow-sm ${
+            b.status === 'removed'
+              ? 'bg-success hover:bg-success/90 text-white'
+              : 'bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20'
+          }`}
+        >
+          {b.status === 'removed' ? (
+            <>
+              <CheckCircle className="h-3.5 w-3.5" />
+              <span>Approve / Restore</span>
+            </>
+          ) : (
+            <>
+              <EyeOff className="h-3.5 w-3.5" />
+              <span>Reject / Flag</span>
+            </>
+          )}
+        </button>
+      ),
+    },
+  ];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <Link
-          href="/admin/dashboard"
-          className="inline-flex items-center space-x-2 text-sm text-text-secondary hover:text-brand transition-colors font-sans"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Control Panel</span>
-        </Link>
-
-        <div className="flex justify-between items-center border-b border-border pb-6">
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-3">
-            <BookOpen className="h-8 w-8 text-brand" />
-            <span>Listing Moderation</span>
+    <AdminLayout>
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
+            <BookOpen className="h-7 w-7 text-brand" />
+            <span>Book Catalog Moderation</span>
           </h1>
+          <p className="text-xs text-text-secondary mt-1">
+            Approve, reject, or flag seller submitted book titles across India.
+          </p>
         </div>
 
-        {!isAdmin ? (
-          <div className="text-center py-16 border border-border bg-surface rounded-md font-sans space-y-4">
-            <ShieldAlert className="h-12 w-12 text-danger mx-auto" />
-            <h2 className="font-serif text-xl font-bold text-text-primary">Access Restricted</h2>
-          </div>
-        ) : (
-          <div className="space-y-6 font-sans">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                <input
-                  type="text"
-                  placeholder="Search listings by title, author, or ISBN..."
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-md bg-surface text-text-primary focus:ring-brand focus:border-brand"
-                />
-              </div>
+        {/* Filter Dropdown */}
+        <div className="flex items-center space-x-2">
+          <Filter className="h-4 w-4 text-text-muted" />
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="px-3 py-1.5 text-xs font-semibold border border-border rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-brand"
+          >
+            <option value="">All Catalog Statuses</option>
+            <option value="active">Active Books</option>
+            <option value="removed">Removed / Flagged</option>
+            <option value="draft">Drafts</option>
+          </select>
+        </div>
+      </div>
 
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="px-4 py-2 text-sm border border-border rounded-md bg-surface text-text-primary focus:ring-brand focus:border-brand"
-              >
-                <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="sold">Sold</option>
-                <option value="removed">Removed</option>
-                <option value="draft">Draft</option>
-              </select>
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-4 animate-pulse">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <div key={idx} className="h-16 border border-border bg-surface rounded-md" />
-                ))}
-              </div>
-            ) : isError ? (
-              <div className="text-center py-12 border border-border bg-surface rounded-md">
-                <h2 className="text-lg font-bold text-text-primary mb-2 font-serif">
-                  Failed to load catalog listings
-                </h2>
-                <button
-                  onClick={() => refetch()}
-                  className="px-4 py-2 bg-brand text-white rounded hover:bg-brand-hover text-sm font-semibold"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : (
-              <div className="border border-border rounded-md overflow-hidden bg-surface shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-background-subtle text-xs font-bold uppercase tracking-wider text-text-secondary">
-                        <th className="p-4">Book Title & Author</th>
-                        <th className="p-4">Category</th>
-                        <th className="p-4">Price</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Moderation Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {listings.map((b: AdminListing) => (
-                        <tr key={b.id} className="hover:bg-background-subtle transition-colors">
-                          <td className="p-4">
-                            <Link href={`/books/${b.slug}`} className="font-bold text-text-primary hover:text-brand transition-colors block">
-                              {b.title}
-                            </Link>
-                            <span className="text-xs text-text-muted">by {b.author}</span>
-                          </td>
-                          <td className="p-4 text-xs font-medium text-text-secondary">{b.category}</td>
-                          <td className="p-4 font-bold text-text-primary">${b.price.toFixed(2)}</td>
-                          <td className="p-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
-                                b.status === 'active'
-                                  ? 'bg-success/10 text-success border border-success/20'
-                                  : b.status === 'removed'
-                                  ? 'bg-danger/10 text-danger border border-danger/20'
-                                  : 'bg-warning/10 text-warning border border-warning/20'
-                              }`}
-                            >
-                              {b.status}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => handleToggleStatus(b.id, b.status)}
-                              disabled={moderateMutation.isPending}
-                              className={`px-3 py-1.5 text-xs font-bold rounded flex items-center space-x-1 ml-auto transition-colors ${
-                                b.status === 'removed'
-                                  ? 'bg-success hover:bg-success/90 text-white'
-                                  : 'bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20'
-                              }`}
-                            >
-                              {b.status === 'removed' ? (
-                                <>
-                                  <CheckCircle className="h-3.5 w-3.5" />
-                                  <span>Restore Listing</span>
-                                </>
-                              ) : (
-                                <>
-                                  <EyeOff className="h-3.5 w-3.5" />
-                                  <span>Remove / Flag</span>
-                                </>
-                              )}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {meta.pages > 1 && (
-                  <div className="flex justify-between items-center p-4 border-t border-border bg-background-subtle text-xs font-medium">
-                    <button
-                      disabled={page <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className="px-3 py-1.5 border border-border rounded bg-surface disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <span>
-                      Page {meta.page} of {meta.pages}
-                    </span>
-                    <button
-                      disabled={page >= meta.pages}
-                      onClick={() => setPage((p) => p + 1)}
-                      className="px-3 py-1.5 border border-border rounded bg-surface disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      <Footer />
-    </div>
+      {/* Main Data Table */}
+      {isError ? (
+        <div className="p-8 text-center border border-border bg-surface rounded-md font-sans space-y-3">
+          <p className="text-sm font-bold text-danger">Failed to load administrative listings catalog.</p>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
+          >
+            Retry Catalog Fetch
+          </button>
+        </div>
+      ) : (
+        <AdminDataTable
+          title="Submitted Book Listings"
+          subtitle="Real-time moderation portal"
+          data={listings}
+          columns={columns}
+          searchField="title"
+          searchPlaceholder="Search title or author..."
+          isLoading={isLoading}
+        />
+      )}
+    </AdminLayout>
   );
 }

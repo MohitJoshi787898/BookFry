@@ -16,75 +16,75 @@ import {
 export function CategoryGrid() {
   const categories = [
     {
+      title: 'Engineering & Tech',
+      subtitle: 'Computer Science, Electrical, Mechanical, Civil',
+      icon: GraduationCap,
+      href: '/books?category=engineering',
+      count: '14,200+ books',
+    },
+    {
+      title: 'Exams & Study Prep',
+      subtitle: 'JEE, NEET, UPSC, GATE, CAT, Bank PO',
+      icon: Sparkles,
+      href: '/books?category=exams',
+      count: '11,500+ books',
+    },
+    {
+      title: 'Medical & Healthcare',
+      subtitle: 'MBBS, BDS, Nursing, Pharmacy, Anatomy',
+      icon: Compass,
+      href: '/books?category=medical',
+      count: '9,800+ books',
+    },
+    {
       title: 'Fiction & Novels',
-      subtitle: 'Literary fiction, contemporary, classics',
+      subtitle: 'Literary fiction, Indian contemporary, classics',
       icon: Feather,
       href: '/books?category=fiction',
-      count: '14,200+ titles',
+      count: '18,400+ books',
     },
     {
-      title: 'Non-Fiction & Memoir',
-      subtitle: 'Biographies, history, self-help',
-      icon: Compass,
-      href: '/books?category=non-fiction',
-      count: '9,800+ titles',
-    },
-    {
-      title: 'Sci-Fi & Fantasy',
-      subtitle: 'Space opera, epic fantasy, cyberpunk',
-      icon: Sparkles,
-      href: '/books?category=sci-fi',
-      count: '8,400+ titles',
-    },
-    {
-      title: 'Academic & Exams',
-      subtitle: 'Textbooks, test prep, reference guides',
-      icon: GraduationCap,
-      href: '/books?category=exams',
-      count: '11,500+ titles',
-    },
-    {
-      title: 'Mystery & Thriller',
-      subtitle: 'Crime, psychological thrillers, suspense',
-      icon: Ghost,
-      href: '/books?category=mystery',
-      count: '7,100+ titles',
-    },
-    {
-      title: 'Romance',
-      subtitle: 'Contemporary, historical, rom-coms',
-      icon: Heart,
-      href: '/books?category=romance',
-      count: '6,900+ titles',
-    },
-    {
-      title: 'Manga & Graphic Novels',
-      subtitle: 'Shonen, seinen, graphic memoirs',
-      icon: Zap,
-      href: '/books?category=manga',
-      count: '5,300+ titles',
-    },
-    {
-      title: 'Children & YA',
-      subtitle: 'Picture books, middle grade, young adult',
+      title: 'School K-12 Textbooks',
+      subtitle: 'NCERT, CBSE, ICSE, State Boards',
       icon: BookOpen,
-      href: '/books?category=kids',
-      count: '10,100+ titles',
+      href: '/books?category=school',
+      count: '12,100+ books',
+    },
+    {
+      title: 'Commerce & CA',
+      subtitle: 'Accountancy, Finance, Economics, Business',
+      icon: Zap,
+      href: '/books?category=commerce',
+      count: '7,900+ books',
+    },
+    {
+      title: 'Programming & CS',
+      subtitle: 'Python, Java, AI/ML, Web Dev, Algorithms',
+      icon: Ghost,
+      href: '/books?category=programming',
+      count: '6,300+ books',
+    },
+    {
+      title: 'Award Winners & Rare',
+      subtitle: 'Booker Prize, Pulitzer, Out of Print Literature',
+      icon: Heart,
+      href: '/books?category=award-winners',
+      count: '5,100+ books',
     },
   ];
 
   return (
-    <section className="py-16 bg-background font-sans">
+    <section className="py-16 sm:py-24 bg-background font-sans border-b border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted block">
-            Explore Genres
+          <span className="text-xs font-bold uppercase tracking-widest text-secondary block">
+            Explore Every Subject
           </span>
-          <h2 className="font-serif text-3xl font-bold text-text-primary">
-            Curated Categories for Every Reader
+          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-text-primary">
+            Digital Bookshelves by Category
           </h2>
           <p className="text-sm text-text-secondary">
-            Find exactly what you are looking for across our catalog taxonomy.
+            Find required semester courseware, competitive test prep, and leisure literature.
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export function CategoryGrid() {
               <Link
                 key={cat.title}
                 href={cat.href}
-                className="group p-6 rounded-lg border border-border bg-surface hover:border-brand/50 hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+                className="group p-6 rounded-lg border border-border bg-surface hover:border-brand hover-page-turn flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="h-10 w-10 rounded-md bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors">
@@ -106,9 +106,14 @@ export function CategoryGrid() {
                   </h3>
                   <p className="text-xs text-text-secondary leading-relaxed">{cat.subtitle}</p>
                 </div>
-                <span className="text-[11px] font-semibold text-text-muted group-hover:text-brand transition-colors block pt-4">
-                  {cat.count} →
-                </span>
+                <div className="pt-4 mt-2 border-t border-border/50 flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-brand uppercase tracking-wider">
+                    {cat.count}
+                  </span>
+                  <span className="text-xs font-bold text-text-muted group-hover:text-brand transition-colors">
+                    Browse →
+                  </span>
+                </div>
               </Link>
             );
           })}

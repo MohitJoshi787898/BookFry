@@ -1,6 +1,7 @@
 import './globals.css';
 import { Inter, Source_Serif_4, JetBrains_Mono } from 'next/font/google';
 import { Providers } from '@/components/providers';
+import { AuthModal } from '@/components/auth/auth-modal';
 
 const sans = Inter({
   subsets: ['latin'],
@@ -69,6 +70,7 @@ export default function RootLayout({
           <div id="main-content" className="flex-grow flex flex-col">
             {children}
           </div>
+          <AuthModal />
         </Providers>
       </body>
     </html>

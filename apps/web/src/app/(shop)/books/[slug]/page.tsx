@@ -12,6 +12,7 @@ import { useCartStore } from '@/stores/cart.store';
 import { Book, Review, Order, Wishlist } from '@bookmarket/types';
 import { Star, ShoppingBag, Plus, Minus, ArrowLeft, CheckCircle, ShieldAlert, Heart } from 'lucide-react';
 import Link from 'next/link';
+import { BookJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
 
 export default function BookDetailPage() {
   const params = useParams();
@@ -220,41 +221,18 @@ export default function BookDetailPage() {
 
   const imageUrl = book.images?.[0]?.url || '';
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: book.title,
-    image: imageUrl,
-    description: book.description,
-    isbn: book.isbn,
-    author: {
-      '@type': 'Person',
-      name: book.author,
-    },
-    offers: {
-      '@type': 'Offer',
-      price: book.price,
-      priceCurrency: 'USD',
-      itemCondition: book.condition === 'new' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
-      availability: book.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-    },
-    ...(book.ratingCount > 0 && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: book.ratingAvg,
-        reviewCount: book.ratingCount,
-      },
-    }),
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        <BookJsonLd book={book} url={`https://bookfry.in/books/${book.slug}`} />
+        <BreadcrumbJsonLd
+          items={[
+            { name: 'Home', item: 'https://bookfry.in' },
+            { name: 'Books', item: 'https://bookfry.in/books' },
+            { name: book.title, item: `https://bookfry.in/books/${book.slug}` },
+          ]}
         />
 
         <Link

@@ -11,17 +11,20 @@ export function Footer() {
           {/* Brand Info Column */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="inline-block">
-              <span className="font-serif text-2xl font-bold text-brand">BookMarket</span>
+              <span className="font-serif text-2xl font-bold text-brand">BookFry</span>
             </Link>
-            <p className="text-xs text-text-secondary max-w-sm leading-relaxed">
-              BookMarket is the premier online marketplace for buying and selling new and used books. Connecting book collectors, independent sellers, and readers nationwide.
+            <p className="font-serif italic text-secondary font-semibold text-sm">
+              &quot;क्योंकि.. पढ़ाई रुकनी नहीं चाहिए&quot;
             </p>
-            <div className="flex items-center space-x-4 text-xs text-text-muted">
+            <p className="text-xs text-text-secondary max-w-sm leading-relaxed">
+              BookFry is India&apos;s trusted student marketplace for buying and selling new and pre-owned textbooks. Empowering students with affordable education and circular book sharing.
+            </p>
+            <div className="flex items-center space-x-4 text-xs text-text-muted pt-1">
               <span className="flex items-center gap-1">
-                <ShieldCheck className="h-4 w-4 text-brand" /> Buyer Protection
+                <ShieldCheck className="h-4 w-4 text-brand" /> Verified Sellers
               </span>
               <span className="flex items-center gap-1">
-                <Truck className="h-4 w-4 text-brand" /> Fast Delivery
+                <Truck className="h-4 w-4 text-brand" /> Direct Delivery
               </span>
             </div>
           </div>

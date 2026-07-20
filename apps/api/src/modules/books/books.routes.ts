@@ -13,11 +13,10 @@ const controller = new BooksController();
 router.get('/', validate({ query: queryBookSchema }), asyncHandler(controller.list));
 router.get('/:slug', asyncHandler(controller.getDetails));
 
-// Seller / Admin mutating routes
+// Authenticated user mutating routes
 router.post(
   '/',
   requireAuth,
-  requireRoles(['seller', 'admin']),
   uploadMultiple('images', 5),
   validate({ body: createBookSchema }),
   asyncHandler(controller.create)

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
+import { useAuthModalStore } from '@/stores/auth-modal.store';
 import { useCartStore } from '@/stores/cart.store';
 import { apiClient } from '@/lib/api-client';
 import { AnnouncementBar } from './announcement-bar';
@@ -338,17 +339,26 @@ export function Navbar() {
 
           {/* Category Text Subnav Bar (Underline on Hover) */}
           <nav className="hidden lg:flex items-center space-x-8 border-t border-border/60 py-2.5 text-xs font-medium text-text-secondary overflow-x-auto no-scrollbar">
-            {categorySubnav.map((cat) => (
-              <Link
-                key={cat.name}
-                href={cat.href}
-                className={`transition-colors whitespace-nowrap hover:text-brand border-b-2 border-transparent hover:border-brand py-1 ${
-                  cat.isHighlight ? 'text-accent font-bold hover:border-accent' : ''
-                }`}
-              >
-                {cat.name}
-              </Link>
-            ))}
+            {categorySubnav.map((cat) => {
+              const isSellLink = cat.href === '/sell';
+              return (
+                <Link
+                  key={cat.name}
+                  href={cat.href}
+                  onClick={(e) => {
+                    if (isSellLink && !isAuthenticated) {
+                      e.preventDefault();
+                      useAuthModalStore.getState().openModal('login', '/sell');
+                    }
+                  }}
+                  className={`transition-colors whitespace-nowrap hover:text-brand border-b-2 border-transparent hover:border-brand py-1 ${
+                    cat.isHighlight ? 'text-accent font-bold hover:border-accent' : ''
+                  }`}
+                >
+                  {cat.name}
+                </Link>
+              );
+            })}
           </nav>
         </div>
 

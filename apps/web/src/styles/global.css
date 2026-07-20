@@ -199,4 +199,25 @@
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
+
+  /* BookFry Page-Turn & Tactile Book Hover Utilities */
+  .hover-page-turn {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  }
+  .hover-page-turn:hover {
+    transform: translateY(-5px) rotate(0.8deg);
+    box-shadow: 0 16px 32px -8px rgba(26, 59, 92, 0.15);
+  }
+
+  /* Bookmark Ribbon Badge */
+  .bookmark-badge {
+    position: relative;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), 50% 100%, 0 calc(100% - 6px));
+  }
+
+  /* Bookshelf Pattern Utility */
+  .bg-bookshelf-pattern {
+    background-image: radial-gradient(circle at 1px 1px, hsl(var(--border) / 0.8) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
 }
