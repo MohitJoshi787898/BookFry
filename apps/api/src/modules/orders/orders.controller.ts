@@ -1,0 +1,55 @@
+import { Request, Response } from 'express';
+import { OrdersService } from './orders.service';
+import { ApiResponse } from '../../utils/ApiResponse';
+import { OrderStatus } from '@bookmarket/types';
+
+export class OrdersController {
+  private ordersService: OrdersService;
+
+  constructor() {
+    this.ordersService = new OrdersService();
+  }
+
+  create = async (req: Request, res: Response): Promise<void> => {
+    const buyerId = req.user!.id;
+    const { shippingAddress } = req.body;
+    const order = await this.ordersService.createOrder(buyerId, shippingAddress);
+    res.status(201).json(ApiResponse.success(order));
+  };
+
+  getDetails = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    const roles = req.user!.roles;
+    const { id } = req.params;
+    const order = await this.ordersService.getOrderById(id, userId, roles);
+    res.status(200).json(ApiResponse.success(order));
+  };
+
+  listBuyerOrders = async (req: Request, res: Response): Promise<void> => {
+    const buyerId = req.user!.id;
+    const orders = await this.ordersService.getBuyerOrders(buyerId);
+    res.status(200).json(ApiResponse.success(orders));
+  };
+
+  listSellerOrders = async (req: Request, res: Response): Promise<void> => {
+    const sellerId = req.user!.id;
+    const orders = await this.ordersService.getSellerOrders(sellerId);
+    res.status(200).json(ApiResponse.success(orders));
+  };
+
+  updateStatus = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    const roles = req.user!.roles;
+    const { id } = req.params;
+    const { status, note } = req.body;
+    const order = await this.ordersService.updateOrderStatus(
+      id,
+      userId,
+      roles,
+      status as OrderStatus,
+      note
+    );
+    res.status(200).json(ApiResponse.success(order));
+  };
+}
+export default OrdersController;

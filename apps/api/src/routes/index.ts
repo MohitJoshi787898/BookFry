@@ -1,0 +1,28 @@
+import { Router } from 'express';
+import authRoutes from '../modules/auth/auth.routes';
+import categoriesRoutes from '../modules/categories/categories.routes';
+import booksRoutes from '../modules/books/books.routes';
+import cartRoutes from '../modules/cart/cart.routes';
+import paymentsRoutes from '../modules/payments/payments.routes';
+import ordersRoutes from '../modules/orders/orders.routes';
+import wishlistRoutes from '../modules/wishlist/wishlist.routes';
+import reviewsRoutes from '../modules/reviews/reviews.routes';
+import notificationsRoutes from '../modules/notifications/notifications.routes';
+import sellerRoutes from '../modules/seller/seller.routes';
+import adminRoutes from '../modules/admin/admin.routes';
+
+const router = Router();
+
+router.use('/auth', authRoutes);
+router.use('/categories', categoriesRoutes);
+router.use('/books', booksRoutes);
+router.use('/cart', cartRoutes);
+router.use('/payments', paymentsRoutes);
+router.use('/orders', ordersRoutes);
+router.use('/wishlist', wishlistRoutes);
+router.use('/reviews', reviewsRoutes);
+router.use('/notifications', notificationsRoutes);
+router.use('/seller', sellerRoutes);
+router.use('/admin', adminRoutes);
+
+export default router;

@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand HSL Variables (Compatible with shadcn/ui) */
+    --background: 0 0% 100%;
+    --foreground: 210 50% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 50% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 50% 10%;
+
+    /* Primary: Deep Navy Blue (#1A3B5C) */
+    --primary: 210 56% 23%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Fiery Orange (#F26522) */
+    --secondary: 20 89% 54%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent: Warm Sun Gold (#FF9900) */
+    --accent: 36 100% 50%;
+    --accent-foreground: 210 60% 10%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 210 15% 45%;
+
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 210 56% 23%;
+
+    --radius: 0.625rem;
+
+    --success: 142 71% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    /* 50-950 Color Scales (Primary Deep Navy) */
+    --primary-50: 210 60% 96%;
+    --primary-100: 210 58% 90%;
+    --primary-200: 210 56% 80%;
+    --primary-300: 210 55% 65%;
+    --primary-400: 210 55% 48%;
+    --primary-500: 210 56% 35%;
+    --primary-600: 210 56% 23%;
+    --primary-700: 210 58% 18%;
+    --primary-800: 210 60% 14%;
+    --primary-900: 210 62% 10%;
+    --primary-950: 210 65% 6%;
+
+    /* 50-950 Color Scales (Secondary Fiery Orange) */
+    --secondary-50: 20 100% 97%;
+    --secondary-100: 20 95% 92%;
+    --secondary-200: 20 92% 83%;
+    --secondary-300: 20 90% 71%;
+    --secondary-400: 20 89% 60%;
+    --secondary-500: 20 89% 54%;
+    --secondary-600: 20 85% 46%;
+    --secondary-700: 20 82% 38%;
+    --secondary-800: 20 80% 31%;
+    --secondary-900: 20 78% 24%;
+    --secondary-950: 20 80% 14%;
+
+    /* Legacy Token Aliases */
+    --color-bg: #FFFFFF;
+    --color-bg-subtle: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-border: #E2E8F0;
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748B;
+    --color-brand: #1A3B5C;
+    --color-brand-hover: #142F4A;
+    --color-accent: #F26522;
+    --color-success: #1E8E5A;
+    --color-warning: #D97706;
+    --color-danger: #DC2626;
+    --color-info: #2563EB;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 2px rgba(26, 59, 92, 0.05);
+    --shadow-md: 0 4px 12px rgba(26, 59, 92, 0.08);
+    --shadow-lg: 0 12px 32px rgba(26, 59, 92, 0.12);
+  }
+
+  .dark {
+    --background: 210 40% 7%;
+    --foreground: 210 20% 98%;
+
+    --card: 210 35% 11%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 210 35% 11%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 210 55% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 20 89% 54%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 36 100% 50%;
+    --accent-foreground: 210 60% 10%;
+
+    --muted: 210 30% 15%;
+    --muted-foreground: 210 15% 65%;
+
+    --border: 210 30% 18%;
+    --input: 210 30% 18%;
+    --ring: 210 55% 48%;
+
+    --success: 142 71% 45%;
+    --warning: 38 92% 55%;
+    --danger: 0 84% 65%;
+    --info: 217 91% 65%;
+
+    /* Legacy Token Aliases (Dark) */
+    --color-bg: #0A1118;
+    --color-bg-subtle: #101923;
+    --color-surface: #152230;
+    --color-border: #1F3144;
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #94A3B8;
+    --color-text-muted: #64748B;
+    --color-brand: #2A5A8C;
+    --color-brand-hover: #1A3B5C;
+    --color-accent: #F26522;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-sans), sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  ::selection {
+    background-color: hsl(var(--secondary) / 0.25);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer utilities {
+  /* Scrollbar Utilities */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Glassmorphism Utilities */
+  .glass-surface {
+    background-color: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.6);
+  }
+
+  .glass-header {
+    background-color: hsl(var(--background) / 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Brand Gradients extracted from Logo Flame */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, hsl(210 56% 23%) 0%, hsl(210 58% 18%) 100%);
+  }
+
+  .bg-gradient-flame {
+    background: linear-gradient(135deg, hsl(20 89% 54%) 0%, hsl(36 100% 50%) 100%);
+  }
+
+  .bg-gradient-hero {
+    background: radial-gradient(circle at 50% 0%, hsl(20 89% 54% / 0.08) 0%, transparent 70%);
+  }
+
+  /* Focus Ring Utility */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
