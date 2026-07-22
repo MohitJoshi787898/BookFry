@@ -1,6 +1,6 @@
 import express from "express";
 import helmet from "helmet";
-// import cors from 'cors';
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import { env } from "./config/env";
 import routes from "./routes";
@@ -17,6 +17,13 @@ app.use(helmet());
 //     credentials: true,
 //   })
 // );
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
 
 app.use(cookieParser());
 app.use(
