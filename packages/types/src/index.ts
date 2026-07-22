@@ -10,6 +10,14 @@ export interface Address {
   isDefault: boolean;
 }
 
+export interface CreateIntentResult {
+  clientSecret: string;
+  id: string;
+  keyId?: string;
+  amount?: number;
+  currency?: string;
+}
+
 export interface SellerProfile {
   storeName: string;
   bio?: string;
@@ -62,6 +70,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  description?: string;
   parentId?: string | null;
   imageUrl?: string;
   order: number;

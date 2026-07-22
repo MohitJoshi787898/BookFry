@@ -1,6 +1,9 @@
 export interface CreateIntentResult {
   clientSecret: string;
   id: string;
+  keyId?: string;
+  amount?: number;
+  currency?: string;
 }
 
 export interface VerifyWebhookResult {

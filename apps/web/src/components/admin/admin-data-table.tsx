@@ -22,6 +22,7 @@ interface AdminDataTableProps<T> {
   isLoading?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function AdminDataTable<T extends Record<string, any>>({
   title,
   subtitle,

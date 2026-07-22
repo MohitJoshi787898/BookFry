@@ -1,6 +1,7 @@
 import { UserModel } from '../../models/user.model';
 import { BookModel } from '../../models/book.model';
 import { OrderModel } from '../../models/order.model';
+import { ContactModel } from '../../models/contact.model';
 import { NotFoundError } from '../../utils/AppError';
 import mongoose from 'mongoose';
 
@@ -208,6 +209,34 @@ export class AdminService {
     return {
       monthlyReport,
       statusCounts: statusCounts.map((s) => ({ status: s._id, count: s.count })),
+    };
+  }
+
+  async getSupportTickets() {
+    const docs = await ContactModel.find().sort({ createdAt: -1 }).exec();
+    return docs.map((doc, idx) => ({
+      id: doc._id.toString(),
+      ticketNumber: `TICK-${100 + idx}`,
+      userEmail: doc.email,
+      name: doc.name,
+      subject: doc.subject,
+      message: doc.message,
+      priority: doc.subject === 'Order Issue' ? ('high' as const) : doc.subject === 'Report a Listing' ? ('high' as const) : ('medium' as const),
+      status: doc.status || 'open',
+      createdAt: doc.createdAt.toISOString().split('T')[0],
+    }));
+  }
+
+  async resolveSupportTicket(ticketId: string) {
+    const doc = await ContactModel.findById(ticketId);
+    if (!doc) {
+      throw new NotFoundError('Support ticket not found');
+    }
+    doc.status = 'resolved';
+    await doc.save();
+    return {
+      id: doc._id.toString(),
+      status: doc.status,
     };
   }
 }

@@ -9,7 +9,14 @@ import { apiClient } from '@/lib/api-client';
 import { Book, Category } from '@bookmarket/types';
 import { Search, SlidersHorizontal, RotateCcw } from 'lucide-react';
 
-export default function BooksPage() {
+import { useSearchParams } from 'next/navigation';
+
+function BooksCatalog() {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get('category');
+  const searchParam = searchParams.get('search');
+  const discountParam = searchParams.get('discount');
+
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [conditions, setConditions] = useState<string[]>([]);
@@ -23,6 +30,26 @@ export default function BooksPage() {
     queryKey: ['categories'],
     queryFn: () => apiClient('/categories'),
   });
+
+  // Sync URL search parameters dynamically on load or search change
+  React.useEffect(() => {
+    if (searchParam !== null) {
+      setSearch(searchParam);
+    }
+    if (categoryParam !== null && categories.length > 0) {
+      const matchedCat = categories.find(
+        (c) => c.slug === categoryParam || c.id === categoryParam
+      );
+      if (matchedCat) {
+        setCategory(matchedCat.id);
+      }
+    }
+    if (discountParam !== null) {
+      // If today's deals discount is requested, preset maxPrice or sorting appropriately
+      setMinPrice('');
+      setMaxPrice('');
+    }
+  }, [searchParam, categoryParam, discountParam, categories]);
 
   const {
     data: booksData = { books: [], total: 0 },
@@ -306,5 +333,24 @@ export default function BooksPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function BooksPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex flex-col min-h-screen bg-background text-text-primary">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center font-sans">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto"></div>
+            <p className="text-xs text-text-secondary">Loading catalog books...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    }>
+      <BooksCatalog />
+    </React.Suspense>
   );
 }

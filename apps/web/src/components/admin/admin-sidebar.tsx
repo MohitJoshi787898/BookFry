@@ -9,7 +9,6 @@ import {
   Users,
   Layers,
   BarChart3,
-  ShieldCheck,
   Tag,
   Settings,
   ChevronLeft,

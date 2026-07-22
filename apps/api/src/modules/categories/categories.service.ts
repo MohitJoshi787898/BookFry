@@ -26,6 +26,7 @@ export class CategoriesService {
 
   async createCategory(data: {
     name: string;
+    description?: string;
     parentId?: string | null;
     imageUrl?: string;
     order?: number;
@@ -39,6 +40,7 @@ export class CategoriesService {
     const doc = await this.categoriesRepository.create({
       name: data.name,
       slug,
+      description: data.description,
       parentId: data.parentId ? (data.parentId as any) : null,
       imageUrl: data.imageUrl,
       order: data.order || 0,
@@ -49,7 +51,7 @@ export class CategoriesService {
 
   async updateCategory(
     id: string,
-    data: { name?: string; parentId?: string | null; imageUrl?: string; order?: number }
+    data: { name?: string; description?: string; parentId?: string | null; imageUrl?: string; order?: number }
   ): Promise<Category> {
     const category = await this.categoriesRepository.findById(id);
     if (!category) {
@@ -87,6 +89,7 @@ export class CategoriesService {
       id: doc._id.toString(),
       name: doc.name,
       slug: doc.slug,
+      description: doc.description,
       parentId: doc.parentId ? doc.parentId.toString() : null,
       imageUrl: doc.imageUrl,
       order: doc.order,

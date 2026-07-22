@@ -121,13 +121,13 @@ export function Navbar() {
   const isAdmin = user?.roles.includes('admin');
 
   const categorySubnav = [
-    { name: 'Fiction', href: '/books?category=fiction' },
-    { name: 'Non-Fiction', href: '/books?category=non-fiction' },
-    { name: 'Teens & YA', href: '/books?category=ya' },
-    { name: 'Kids', href: '/books?category=kids' },
-    { name: 'Exams & Study', href: '/books?category=exams' },
-    { name: 'Manga', href: '/books?category=manga' },
-    { name: 'Award Winners', href: '/books?category=award-winners' },
+    { name: 'Engineering & CS', href: '/books?category=engineering-cs' },
+    { name: 'Exams & Study', href: '/books?category=competitive-exams' },
+    { name: 'Medical', href: '/books?category=medical-healthcare' },
+    { name: 'Management', href: '/books?category=management-business' },
+    { name: 'School Textbooks', href: '/books?category=school-textbooks' },
+    { name: 'Indian Literature', href: '/books?category=indian-literature' },
+    { name: 'Humanities & Arts', href: '/books?category=humanities-arts' },
     { name: "Today's Deals", href: '/books?discount=40', isHighlight: true },
     { name: '💰 Sell Books', href: '/sell', isSecondary: true },
   ];
@@ -254,8 +254,8 @@ export function Navbar() {
 
               {/* Notifications Link */}
               {isAuthenticated && (
-                <Link
-                  href="/account/notifications"
+                <button
+                  onClick={() => router.push('/account/notifications')}
                   className="relative rounded-full p-2 text-text-secondary hover:bg-background-subtle hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-brand"
                   aria-label="Notifications"
                   title="Notifications"
@@ -266,7 +266,7 @@ export function Navbar() {
                       {unreadCount}
                     </span>
                   )}
-                </Link>
+                </button>
               )}
 
               {/* User Account Controls */}

@@ -20,4 +20,7 @@ router.patch('/listings/:id/moderate', asyncHandler(controller.moderateListing))
 
 router.get('/reports', asyncHandler(controller.getReports));
 
+router.get('/support-tickets', asyncHandler(controller.getSupportTickets));
+router.patch('/support-tickets/:id/resolve', asyncHandler(controller.resolveSupportTicket));
+
 export default router;

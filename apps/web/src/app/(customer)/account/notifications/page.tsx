@@ -9,10 +9,12 @@ import { useAuthStore } from '@/stores/auth.store';
 import { Notification } from '@bookmarket/types';
 import { Bell, ArrowLeft, Check, Calendar } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function NotificationsPage() {
   const { isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const {
     data: notifications = [],
@@ -36,8 +38,24 @@ export default function NotificationsPage() {
     },
   });
 
-  const handleMarkRead = (id: string) => {
+  const handleMarkRead = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     readMutation.mutate(id);
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.isRead) {
+      readMutation.mutate(notification.id);
+    }
+
+    let targetPath = '/books';
+    if (notification.type === 'new_sale') {
+      targetPath = '/seller/orders';
+    } else if (notification.type.startsWith('order_')) {
+      targetPath = '/account/orders';
+    }
+
+    router.push(targetPath);
   };
 
   return (
@@ -115,10 +133,11 @@ export default function NotificationsPage() {
               return (
                 <div
                   key={notification.id}
-                  className={`border rounded-md p-5 flex justify-between items-start gap-4 transition-all duration-120 ${
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`border rounded-md p-5 flex justify-between items-start gap-4 transition-all duration-120 cursor-pointer select-none hover:shadow-xs ${
                     notification.isRead
-                      ? 'border-border bg-surface/50 opacity-75'
-                      : 'border-brand/30 bg-brand/5 shadow-sm'
+                      ? 'border-border bg-surface/50 opacity-75 hover:bg-muted/20'
+                      : 'border-brand/30 bg-brand/5 shadow-sm hover:bg-brand/10'
                   }`}
                 >
                   <div className="flex items-start space-x-3">
@@ -145,7 +164,7 @@ export default function NotificationsPage() {
 
                   {!notification.isRead && (
                     <button
-                      onClick={() => handleMarkRead(notification.id)}
+                      onClick={(e) => handleMarkRead(notification.id, e)}
                       className="p-1.5 border border-border hover:border-brand/40 text-text-secondary hover:text-brand bg-surface rounded transition-all font-sans"
                       title="Mark as Read"
                     >

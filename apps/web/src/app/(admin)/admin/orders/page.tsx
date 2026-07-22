@@ -43,11 +43,12 @@ export default function AdminOrdersPage() {
     queryKey: ['admin-orders', statusFilter],
     queryFn: async () => {
       try {
-        const res = await apiClient<{ data: Order[] } | Order[]>(`/admin/dashboard`);
-        // Fallback to extraction from dashboard or direct API endpoint
-        if (Array.isArray(res)) return res;
-        if ('data' in res && Array.isArray(res.data)) return res.data;
-        return (res as any).recentOrders || [];
+        const res = await apiClient<unknown>(`/admin/dashboard`);
+        if (Array.isArray(res)) return res as Order[];
+        const resData = res as Record<string, unknown>;
+        if ('data' in resData && Array.isArray(resData.data)) return resData.data as Order[];
+        if ('recentOrders' in resData && Array.isArray(resData.recentOrders)) return resData.recentOrders as Order[];
+        return [];
       } catch {
         return [];
       }

@@ -58,6 +58,17 @@ export class AdminController {
     const reports = await this.adminService.getPlatformReports();
     res.status(200).json(ApiResponse.success(reports));
   };
+
+  getSupportTickets = async (req: Request, res: Response): Promise<void> => {
+    const tickets = await this.adminService.getSupportTickets();
+    res.status(200).json(ApiResponse.success(tickets));
+  };
+
+  resolveSupportTicket = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const result = await this.adminService.resolveSupportTicket(id);
+    res.status(200).json(ApiResponse.success(result));
+  };
 }
 
 export default AdminController;

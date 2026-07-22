@@ -84,7 +84,7 @@ export default function AdminCategoriesPage() {
       cell: (cat) => (
         <div className="font-sans">
           <p className="font-bold text-text-primary">{cat.name}</p>
-          {(cat as any).description && <p className="text-[11px] text-text-muted">{(cat as any).description}</p>}
+          {cat.description && <p className="text-[11px] text-text-muted">{cat.description}</p>}
         </div>
       ),
     },

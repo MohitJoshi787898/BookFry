@@ -1,56 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { useAuthStore } from '@/stores/auth.store';
 import { MessageSquare, ShieldAlert, CheckCircle2, AlertCircle } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
 
 interface SupportTicket {
   id: string;
   ticketNumber: string;
   userEmail: string;
+  name: string;
   subject: string;
+  message: string;
   priority: 'high' | 'medium' | 'low';
   status: 'open' | 'in_progress' | 'resolved';
   createdAt: string;
 }
 
-const mockTickets: SupportTicket[] = [
-  {
-    id: '1',
-    ticketNumber: 'TICK-801',
-    userEmail: 'priya.sharma@iitd.ac.in',
-    subject: 'Book dispatch tracking inquiry for Delhi address',
-    priority: 'high',
-    status: 'open',
-    createdAt: '2026-07-20',
-  },
-  {
-    id: '2',
-    ticketNumber: 'TICK-802',
-    userEmail: 'rahul.verma@du.ac.in',
-    subject: 'Seller payout release verification for order BF-ORD-1002',
-    priority: 'medium',
-    status: 'in_progress',
-    createdAt: '2026-07-19',
-  },
-  {
-    id: '3',
-    ticketNumber: 'TICK-803',
-    userEmail: 'ananya.roy@ku.ac.in',
-    subject: 'Request coupon code clarification for competitive exams bundle',
-    priority: 'low',
-    status: 'resolved',
-    createdAt: '2026-07-17',
-  },
-];
-
 export default function AdminSupportPage() {
   const { user: currentUser } = useAuthStore();
   const isAdmin = currentUser?.roles.includes('admin');
+  const queryClient = useQueryClient();
 
-  const [tickets, setTickets] = useState<SupportTicket[]>(mockTickets);
+  const { data: tickets = [] } = useQuery<SupportTicket[]>({
+    queryKey: ['admin-support-tickets'],
+    queryFn: () => apiClient('/admin/support-tickets'),
+    enabled: !!isAdmin,
+  });
+
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiClient(`/admin/support-tickets/${id}/resolve`, {
+        method: 'PATCH',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-support-tickets'] });
+    },
+  });
 
   if (!isAdmin) {
     return (
@@ -64,7 +53,7 @@ export default function AdminSupportPage() {
   }
 
   const handleResolve = (id: string) => {
-    setTickets(tickets.map((t) => (t.id === id ? { ...t, status: 'resolved' } : t)));
+    resolveMutation.mutate(id);
   };
 
   const columns: Column<SupportTicket>[] = [

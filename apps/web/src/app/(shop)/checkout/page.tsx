@@ -36,6 +36,17 @@ const paymentSchema = z.object({
   cardCvc: z.string().regex(/^\d{3}$/, 'CVC must be 3 digits'),
 });
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function CheckoutPage() {
   const { user } = useAuthStore();
   const { items, clearCart } = useCartStore();
@@ -88,7 +99,7 @@ export default function CheckoutPage() {
     setCheckoutError(null);
 
     try {
-      const orderRes = await apiClient('/orders', {
+      const orderRes = await apiClient<Order>('/orders', {
         method: 'POST',
         body: JSON.stringify({
           shippingAddress: shippingData,
@@ -97,27 +108,92 @@ export default function CheckoutPage() {
 
       setCreatedOrder(orderRes);
 
-      await apiClient('/payments/create-intent', {
+      const paymentIntent = await apiClient<{
+        id: string;
+        clientSecret: string;
+        keyId?: string;
+        amount?: number;
+        currency?: string;
+      }>('/payments/create-intent', {
         method: 'POST',
         body: JSON.stringify({
           orderId: orderRes.id,
         }),
       });
 
-      await apiClient('/payments/webhook', {
-        method: 'POST',
-        body: JSON.stringify({
-          orderId: orderRes.id,
-          paymentIntentId: `pi_mock_${Math.random().toString(36).substring(2, 10)}`,
-        }),
-      });
+      if (paymentIntent && paymentIntent.keyId) {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+        }
 
-      clearCart();
-      setStep('success');
+        const options = {
+          key: paymentIntent.keyId,
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency || 'INR',
+          name: 'BookFry',
+          description: 'Purchase Academic Textbooks',
+          image: '/favicon.ico',
+          order_id: paymentIntent.id,
+          handler: async function (response: {
+            razorpay_order_id: string;
+            razorpay_payment_id: string;
+            razorpay_signature: string;
+          }) {
+            try {
+              setIsLoading(true);
+              await apiClient('/payments/verify', {
+                method: 'POST',
+                body: JSON.stringify({
+                  orderId: orderRes.id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              clearCart();
+              setStep('success');
+            } catch (verifyErr: unknown) {
+              const errMsg = verifyErr instanceof Error ? verifyErr.message : 'Payment verification failed.';
+              setCheckoutError(errMsg);
+            } finally {
+              setIsLoading(false);
+            }
+          },
+          prefill: {
+            name: user?.name || '',
+            email: user?.email || '',
+          },
+          theme: {
+            color: '#1A3B5C',
+          },
+          modal: {
+            ondismiss: function () {
+              setIsLoading(false);
+            },
+          },
+        };
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } else {
+        // Fallback simulated mock payment confirmation
+        await apiClient('/payments/verify', {
+          method: 'POST',
+          body: JSON.stringify({
+            orderId: orderRes.id,
+            razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 10)}`,
+          }),
+        });
+
+        clearCart();
+        setStep('success');
+      }
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Checkout failed. Please try again.';
       setCheckoutError(errMsg);
-    } finally {
       setIsLoading(false);
     }
   };

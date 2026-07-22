@@ -17,6 +17,7 @@ router.get('/:slug', asyncHandler(controller.getDetails));
 router.post(
   '/',
   requireAuth,
+  requireRoles(['seller', 'admin']),
   uploadMultiple('images', 5),
   validate({ body: createBookSchema }),
   asyncHandler(controller.create)

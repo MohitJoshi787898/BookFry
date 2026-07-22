@@ -22,7 +22,11 @@ export function QuickFilterBar() {
     setActivePopover(null);
     const params = new URLSearchParams();
     if (selectedCategory) params.set('category', selectedCategory);
-    if (selectedPrice) params.set('price', selectedPrice);
+    if (selectedPrice) {
+      const [min, max] = selectedPrice.split('-');
+      if (min) params.set('minPrice', min);
+      if (max) params.set('maxPrice', max);
+    }
     if (selectedCondition) params.set('condition', selectedCondition);
     if (selectedRating) params.set('minRating', selectedRating);
     router.push(`/books?${params.toString()}`);
@@ -56,22 +60,50 @@ export function QuickFilterBar() {
                   : 'border-border bg-surface text-text-secondary hover:bg-background-subtle'
               }`}
             >
-              <span>{selectedCategory ? `Category: ${selectedCategory}` : 'Category'}</span>
+              <span>
+                {selectedCategory
+                  ? `Category: ${
+                      selectedCategory === 'engineering-cs'
+                        ? 'Engineering'
+                        : selectedCategory === 'competitive-exams'
+                        ? 'Exams'
+                        : selectedCategory === 'medical-healthcare'
+                        ? 'Medical'
+                        : selectedCategory === 'management-business'
+                        ? 'Management'
+                        : selectedCategory === 'school-textbooks'
+                        ? 'School'
+                        : selectedCategory === 'indian-literature'
+                        ? 'Literature'
+                        : selectedCategory === 'humanities-arts'
+                        ? 'Humanities'
+                        : selectedCategory
+                    }`
+                  : 'Category'}
+              </span>
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             {activePopover === 'category' && (
               <div className="absolute top-full left-0 mt-2 w-48 p-3 bg-surface border border-border rounded-md shadow-lg z-50 space-y-2">
-                <div className="text-[10px] font-bold uppercase text-text-muted">Select Genre</div>
-                {['fiction', 'non-fiction', 'ya', 'kids', 'exams', 'manga'].map((c) => (
-                  <label key={c} className="flex items-center space-x-2 text-xs capitalize cursor-pointer hover:text-brand">
+                <div className="text-[10px] font-bold uppercase text-text-muted">Select Subject</div>
+                {[
+                  { label: 'Engineering & CS', val: 'engineering-cs' },
+                  { label: 'Exams & Study', val: 'competitive-exams' },
+                  { label: 'Medical & Health', val: 'medical-healthcare' },
+                  { label: 'Management & Biz', val: 'management-business' },
+                  { label: 'School Books', val: 'school-textbooks' },
+                  { label: 'Literature & Fiction', val: 'indian-literature' },
+                  { label: 'Humanities & Arts', val: 'humanities-arts' },
+                ].map((c) => (
+                  <label key={c.val} className="flex items-center space-x-2 text-xs cursor-pointer hover:text-brand">
                     <input
                       type="radio"
                       name="category"
-                      checked={selectedCategory === c}
-                      onChange={() => setSelectedCategory(c)}
+                      checked={selectedCategory === c.val}
+                      onChange={() => setSelectedCategory(c.val)}
                       className="text-brand focus:ring-brand"
                     />
-                    <span>{c}</span>
+                    <span>{c.label}</span>
                   </label>
                 ))}
                 <button
@@ -94,16 +126,26 @@ export function QuickFilterBar() {
                   : 'border-border bg-surface text-text-secondary hover:bg-background-subtle'
               }`}
             >
-              <span>{selectedPrice ? `Price: ${selectedPrice}` : 'Price Range'}</span>
+              <span>
+                {selectedPrice
+                  ? `Price: ${
+                      selectedPrice === '0-200'
+                        ? 'Under ₹200'
+                        : selectedPrice === '200-500'
+                        ? '₹200 to ₹500'
+                        : 'Over ₹500'
+                    }`
+                  : 'Price Range'}
+              </span>
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             {activePopover === 'price' && (
               <div className="absolute top-full left-0 mt-2 w-48 p-3 bg-surface border border-border rounded-md shadow-lg z-50 space-y-2">
                 <div className="text-[10px] font-bold uppercase text-text-muted">Select Price</div>
                 {[
-                  { label: 'Under $10', val: '0-10' },
-                  { label: '$10 to $25', val: '10-25' },
-                  { label: 'Over $25', val: '25-100' },
+                  { label: 'Under ₹200', val: '0-200' },
+                  { label: '₹200 to ₹500', val: '200-500' },
+                  { label: 'Over ₹500', val: '500-2000' },
                 ].map((p) => (
                   <label key={p.val} className="flex items-center space-x-2 text-xs cursor-pointer hover:text-brand">
                     <input

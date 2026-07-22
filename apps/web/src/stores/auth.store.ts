@@ -7,6 +7,7 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   setAuth: (user: Omit<User, 'createdAt' | 'updatedAt' | 'addresses'>, accessToken: string) => void;
+  setUser: (user: Omit<User, 'createdAt' | 'updatedAt' | 'addresses'>) => void;
   clearAuth: () => void;
 }
 
@@ -22,6 +23,7 @@ export const useAuthStore = create<AuthState>()(
           accessToken,
           isAuthenticated: true,
         }),
+      setUser: (user) => set({ user }),
       clearAuth: () =>
         set({
           user: null,
