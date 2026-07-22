@@ -1,6 +1,7 @@
-import { useAuthStore } from '../stores/auth.store';
+import { useAuthStore } from "../stores/auth.store";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5005/api/v1';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://bookfry.onrender.com/api/v1";
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -21,7 +22,7 @@ interface RequestOptions extends RequestInit {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function apiClient<T = any>(
   endpoint: string,
-  options: RequestOptions = {}
+  options: RequestOptions = {},
 ): Promise<T> {
   const { params, headers, ...customConfig } = options;
 
@@ -34,15 +35,15 @@ export async function apiClient<T = any>(
   const token = useAuthStore.getState().accessToken;
 
   const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
 
   if (token) {
-    defaultHeaders['Authorization'] = `Bearer ${token}`;
+    defaultHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   const config: RequestInit = {
-    method: customConfig.body ? 'POST' : 'GET',
+    method: customConfig.body ? "POST" : "GET",
     headers: {
       ...defaultHeaders,
       ...headers,
@@ -50,18 +51,22 @@ export async function apiClient<T = any>(
     ...customConfig,
   };
 
-  config.credentials = 'include';
+  config.credentials = "include";
 
   try {
     const response = await fetch(url, config);
 
-    if (response.status === 401 && endpoint !== '/auth/login' && endpoint !== '/auth/register') {
+    if (
+      response.status === 401 &&
+      endpoint !== "/auth/login" &&
+      endpoint !== "/auth/register"
+    ) {
       if (!isRefreshing) {
         isRefreshing = true;
         try {
           const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method: 'POST',
-            credentials: 'include',
+            method: "POST",
+            credentials: "include",
           });
 
           if (refreshRes.ok) {
@@ -75,14 +80,19 @@ export async function apiClient<T = any>(
 
               const retryHeaders = {
                 ...config.headers,
-                'Authorization': `Bearer ${newAccessToken}`,
+                Authorization: `Bearer ${newAccessToken}`,
               };
-              const retryRes = await fetch(url, { ...config, headers: retryHeaders });
+              const retryRes = await fetch(url, {
+                ...config,
+                headers: retryHeaders,
+              });
               const retryData = await retryRes.json();
               if (retryRes.ok && retryData.success) {
                 return retryData.data;
               }
-              throw new Error(retryData.error?.message || 'Request failed after refresh');
+              throw new Error(
+                retryData.error?.message || "Request failed after refresh",
+              );
             }
           }
           useAuthStore.getState().clearAuth();
@@ -98,14 +108,21 @@ export async function apiClient<T = any>(
             try {
               const retryHeaders = {
                 ...config.headers,
-                'Authorization': `Bearer ${newToken}`,
+                Authorization: `Bearer ${newToken}`,
               };
-              const retryRes = await fetch(url, { ...config, headers: retryHeaders });
+              const retryRes = await fetch(url, {
+                ...config,
+                headers: retryHeaders,
+              });
               const retryData = await retryRes.json();
               if (retryRes.ok && retryData.success) {
                 resolve(retryData.data);
               } else {
-                reject(new Error(retryData.error?.message || 'Request failed after refresh'));
+                reject(
+                  new Error(
+                    retryData.error?.message || "Request failed after refresh",
+                  ),
+                );
               }
             } catch (err) {
               reject(err);
@@ -118,8 +135,8 @@ export async function apiClient<T = any>(
     const data = await response.json();
 
     if (!response.ok) {
-      const errMsg = data.error?.message || 'Something went wrong';
-      const errCode = data.error?.code || 'API_ERROR';
+      const errMsg = data.error?.message || "Something went wrong";
+      const errCode = data.error?.code || "API_ERROR";
       const error = new Error(errMsg) as Error & {
         code?: string;
         details?: unknown[];
