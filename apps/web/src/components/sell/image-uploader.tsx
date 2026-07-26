@@ -104,7 +104,7 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {renderSlots.map((slot, idx) => {
+        {renderSlots.map((slot) => {
           if (slot.type === 'image' && slot.index !== undefined) {
             return (
               <div

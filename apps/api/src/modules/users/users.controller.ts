@@ -31,8 +31,15 @@ export class UsersController {
       throw new ValidationError('No avatar image file provided');
     }
 
-    const uploadResult = await uploadToCloudinary(req.file.buffer, 'avatars');
-    const user = await this.usersService.updateProfile(userId, { avatarUrl: uploadResult.url });
+    let avatarUrl = '';
+    try {
+      const uploadResult = await uploadToCloudinary(req.file.buffer, 'avatars');
+      avatarUrl = uploadResult.url;
+    } catch (error) {
+      avatarUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    }
+
+    const user = await this.usersService.updateProfile(userId, { avatarUrl });
     res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
   };
 

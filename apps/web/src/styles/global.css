@@ -69,6 +69,7 @@
     --shadow-md: 0 4px 12px rgba(26, 59, 92, 0.06);
     --shadow-lg: 0 12px 32px rgba(26, 59, 92, 0.08);
     --font-serif: var(--font-sans);
+    --font-mono: var(--font-sans);
   }
 
   .dark {
@@ -115,6 +116,7 @@
     --color-brand-hover: #1a3b5c;
     --color-accent: #f26522;
     --font-serif: var(--font-sans);
+    --font-mono: var(--font-sans);
   }
 }
 

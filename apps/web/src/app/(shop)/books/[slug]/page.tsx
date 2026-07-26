@@ -24,6 +24,8 @@ import {
   RotateCcw,
   Truck
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Rating } from '@/components/ui/marketplace';
 import Link from 'next/link';
 import { BookJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
 
@@ -326,17 +328,7 @@ export default function BookDetailPage() {
               </p>
               
               {/* Rating stars summary */}
-              <div className="flex items-center space-x-1.5 pt-1 font-sans text-xs">
-                <div className="flex items-center text-amber-400">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                </div>
-                <span className="font-bold text-text-primary">4.7</span>
-                <span className="text-text-muted hover:underline cursor-pointer">(12,876 ratings)</span>
-              </div>
+              <Rating rating={4.7} count={12876} className="pt-1 text-xs" />
 
               {/* Genre badges */}
               <div className="flex flex-wrap gap-2 pt-2">
@@ -485,25 +477,32 @@ export default function BookDetailPage() {
 
                   {/* Purchase buttons */}
                   <div className="space-y-2 pt-1">
-                    <button
+                    <Button
                       onClick={handleBuyNow}
-                      className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white font-bold rounded text-xs uppercase tracking-widest transition-colors flex items-center justify-center gap-1 shadow-sm"
+                      variant="primary"
+                      fullWidth
+                      className="uppercase tracking-widest text-xs font-bold py-2.5"
                     >
                       ⚡ Buy Now
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={handleAddToCart}
-                      className="w-full py-2.5 border border-brand text-brand hover:bg-brand/5 font-bold rounded text-xs uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5"
+                      variant="outline"
+                      fullWidth
+                      className="uppercase tracking-widest text-xs font-bold py-2.5 border-primary text-primary hover:bg-primary-50"
+                      leftIcon={<ShoppingBag className="h-3.5 w-3.5" />}
                     >
-                      <ShoppingBag className="h-3.5 w-3.5" /> Add to Cart
-                    </button>
+                      Add to Cart
+                    </Button>
 
-                    <button
+                    <Button
                       onClick={handleBuyNow}
-                      className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors"
+                      variant="ghost"
+                      fullWidth
+                      className="bg-slate-900 hover:bg-slate-800 text-white rounded text-[10px] font-bold uppercase tracking-wider py-2"
                     >
-                      Buy with UPI <span className="font-black text-secondary">UPI</span>
-                    </button>
+                      Buy with UPI <span className="font-black text-secondary ml-1">UPI</span>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -926,7 +925,7 @@ export default function BookDetailPage() {
                         try {
                           await addItem(isAuthenticated, relBook, 1);
                           alert(`Added "${relBook.title}" to cart!`);
-                        } catch (err) {
+                        } catch {
                           alert('Failed to add to cart.');
                         }
                       }}

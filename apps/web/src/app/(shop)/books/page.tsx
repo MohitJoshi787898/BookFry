@@ -4,10 +4,14 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
-import { BookCard, SkeletonBookCard } from '@/components/shared/book-card';
+import { BookCard } from '@/components/shared/book-card';
 import { TrustBarItem } from '@/components/shared/trust-bar-item';
 import { apiClient } from '@/lib/api-client';
 import { Book, Category } from '@bookmarket/types';
+import { Button } from '@/components/ui/button';
+import { BookCardSkeleton } from '@/components/ui/loader';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Pagination } from '@/components/ui/navigation';
 import {
   SlidersHorizontal,
   RotateCcw,
@@ -21,12 +25,11 @@ import {
   ShieldCheck,
   Star
 } from 'lucide-react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 function BooksCatalog() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const categoryParam = searchParams.get('category');
   const searchParam = searchParams.get('search');
 
@@ -567,7 +570,7 @@ function BooksCatalog() {
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
                 {Array.from({ length: 12 }).map((_, idx) => (
-                  <SkeletonBookCard key={idx} />
+                  <BookCardSkeleton key={idx} />
                 ))}
               </div>
             ) : isError ? (
@@ -575,38 +578,22 @@ function BooksCatalog() {
                 <p className="text-danger font-medium">
                   Failed to load books. Please check your connection and try again.
                 </p>
-                <button
+                <Button
                   onClick={() => refetch()}
-                  className="mt-4 px-4 py-2 bg-brand text-white rounded hover:bg-brand-hover text-sm font-medium"
+                  className="mt-4"
+                  size="sm"
                 >
                   Try Again
-                </button>
+                </Button>
               </div>
             ) : booksData.books.length === 0 ? (
-              <div className="text-center py-16 border border-border rounded-2xl bg-card space-y-4">
-                <div className="mx-auto h-28 w-28 rounded-full overflow-hidden bg-background-subtle flex items-center justify-center border border-border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/fox_searching_1784911502225.jpg"
-                    alt="Fox searching"
-                    className="w-full h-full object-cover select-none"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-serif text-lg font-bold text-text-primary">
-                    No books found
-                  </h3>
-                  <p className="text-xs text-text-secondary max-w-xs mx-auto mt-1 leading-relaxed">
-                    We couldn&apos;t find any books matching your search criteria. Try modifying your search query or filters.
-                  </p>
-                </div>
-                <button
-                  onClick={handleReset}
-                  className="px-4 py-2 bg-[#F26522] hover:bg-[#e05310] text-white rounded-lg text-xs font-bold transition-all shadow-sm"
-                >
-                  Clear All Filters
-                </button>
-              </div>
+              <EmptyState
+                type="search"
+                title="No books found"
+                description="We couldn't find any books matching your search criteria. Try modifying your search query or filters."
+                actionText="Clear All Filters"
+                onActionClick={handleReset}
+              />
             ) : (
               <>
                 {/* 6-Column Book Grid on Desktop */}
@@ -631,55 +618,11 @@ function BooksCatalog() {
                       Showing {(page - 1) * 18 + 1} - {Math.min(page * 18, booksData.total)} of {booksData.total} results
                     </p>
                     
-                    <div className="flex items-center space-x-1.5 text-xs select-none">
-                      <button
-                        disabled={page === 1}
-                        onClick={() => setPage(page - 1)}
-                        className="px-3.5 py-1.5 rounded-lg border border-border bg-card text-text-secondary hover:bg-background-subtle disabled:opacity-40 font-bold focus:outline-none transition-colors shadow-2xs"
-                      >
-                        Prev
-                      </button>
-                      
-                      {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
-                        const pageNum = idx + 1;
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setPage(pageNum)}
-                            className={`px-3 py-1.5 rounded-lg border font-bold transition-all shadow-2xs ${
-                              page === pageNum
-                                ? 'bg-[#F26522] text-white border-[#F26522]'
-                                : 'border-border bg-card hover:bg-background-subtle text-text-secondary'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                      
-                      {totalPages > 5 && <span className="text-text-muted px-1">...</span>}
-                      
-                      {totalPages > 5 && (
-                        <button
-                          onClick={() => setPage(totalPages)}
-                          className={`px-3 py-1.5 rounded-lg border font-bold transition-all shadow-2xs ${
-                            page === totalPages
-                              ? 'bg-[#F26522] text-white border-[#F26522]'
-                              : 'border-border bg-card hover:bg-background-subtle text-text-secondary'
-                          }`}
-                        >
-                          {totalPages}
-                        </button>
-                      )}
-
-                      <button
-                        disabled={page === totalPages}
-                        onClick={() => setPage(page + 1)}
-                        className="px-3.5 py-1.5 rounded-lg border border-border bg-card text-text-secondary hover:bg-background-subtle disabled:opacity-40 font-bold focus:outline-none transition-colors shadow-2xs"
-                      >
-                        Next
-                      </button>
-                    </div>
+                    <Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onPageChange={setPage}
+                    />
                   </div>
                 )}
               </>

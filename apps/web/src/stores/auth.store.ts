@@ -17,19 +17,27 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       accessToken: null,
       isAuthenticated: false,
-      setAuth: (user, accessToken) =>
+      setAuth: (user, accessToken) => {
+        if (typeof window !== 'undefined') {
+          document.cookie = 'bookmarket_logged_in=true; path=/; max-age=604800; SameSite=Lax';
+        }
         set({
           user,
           accessToken,
           isAuthenticated: true,
-        }),
+        });
+      },
       setUser: (user) => set({ user }),
-      clearAuth: () =>
+      clearAuth: () => {
+        if (typeof window !== 'undefined') {
+          document.cookie = 'bookmarket_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
         set({
           user: null,
           accessToken: null,
           isAuthenticated: false,
-        }),
+        });
+      },
     }),
     {
       name: 'bookmarket-auth',

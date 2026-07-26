@@ -5,12 +5,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signupSchema, SignupFormData } from '@/lib/validations/auth-schemas';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
+import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 import { PasswordStrength } from './password-strength';
 import { apiClient } from '@/lib/api-client';
 import { Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
 
 export function SignupForm() {
   const { setScreen, setUserEmail } = useAuthModalStore();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -31,7 +34,7 @@ export function SignupForm() {
   const onSubmit = async (values: SignupFormData) => {
     setApiError(null);
     try {
-      await apiClient('/auth/register', {
+      const data = await apiClient('/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           name: values.name,
@@ -40,6 +43,9 @@ export function SignupForm() {
           roles: ['customer', 'seller'],
         }),
       });
+
+      setAuth(data.user, data.accessToken);
+      await useCartStore.getState().syncCart();
 
       setUserEmail(values.email);
       setScreen('verify_email');

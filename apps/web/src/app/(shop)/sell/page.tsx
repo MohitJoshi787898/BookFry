@@ -16,6 +16,7 @@ import { EarningsCalculatorCard } from '@/components/sell/earnings-calculator-ca
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Book } from '@bookmarket/types';
+import { Button } from '@/components/ui/button';
 import {
   BookOpen,
   DollarSign,
@@ -31,7 +32,6 @@ import {
   Camera,
   Bookmark,
   Check,
-  ThumbsUp,
   Percent,
   MessageSquare,
 } from 'lucide-react';
@@ -469,7 +469,16 @@ function SellBookPageInner() {
             )}
 
             {/* Form Steps fields */}
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onSubmit, (errs) => {
+              console.error('Form validation errors:', errs);
+              const errMsg = Object.keys(errs)
+                .map((key) => {
+                  const error = errs[key as keyof typeof errs];
+                  return `- ${error?.message || 'Invalid value'}`;
+                })
+                .join('\n');
+              alert(`Please check the following validation errors before publishing:\n\n${errMsg}`);
+            })}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentStep}
@@ -1000,45 +1009,39 @@ function SellBookPageInner() {
                   {/* Navigation steps buttons */}
                   <div className="pt-6 border-t border-border flex justify-between items-center">
                     {currentStep > 1 ? (
-                      <button
+                      <Button
                         type="button"
                         onClick={prevStep}
-                        className="px-5 py-2.5 border border-border rounded-xl text-xs font-bold text-text-primary hover:bg-background-subtle transition-colors flex items-center space-x-1.5 transition-all active:scale-95"
+                        variant="outline"
+                        leftIcon={<ArrowLeft className="h-4 w-4" />}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold"
                       >
-                        <ArrowLeft className="h-4 w-4" />
-                        <span>Back</span>
-                      </button>
+                        Back
+                      </Button>
                     ) : (
                       <div />
                     )}
 
                     {currentStep < STEPS.length ? (
-                      <button
+                      <Button
                         type="button"
                         onClick={nextStep}
-                        className="px-6 py-2.5 bg-[#F26522] hover:bg-[#e05310] text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center space-x-1.5 active:scale-95"
+                        variant="secondary"
+                        rightIcon={<ArrowRight className="h-4 w-4" />}
+                        className="px-6 py-2.5 rounded-xl text-xs font-bold"
                       >
-                        <span>Continue</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
+                        Continue
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="px-8 py-3 bg-[#F26522] hover:bg-[#e05310] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center space-x-2 active:scale-95"
+                        loading={isSubmitting}
+                        variant="secondary"
+                        rightIcon={<Sparkles className="h-4 w-4 text-accent" />}
+                        className="px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-wider"
                       >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin text-white" />
-                            <span>Publishing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Post Book For Sale</span>
-                            <Sparkles className="h-4 w-4 text-accent" />
-                          </>
-                        )}
-                      </button>
+                        Post Book For Sale
+                      </Button>
                     )}
                   </div>
                 </motion.div>

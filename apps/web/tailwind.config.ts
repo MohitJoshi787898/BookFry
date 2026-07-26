@@ -87,7 +87,7 @@ const config: Config = {
       fontFamily: {
         serif: ['var(--font-sans)', 'sans-serif'],
         sans: ['var(--font-sans)', 'sans-serif'],
-        mono: ['var(--font-mono)', 'monospace'],
+        mono: ['var(--font-sans)', 'sans-serif'],
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

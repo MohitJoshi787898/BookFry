@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Order } from "@bookmarket/types";
+import { Button } from "@/components/ui/button";
 
 const shippingSchema = z.object({
   street: z.string().min(3, "Street address is required"),
@@ -442,13 +443,15 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <button
+                  <Button
                     type="submit"
-                    className="w-full py-3 bg-brand text-white font-semibold rounded hover:bg-brand-hover transition-all duration-120 flex items-center justify-center space-x-2 font-sans"
+                    variant="primary"
+                    fullWidth
+                    rightIcon={<ArrowRight className="h-4 w-4" />}
+                    className="py-3 text-xs font-bold rounded-lg"
                   >
-                    <span>Proceed to Payment</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                    Proceed to Payment
+                  </Button>
                 </form>
               ) : (
                 <form
@@ -554,29 +557,25 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4 font-sans">
-                    <button
+                  <div className="flex gap-4 font-sans w-full">
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => setStep("shipping")}
-                      className="w-1/3 py-3 border border-border rounded hover:bg-background-subtle font-semibold text-text-secondary text-sm"
+                      className="w-1/3 py-3 border border-border text-xs font-bold"
                       disabled={isLoading}
                     >
                       Back
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      className="w-2/3 py-3 bg-brand text-white font-semibold rounded hover:bg-brand-hover transition-all duration-120 flex items-center justify-center space-x-2"
-                      disabled={isLoading}
+                      loading={isLoading}
+                      variant="primary"
+                      className="w-2/3 py-3 text-xs font-bold"
+                      leftIcon={<ShieldCheck className="h-4 w-4" />}
                     >
-                      {isLoading ? (
-                        <span>Processing Order...</span>
-                      ) : (
-                        <>
-                          <ShieldCheck className="h-4 w-4" />
-                          <span>Pay ${total.toFixed(2)}</span>
-                        </>
-                      )}
-                    </button>
+                      Pay ₹{total.toFixed(2)}
+                    </Button>
                   </div>
                 </form>
               )}

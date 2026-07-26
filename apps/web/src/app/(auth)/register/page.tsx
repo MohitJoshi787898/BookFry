@@ -12,21 +12,23 @@ import { apiClient } from "@/lib/api-client";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import {
-  Loader2,
-  Eye,
-  EyeOff,
   Mail,
   Lock,
   User,
   Tag,
   ShieldCheck,
   BookOpen,
-  Chrome,
-  Facebook,
-  Apple,
   RotateCcw,
   Truck,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card } from "@/components/ui/card";
+import {
+  SocialLogins,
+  PasswordStrengthIndicator,
+} from "@/components/ui/auth-components";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -39,16 +41,17 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
-  const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   });
+  const passwordVal = watch("password");
 
   const onSubmit = async (values: RegisterFormValues) => {
     setApiError(null);
@@ -68,27 +71,27 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FB]">
+    <div className="flex flex-col min-h-screen bg-[#F8F9FB] dark:bg-background text-text-primary">
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         {/* Main signup container card */}
-        <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 rounded-2xl border border-border bg-white overflow-hidden shadow-xs">
-          {/* A. Left Column (Warm Cream Background) */}
-          <div className="bg-[#FEF8F3] p-8 flex flex-col items-center justify-between text-center border-b md:border-b-0 md:border-r border-border">
+        <Card className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden shadow-md border-border bg-white dark:bg-card">
+          {/* A. Left Column (Warm Cream Background / Dark Slate) */}
+          <div className="bg-[#FEF8F3] dark:bg-primary-950/15 p-8 flex flex-col items-center justify-between text-center border-b md:border-b-0 md:border-r border-border">
             {/* Mascot Image */}
-            <div className="w-full max-w-[220px] aspect-square flex items-center justify-center">
+            <div className="w-full max-w-[220px] aspect-square flex items-center justify-center bg-white/40 dark:bg-white/95 rounded-2xl p-4 shadow-xs select-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/fox_reading_17849114865545.png"
+                src="/fox_reading_178491148655455.png"
                 alt="BookFry Fox Reading Mascot"
-                className="w-full h-full object-contain mix-blend-multiply select-none"
+                className="w-full h-full object-contain select-none"
               />
             </div>
 
             {/* Editorial headings */}
             <div className="space-y-2 mt-4">
-              <h2 className="font-serif text-2xl font-bold text-[#1A3B5C]">
+              <h2 className="font-serif text-2xl font-bold text-[#1A3B5C] dark:text-[#85B7E5]">
                 Join BookFry Today
               </h2>
               <p className="text-xs text-text-secondary font-sans font-medium">
@@ -99,7 +102,7 @@ export default function RegisterPage() {
             {/* Trust points list */}
             <div className="w-full space-y-3.5 pt-6 border-t border-border/60 mt-6 font-sans text-xs text-left">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] border border-[#FFF0E8] flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
                   <Tag className="h-4 w-4 text-[#F26522]" />
                 </div>
                 <div>
@@ -109,7 +112,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] border border-[#FFF0E8] flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
                   <ShieldCheck className="h-4 w-4 text-[#F26522]" />
                 </div>
                 <div>
@@ -119,7 +122,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] border border-[#FFF0E8] flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
                   <BookOpen className="h-4 w-4 text-[#F26522]" />
                 </div>
                 <div>
@@ -132,10 +135,10 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* B. Right Column (White Form Panel) */}
-          <div className="bg-white p-8 flex flex-col justify-center space-y-6 font-sans">
+          {/* B. Right Column (White Form Panel / Dark Card) */}
+          <div className="bg-white dark:bg-card p-8 flex flex-col justify-center space-y-6 font-sans">
             <div className="space-y-1.5">
-              <h1 className="font-serif text-2xl font-bold text-[#1A3B5C]">
+              <h1 className="font-serif text-2xl font-bold text-[#1A3B5C] dark:text-[#85B7E5]">
                 Create your account
               </h1>
               <p className="text-xs text-text-secondary font-medium">
@@ -149,121 +152,82 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <form
-              className="space-y-4 text-xs"
-              onSubmit={handleSubmit(onSubmit)}
-            >
+            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
               {/* Full Name */}
-              <div className="space-y-1">
-                <label className="font-bold text-text-secondary">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter your full name"
-                    {...register("name")}
-                    className={`w-full pl-9 pr-3 py-2.5 border rounded-lg bg-slate-50/50 text-text-primary focus:outline-none focus:ring-1 focus:ring-[#F26522] ${
-                      errors.name ? "border-danger" : "border-border"
-                    }`}
-                  />
-                </div>
-                {errors.name && (
-                  <p className="text-[10px] text-danger font-bold mt-0.5">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
+              <Input
+                label="Full Name"
+                type="text"
+                required
+                placeholder="Enter your full name"
+                leftIcon={<User className="h-4 w-4" />}
+                error={errors.name?.message}
+                {...register("name")}
+              />
 
               {/* Email Address */}
-              <div className="space-y-1">
-                <label className="font-bold text-text-secondary">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="Enter your email address"
-                    {...register("email")}
-                    className={`w-full pl-9 pr-3 py-2.5 border rounded-lg bg-slate-50/50 text-text-primary focus:outline-none focus:ring-1 focus:ring-[#F26522] ${
-                      errors.email ? "border-danger" : "border-border"
-                    }`}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-[10px] text-danger font-bold mt-0.5">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
+              <Input
+                label="Email Address"
+                type="email"
+                required
+                placeholder="Enter your email address"
+                leftIcon={<Mail className="h-4 w-4" />}
+                error={errors.email?.message}
+                {...register("email")}
+              />
 
               {/* Password Address */}
-              <div className="space-y-1">
-                <label className="font-bold text-text-secondary">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Create a strong password"
-                    {...register("password")}
-                    className={`w-full pl-9 pr-10 py-2.5 border rounded-lg bg-slate-50/50 text-text-primary focus:outline-none focus:ring-1 focus:ring-[#F26522] ${
-                      errors.password ? "border-danger" : "border-border"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-primary"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-[10px] text-danger font-bold mt-0.5">
-                    {errors.password.message}
-                  </p>
-                )}
+              <div className="space-y-2">
+                <Input
+                  label="Password"
+                  type="password"
+                  required
+                  placeholder="Create a strong password"
+                  leftIcon={<Lock className="h-4 w-4" />}
+                  error={errors.password?.message}
+                  {...register("password")}
+                />
+                <PasswordStrengthIndicator password={passwordVal} />
               </div>
 
               {/* Terms checkbox */}
               <div className="pt-1">
-                <label className="flex items-start space-x-2 cursor-pointer font-bold text-text-secondary leading-normal">
-                  <input
-                    type="checkbox"
-                    required
-                    className="mt-0.5 rounded border-border text-brand focus:ring-brand accent-[#F26522]"
-                  />
-                  <span>I agree to the Terms of Service & Privacy Policy</span>
-                </label>
+                <Checkbox
+                  required
+                  label={
+                    <span className="font-semibold text-text-secondary select-none">
+                      I agree to the{" "}
+                      <Link
+                        href="/terms"
+                        className="text-secondary hover:underline"
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      &{" "}
+                      <Link
+                        href="/privacy"
+                        className="text-secondary hover:underline"
+                      >
+                        Privacy Policy
+                      </Link>
+                    </span>
+                  }
+                />
               </div>
 
               {/* Submit button */}
-              <button
+              <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full py-2.5 bg-[#F26522] hover:bg-[#e05310] text-white font-bold rounded-lg uppercase tracking-wider transition-colors shadow-xs flex items-center justify-center gap-1.5"
+                loading={isSubmitting}
+                variant="secondary"
+                fullWidth
+                className="uppercase tracking-wider py-2.5 text-xs font-bold rounded-lg"
               >
-                {isSubmitting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  "Create Account"
-                )}
-              </button>
+                Create Account
+              </Button>
             </form>
 
             {/* Divider */}
-            <div className="relative flex py-1 items-center">
+            <div className="relative flex py-1 items-center font-sans">
               <div className="flex-grow border-t border-border" />
               <span className="flex-shrink mx-4 text-[10px] font-bold text-text-muted uppercase">
                 or continue with
@@ -272,17 +236,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Social log buttons */}
-            <div className="grid grid-cols-3 gap-3 text-xs font-bold font-sans">
-              <button className="flex items-center justify-center gap-1.5 py-2 border border-border rounded-lg bg-white hover:bg-slate-50 transition-all shadow-xs">
-                <Chrome className="h-3.5 w-3.5 text-red-500" /> Google
-              </button>
-              <button className="flex items-center justify-center gap-1.5 py-2 border border-border rounded-lg bg-white hover:bg-slate-50 transition-all shadow-xs">
-                <Facebook className="h-3.5 w-3.5 text-blue-600" /> Facebook
-              </button>
-              <button className="flex items-center justify-center gap-1.5 py-2 border border-border rounded-lg bg-white hover:bg-slate-50 transition-all shadow-xs">
-                <Apple className="h-3.5 w-3.5 text-slate-900" /> Apple
-              </button>
-            </div>
+            <SocialLogins />
 
             {/* Sign in bottom link */}
             <p className="text-center text-xs font-medium text-text-secondary">
@@ -295,15 +249,15 @@ export default function RegisterPage() {
               </Link>
             </p>
           </div>
-        </div>
+        </Card>
       </main>
 
       {/* Horizontal Trust bar */}
-      <div className="bg-white border-t border-b border-border/60 py-5 font-sans">
+      <div className="bg-white dark:bg-card border-t border-b border-border/60 py-5 font-sans">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-center justify-between text-left">
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] border border-[#FFF0E8] flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
                 <Tag className="h-5 w-5 text-[#F26522]" />
               </div>
               <div>
@@ -317,7 +271,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] border border-[#FFF0E8] flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
                 <Truck className="h-5 w-5 text-[#F26522]" />
               </div>
               <div>
@@ -331,7 +285,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] border border-[#FFF0E8] flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
                 <ShieldCheck className="h-5 w-5 text-[#F26522]" />
               </div>
               <div>
@@ -345,7 +299,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] border border-[#FFF0E8] flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
                 <RotateCcw className="h-5 w-5 text-[#F26522]" />
               </div>
               <div>

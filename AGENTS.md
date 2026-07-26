@@ -34,6 +34,8 @@ Before modifying or creating any file, every AI agent **MUST** read and obey:
 | **Server State & Data Fetching** | TanStack Query (`useQuery`, `useMutation`) — **NEVER use `useEffect` + `fetch` for API data fetching** |
 | **Animations & Motion** | Framer Motion (Smooth, accessible micro-interactions) |
 | **Form Management & Validation** | React Hook Form + Zod Validation Schemas |
+| **Payments** | Razorpay Standard Web Checkout (active via NEXT_PUBLIC_RAZORPAY_KEY_ID; backend verification runs inside MongoDB transactions) |
+
 
 ---
 
@@ -166,6 +168,7 @@ When an unauthenticated user triggers seller or account actions (*Sell Books*, *
    - Email Verification Screen (Inbox check + 60s Resend Timer).
    - Reset Password Screen (New Password + Confirm Password + Strength Rules).
 3. **Real-time Password Strength Meter**: Required on all signup and password reset forms.
+4. **User Session Persistence**: On boot, the frontend checks if `isAuthenticated` is true, querying `/auth/me` to sync the latest database profile details. If this query fails with a 401, it clears local credentials automatically to maintain sync.
 
 ---
 

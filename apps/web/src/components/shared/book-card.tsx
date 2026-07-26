@@ -12,7 +12,7 @@ interface BookCardProps {
   compact?: boolean;
 }
 
-export function BookCard({ book, compact = false }: BookCardProps) {
+export function BookCard({ book }: BookCardProps) {
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
   const [added, setAdded] = useState(false);

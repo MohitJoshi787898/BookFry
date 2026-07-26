@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Search, ArrowRight, BookOpen, Tag, ShieldCheck } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth.store';
-import { useAuthModalStore } from '@/stores/auth-modal.store';
-import { StatItem } from '../shared/stat-item';
-import { SearchPillChip } from '../shared/search-pill-chip';
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Search, ArrowRight, BookOpen, Tag, ShieldCheck } from "lucide-react";
+import { useAuthStore } from "@/stores/auth.store";
+import { useAuthModalStore } from "@/stores/auth-modal.store";
+import { StatItem } from "../shared/stat-item";
+import { SearchPillChip } from "../shared/search-pill-chip";
 
 export function HeroSection() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,14 +23,14 @@ export function HeroSection() {
   };
 
   const quickTags = [
-    { label: 'Engineering', href: '/books?category=engineering' },
-    { label: 'NEET Books', href: '/books?search=NEET' },
-    { label: 'JEE Main', href: '/books?search=JEE' },
-    { label: 'Class 12', href: '/books?search=Class+12' },
-    { label: 'CA Books', href: '/books?search=CA' },
-    { label: 'UPSC', href: '/books?search=UPSC' },
-    { label: 'Novels', href: '/books?category=fiction' },
-    { label: 'B.Sc. Books', href: '/books?search=B.Sc' },
+    { label: "Engineering", href: "/books?category=engineering" },
+    { label: "NEET Books", href: "/books?search=NEET" },
+    { label: "JEE Main", href: "/books?search=JEE" },
+    { label: "Class 12", href: "/books?search=Class+12" },
+    { label: "CA Books", href: "/books?search=CA" },
+    { label: "UPSC", href: "/books?search=UPSC" },
+    { label: "Novels", href: "/books?category=fiction" },
+    { label: "B.Sc. Books", href: "/books?search=B.Sc" },
   ];
 
   return (
@@ -40,7 +40,6 @@ export function HeroSection() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          
           {/* Left Column: Editorial Copy */}
           <div className="lg:col-span-4 space-y-6 text-center lg:text-left">
             <motion.div
@@ -100,7 +99,7 @@ export function HeroSection() {
                 onClick={(e) => {
                   if (!isAuthenticated) {
                     e.preventDefault();
-                    useAuthModalStore.getState().openModal('login', '/sell');
+                    useAuthModalStore.getState().openModal("login", "/sell");
                   }
                 }}
                 className="w-full sm:w-auto rounded-lg border border-[#F26522] text-[#F26522] bg-white dark:bg-transparent dark:text-secondary dark:hover:bg-white/5 px-6 py-3 text-xs font-bold shadow-xs hover:bg-[#FFF5F0] transition-all flex items-center justify-center space-x-1.5"
@@ -114,7 +113,11 @@ export function HeroSection() {
             <div className="pt-6 border-t border-border/60 flex flex-wrap gap-4 items-center justify-between font-sans">
               <StatItem icon={BookOpen} value="50,000+" label="Books Listed" />
               <StatItem icon={Tag} value="₹1.2Cr+" label="Saved by Students" />
-              <StatItem icon={ShieldCheck} value="99.4%" label="Verified Quality" />
+              <StatItem
+                icon={ShieldCheck}
+                value="99.4%"
+                label="Verified Quality"
+              />
             </div>
           </div>
 
@@ -132,7 +135,7 @@ export function HeroSection() {
             <div className="relative w-full max-w-[340px] aspect-square flex items-center justify-center rounded-2xl dark:bg-card dark:border dark:border-border/60 p-4 transition-colors">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/fox_reading_17849114865545.png"
+                src="/fox_reading_178491148655455.png"
                 alt="BookFry Mascot Wise Fox Reading"
                 className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal select-none"
               />

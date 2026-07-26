@@ -21,7 +21,7 @@ Not a CRUD toy. Treat every module as production software: validate inputs, hand
 | Auth           | JWT (access + refresh), httpOnly cookies                                                                     |
 | File storage   | Cloudinary (book cover images)                                                                               |
 | Realtime       | Socket.io (order status, seller notifications, chat — future)                                                |
-| Payments       | Razorpay/Stripe (behind a `PaymentProvider` interface — do not hardcode a single vendor into business logic) |
+| Payments       | Razorpay Standard Web Checkout (active via NEXT_PUBLIC_RAZORPAY_KEY_ID; backend verification runs inside MongoDB transactions) |
 | Deployment     | Frontend → Vercel. Backend → Docker container on Railway/Render/EC2. DB → MongoDB Atlas.                     |
 | Testing        | Vitest/Jest (unit), Supertest (API), Playwright (E2E)                                                        |
 
@@ -81,6 +81,7 @@ Never mark a task done without running `pnpm lint`, `pnpm typecheck`, and releva
 - **Frontend data fetching**: use TanStack Query for all server data. No `useEffect` + `fetch` data-fetching patterns.
 - **Components**: Server Components by default; add `"use client"` only when interactivity/state is required. Break down screens into small, single-responsibility reusable components (e.g. `AnnouncementBar`, `BookCard`, `BookCarousel`, `QuickFilterBar`, `CategoryGrid`, `TestimonialsSection`, `NewsletterSection`).
 - **Design System & Styling**: Follow tokens and principles in `DESIGN.md`. Use CSS variables in `globals.css` via Tailwind design tokens (`bg-background`, `text-text-primary`, `bg-brand`, `text-accent`, etc.). Never hardcode hex colors in UI components. Always include skeleton loaders, empty states, and responsive styling for both Light and Dark modes.
+- **User Session Persistence**: On boot, the frontend checks if `isAuthenticated` is true, querying `/auth/me` to sync the latest database profile details. If this query fails with a 401, it clears local credentials automatically to maintain sync.
 - **Secrets**: never commit `.env`. Add new env vars to `.env.example` in the same PR.
 - **Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`).
 

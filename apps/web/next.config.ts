@@ -1,7 +1,74 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      // Amazon product images (book covers from Amazon)
+      {
+        protocol: "https",
+        hostname: "m.media-amazon.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images-na.ssl-images-amazon.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images-eu.ssl-images-amazon.com",
+        pathname: "/**",
+      },
+      // Cloudinary (avatar & book image uploads)
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+      // Gravatar (user avatars)
+      {
+        protocol: "https",
+        hostname: "www.gravatar.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "gravatar.com",
+        pathname: "/**",
+      },
+      // Google user profile photos
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+      // Open Library (book cover fallbacks)
+      {
+        protocol: "https",
+        hostname: "covers.openlibrary.org",
+        pathname: "/**",
+      },
+      // Picsum placeholder images (dev/testing)
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+        pathname: "/**",
+      },
+      // UI Avatars (generated initials avatars)
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+        pathname: "/**",
+      },
+      // Local API server (dev uploads served statically)
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "5005",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

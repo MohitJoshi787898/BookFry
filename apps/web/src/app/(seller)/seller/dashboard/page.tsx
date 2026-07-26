@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { apiClient } from '@/lib/api-client';
@@ -12,23 +12,13 @@ import {
   Package,
   ShoppingBag,
   TrendingUp,
-  ArrowRight,
   BookOpen,
-  Calendar,
   Search,
-  Filter,
   Eye,
-  Edit2,
   Archive,
-  Star,
-  ThumbsUp,
-  MessageSquare,
-  ChevronDown,
   Settings,
   Plus,
   Loader2,
-  BookMarked,
-  Info,
   CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
@@ -47,7 +37,7 @@ export default function SellerDashboardPage() {
   const [isbn, setIsbn] = useState('');
   const [publisher, setPublisher] = useState('');
   const [category, setCategory] = useState('');
-  const [language, setLanguage] = useState('English');
+  const [language] = useState('English');
   const [condition, setCondition] = useState<'excellent' | 'good' | 'fair' | 'poor'>('good');
   const [price, setPrice] = useState('');
   const [comparePrice, setComparePrice] = useState('');

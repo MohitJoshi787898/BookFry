@@ -9,13 +9,12 @@ import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { User, Address, Book } from '@bookmarket/types';
+import { User, Address, Book, Order } from '@bookmarket/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trash2,
   Plus,
   Minus,
-  ShoppingBag,
   ArrowLeft,
   MapPin,
   Compass,
@@ -23,7 +22,6 @@ import {
   AlertCircle,
   X,
   Check,
-  Percent,
   ChevronDown,
   ChevronUp,
   Tag,
@@ -34,9 +32,22 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 export default function CartPage() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const { items, isLoading: isCartLoading, updateQuantity, removeItem, fetchCart } = useCartStore();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -157,7 +168,8 @@ export default function CartPage() {
   // Checkout Mutation
   const checkoutMutation = useMutation({
     mutationFn: async (address: Address) => {
-      const order = await apiClient('/orders', {
+      // 1. Create order
+      const order = await apiClient<Order>('/orders', {
         method: 'POST',
         body: JSON.stringify({
           shippingAddress: {
@@ -170,25 +182,97 @@ export default function CartPage() {
         }),
       });
 
-      // Trigger mock payment verification automatically in sandbox mode
-      const mockPaymentId = `pay_mock_${Math.random().toString(36).substring(2, 10)}`;
-      await apiClient('/payments/verify', {
+      // 2. Create payment intent
+      const paymentIntent = await apiClient<{
+        id: string;
+        clientSecret: string;
+        keyId?: string;
+        amount?: number;
+        currency?: string;
+      }>('/payments/create-intent', {
         method: 'POST',
         body: JSON.stringify({
           orderId: order.id,
-          razorpay_payment_id: mockPaymentId,
         }),
       });
 
-      return order;
+      // 3. Trigger Razorpay standard payment modal
+      if (paymentIntent && paymentIntent.keyId) {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+        }
+
+        return new Promise<{ order: Order; verifyRes: unknown }>((resolve, reject) => {
+          const options = {
+            key: paymentIntent.keyId,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency || 'INR',
+            name: 'BookFry',
+            description: 'Purchase Academic Textbooks',
+            image: '/logo.jpeg',
+            order_id: paymentIntent.id,
+            handler: async function (response: {
+              razorpay_order_id: string;
+              razorpay_payment_id: string;
+              razorpay_signature: string;
+            }) {
+              try {
+                const verifyRes = await apiClient('/payments/verify', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    orderId: order.id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                  }),
+                });
+                resolve({ order, verifyRes });
+              } catch (verifyErr) {
+                reject(verifyErr);
+              }
+            },
+            prefill: {
+              name: user?.name || '',
+              email: user?.email || '',
+            },
+            theme: {
+              color: '#1A3B5C',
+            },
+            modal: {
+              ondismiss: function () {
+                reject(new Error('Payment cancelled by user.'));
+              },
+            },
+          };
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+        });
+      } else {
+        // Fallback simulated mock payment confirmation
+        const verifyRes = await apiClient('/payments/verify', {
+          method: 'POST',
+          body: JSON.stringify({
+            orderId: order.id,
+            razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 10)}`,
+          }),
+        });
+        return { order, verifyRes };
+      }
     },
-    onSuccess: (res) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       useCartStore.getState().fetchCart(true);
-      setPlacedOrder(res);
+      setPlacedOrder(data.order);
       setIsCheckoutModalOpen(true);
       setIsMobileSummaryOpen(false);
     },
+    onError: (err: unknown) => {
+      const errMsg = err instanceof Error ? err.message : 'Checkout failed. Please try again.';
+      alert(errMsg);
+    }
   });
 
   const resetAddressForm = () => {
@@ -472,7 +556,7 @@ export default function CartPage() {
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             
             {/* Left Items Section Container */}
-            <div className="flex-grow w-full space-y-5">
+            <div className="flex-grow w-full min-w-0 space-y-5">
               
               {/* Delivery Progress Bar Card */}
               <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs">
@@ -606,63 +690,77 @@ export default function CartPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
                         transition={{ duration: 0.2 }}
-                        className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs flex gap-4 sm:gap-5"
+                        className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row gap-4 sm:gap-5"
                       >
-                        {/* Book Image */}
-                        <div className="h-28 w-20 sm:h-32 sm:w-22 bg-background-subtle rounded-xl overflow-hidden shrink-0 border border-border shadow-2xs group cursor-pointer relative">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={imageUrl}
-                            alt={book.title}
-                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                'https://placehold.co/100x150/16523d/ffffff?text=' +
-                                encodeURIComponent(book.title);
-                            }}
-                          />
-                        </div>
+                        {/* Left column: Image & Details */}
+                        <div className="flex flex-grow gap-4 sm:gap-5 min-w-0">
+                          {/* Book Image */}
+                          <div className="h-28 w-20 sm:h-32 sm:w-22 bg-background-subtle rounded-xl overflow-hidden shrink-0 border border-border shadow-2xs group cursor-pointer relative">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={imageUrl}
+                              alt={book.title}
+                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src =
+                                  'https://placehold.co/100x150/16523d/ffffff?text=' +
+                                  encodeURIComponent(book.title);
+                              }}
+                            />
+                          </div>
 
-                        {/* Book details column */}
-                        <div className="flex-grow flex flex-col justify-between min-w-0">
-                          <div>
-                            <div className="flex justify-between items-start gap-2">
+                          {/* Book details */}
+                          <div className="flex-grow flex flex-col justify-between min-w-0">
+                            <div>
                               <Link
                                 href={`/books/${book.slug}`}
                                 className="font-sans text-xs sm:text-sm font-bold text-text-primary hover:text-secondary transition-colors line-clamp-2 leading-snug"
                               >
                                 {book.title}
                               </Link>
-                              <button
-                                onClick={() => handleRemove(item.bookId)}
-                                disabled={isCartLoading}
-                                className="p-1 hover:bg-background-subtle rounded-full text-text-muted hover:text-danger transition-colors shrink-0"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                              <p className="text-[10px] sm:text-xs text-text-secondary mt-0.5">
+                                by {book.author}
+                              </p>
+                              
+                              <div className="flex flex-wrap gap-2.5 items-center mt-2.5 select-none">
+                                <span className="inline-flex items-center rounded-lg bg-[#FFF9F6] border border-[#F26522]/20 px-2 py-0.5 text-[9px] font-bold text-secondary uppercase">
+                                  {book.condition.replace('_', ' ')}
+                                </span>
+                                <span className="text-[10px] text-text-secondary font-medium flex items-center gap-1">
+                                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                  <span>Verified Seller</span>
+                                </span>
+                                <span className="text-[10px] text-text-secondary font-medium flex items-center gap-1">
+                                  <Clock className="h-3.5 w-3.5 text-secondary" />
+                                  <span>Delivered in 2-4 Days</span>
+                                </span>
+                              </div>
                             </div>
-                            <p className="text-[10px] sm:text-xs text-text-secondary mt-0.5">
-                              by {book.author}
-                            </p>
-                            
-                            <div className="flex flex-wrap gap-2.5 items-center mt-2 select-none">
-                              <span className="inline-flex items-center rounded-lg bg-[#FFF9F6] border border-[#F26522]/20 px-2 py-0.5 text-[9px] font-bold text-secondary uppercase">
-                                {book.condition.replace('_', ' ')}
+                          </div>
+                        </div>
+
+                        {/* Right column: Price & Actions */}
+                        <div className="flex md:flex-col justify-between items-end gap-4 pt-3 md:pt-0 border-t md:border-t-0 md:border-l border-border md:pl-5 shrink-0 min-w-full md:min-w-[170px]">
+                          {/* Price details */}
+                          <div className="text-right">
+                            <div className="flex items-center justify-end space-x-1.5">
+                              <span className="text-xs text-text-muted line-through font-medium">
+                                ₹{(item.priceSnapshot * item.quantity * 1.25).toFixed(2)}
                               </span>
-                              <span className="text-[10px] text-text-secondary font-medium flex items-center gap-1">
-                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                <span>Verified Seller</span>
+                              <span className="text-sm font-bold text-text-primary">
+                                ₹{(item.priceSnapshot * item.quantity).toFixed(2)}
                               </span>
-                              <span className="text-[10px] text-text-secondary font-medium flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5 text-secondary" />
-                                <span>Delivered in 2-4 Days</span>
+                            </div>
+                            <div className="flex items-center justify-end gap-1 mt-0.5">
+                              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-1 rounded">20% OFF</span>
+                              <span className="text-[9px] text-text-muted">
+                                (₹{item.priceSnapshot.toFixed(2)} each)
                               </span>
                             </div>
                           </div>
 
-                          {/* Stepper + Prices Row */}
-                          <div className="flex items-center justify-between gap-4 mt-4 pt-3 border-t border-border/40">
-                            {/* Quantity Stepper */}
+                          {/* Stepper and Delete controls */}
+                          <div className="flex items-center gap-3 w-full justify-between md:justify-end">
                             <div className="flex items-center border border-border rounded-xl bg-background overflow-hidden">
                               <button
                                 onClick={() =>
@@ -687,25 +785,15 @@ export default function CartPage() {
                               </button>
                             </div>
 
-                            {/* Price display tags */}
-                            <div className="text-right shrink-0">
-                              <div className="flex items-center justify-end space-x-1.5">
-                                <span className="text-xs text-text-muted line-through font-medium">
-                                  ₹{(item.priceSnapshot * item.quantity * 1.25).toFixed(2)}
-                                </span>
-                                <span className="text-sm font-bold text-text-primary">
-                                  ₹{(item.priceSnapshot * item.quantity).toFixed(2)}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-end gap-1 mt-0.5">
-                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-1 rounded">20% OFF</span>
-                                <span className="text-[9px] text-text-muted">
-                                  (₹{item.priceSnapshot.toFixed(2)} each)
-                                </span>
-                              </div>
-                            </div>
+                            <button
+                              onClick={() => handleRemove(item.bookId)}
+                              disabled={isCartLoading}
+                              className="p-2 hover:bg-danger/10 rounded-xl text-text-muted hover:text-danger transition-colors shrink-0 border border-transparent hover:border-danger/20"
+                              title="Remove Item"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-
                         </div>
                       </motion.div>
                     );
@@ -863,20 +951,16 @@ export default function CartPage() {
                 </div>
 
                 <div className="pt-2">
-                  <button
+                  <Button
                     onClick={handleProceedCheckout}
-                    disabled={checkoutMutation.isPending}
-                    className="w-full py-3 bg-[#F26522] hover:bg-[#e05310] text-white font-bold rounded-xl shadow-sm transition-all duration-120 flex items-center justify-center space-x-2"
+                    loading={checkoutMutation.isPending}
+                    variant="secondary"
+                    fullWidth
+                    rightIcon={<ChevronRight className="h-4 w-4" />}
+                    className="py-3 rounded-xl text-xs font-bold"
                   >
-                    {checkoutMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    ) : (
-                      <>
-                        <span>Proceed to Checkout</span>
-                        <ChevronRight className="h-4 w-4" />
-                      </>
-                    )}
-                  </button>
+                    Proceed to Checkout
+                  </Button>
                   <p className="text-[10px] text-center text-text-muted mt-3">
                     By proceeding, you agree to BookFry terms & conditions
                   </p>
@@ -968,20 +1052,15 @@ export default function CartPage() {
               </div>
             </div>
 
-            <button
-              onClick={handleProceedCheckout}
-              disabled={checkoutMutation.isPending}
-              className="w-full py-3 bg-[#F26522] hover:bg-[#e05310] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center justify-center gap-1.5"
-            >
-              {checkoutMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
-              ) : (
-                <>
-                  <span>Place Order</span>
-                  <ChevronRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
+            <Button
+             onClick={handleProceedCheckout}
+             loading={checkoutMutation.isPending}
+             variant="secondary"
+             className="flex-1 py-3 rounded-xl text-xs uppercase tracking-wider"
+             rightIcon={<ChevronRight className="h-4 w-4" />}
+           >
+             Place Order
+           </Button>
           </div>
         </div>
       )}
@@ -1316,57 +1395,44 @@ export default function CartPage() {
 
       {/* ORDER PLACED SUCCESSFULLY MODAL */}
       <AnimatePresence>
-        {isCheckoutModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+        <Dialog
+          isOpen={isCheckoutModalOpen}
+          onClose={() => {
+            setIsCheckoutModalOpen(false);
+            router.push('/account/orders');
+          }}
+          title="Order Placed Successfully! 🎉"
+          size="sm"
+        >
+          <div className="flex flex-col items-center text-center space-y-4 font-sans">
+            <div className="h-12 w-12 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+              <Check className="h-6 w-6" />
+            </div>
+
+            <div className="space-y-2 w-full">
+              {placedOrder && (
+                <p className="text-xs font-bold text-primary uppercase tracking-wider bg-[#EFF6FC] border border-[#B8D7F2] px-2 py-1 rounded">
+                  Order Number: {placedOrder.orderNumber}
+                </p>
+              )}
+              <p className="text-xs text-text-secondary leading-relaxed">
+                Thank you for your order! Your book request has been saved and is currently being processed. You can monitor its delivery status and timeline under your account profile dashboard.
+              </p>
+            </div>
+
+            <Button
+              variant="primary"
+              fullWidth
               onClick={() => {
                 setIsCheckoutModalOpen(false);
                 router.push('/account/orders');
               }}
-              className="fixed inset-0 bg-primary-950/70 backdrop-blur-md"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.25 }}
-              className="relative w-full max-w-md bg-surface border border-border rounded-xl shadow-2xl overflow-hidden z-10 p-6 flex flex-col items-center text-center space-y-4"
-              role="dialog"
+              className="py-2.5 text-xs font-semibold rounded-lg"
             >
-              <div className="h-12 w-12 bg-brand/10 text-brand rounded-full flex items-center justify-center">
-                <Check className="h-6 w-6" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-serif text-lg font-bold text-text-primary">
-                  Order Placed Successfully! 🎉
-                </h3>
-                {placedOrder && (
-                  <p className="text-xs font-bold text-brand uppercase tracking-wider bg-brand/10 px-2 py-1 rounded">
-                    Order Number: {placedOrder.orderNumber}
-                  </p>
-                )}
-                <p className="text-xs text-text-secondary leading-relaxed">
-                  Thank you for your order! Your book request has been saved and is currently being processed. You can monitor its delivery status and timeline under your account profile dashboard.
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setIsCheckoutModalOpen(false);
-                  router.push('/account/orders');
-                }}
-                className="w-full py-2.5 bg-brand text-white font-semibold rounded text-xs hover:bg-brand-hover shadow-sm transition-colors"
-              >
-                Track My Order
-              </button>
-            </motion.div>
+              Track My Order
+            </Button>
           </div>
-        )}
+        </Dialog>
       </AnimatePresence>
 
       <Footer />

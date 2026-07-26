@@ -185,6 +185,11 @@ Every view and module MUST implement the 4 core states:
 3. **Empty State**: Friendly illustration + clear call to action ("No saved wishlist items yet — Browse Catalog").
 4. **Success State**: Clear toast notification or inline checkmark confirmation.
 
+### 7.6 Responsive Cart Item Cards
+- **Columnar Layout (Desktop/Tablet)**: Image and book details align on the left; prices, quantity steppers, and delete controls group on the right. Separated by a 1px border divider (`border-l border-border pl-5`).
+- **Flow Layout (Mobile)**: Stepper, delete controls, and price details wrap into a responsive bottom container.
+- **Double-Submit Prevention**: Checkout CTA buttons lock during payment requests to prevent duplicate transactions.
+
 ---
 
 ## 8. Accessibility & Compliance
