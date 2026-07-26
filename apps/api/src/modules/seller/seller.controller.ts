@@ -20,5 +20,16 @@ export class SellerController {
     const ledger = await this.sellerService.getEarningsLedger(sellerId);
     res.status(200).json(ApiResponse.success(ledger));
   };
+
+  getListings = async (req: Request, res: Response): Promise<void> => {
+    const sellerId = req.user!.id;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const search = req.query.search as string;
+    const status = req.query.status as string;
+
+    const result = await this.sellerService.getListings(sellerId, page, limit, search, status);
+    res.status(200).json(ApiResponse.success(result.listings, result.meta));
+  };
 }
 export default SellerController;

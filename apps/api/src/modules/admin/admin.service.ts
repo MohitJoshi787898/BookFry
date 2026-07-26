@@ -2,7 +2,7 @@ import { UserModel } from '../../models/user.model';
 import { BookModel } from '../../models/book.model';
 import { OrderModel } from '../../models/order.model';
 import { ContactModel } from '../../models/contact.model';
-import { NotFoundError } from '../../utils/AppError';
+import { NotFoundError, ValidationError } from '../../utils/AppError';
 import mongoose from 'mongoose';
 
 export class AdminService {
@@ -163,19 +163,42 @@ export class AdminService {
     };
   }
 
-  async moderateListing(bookId: string, status: string) {
+  async moderateListing(bookId: string, status: string, rejectionReason?: string, moderatorId?: string) {
     const book = await BookModel.findById(bookId);
     if (!book) {
       throw new NotFoundError('Book listing not found');
     }
 
+    if (status === 'rejected') {
+      if (!rejectionReason || !rejectionReason.trim()) {
+        throw new ValidationError('Rejection reason is required');
+      }
+      book.rejectionReason = rejectionReason;
+    } else {
+      book.rejectionReason = undefined;
+    }
+
     book.status = status as any;
+
+    if (!book.moderationHistory) {
+      book.moderationHistory = [];
+    }
+
+    book.moderationHistory.push({
+      status: status as any,
+      notes: status === 'rejected' ? rejectionReason : `Listing moderated to ${status}`,
+      moderatorId: moderatorId ? new mongoose.Types.ObjectId(moderatorId) : undefined,
+      timestamp: new Date(),
+    });
+
     await book.save();
 
     return {
       id: book._id.toString(),
       title: book.title,
       status: book.status,
+      rejectionReason: book.rejectionReason,
+      moderationHistory: book.moderationHistory,
     };
   }
 

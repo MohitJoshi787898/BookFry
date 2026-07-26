@@ -40,7 +40,8 @@ export class BooksController {
 
   getDetails = async (req: Request, res: Response): Promise<void> => {
     const { slug } = req.params;
-    const book = await this.booksService.getBookBySlug(slug);
+    const requestingUser = req.user;
+    const book = await this.booksService.getBookBySlug(slug, requestingUser);
     res.status(200).json(ApiResponse.success(book));
   };
 

@@ -7,7 +7,7 @@ export function TestimonialsSection() {
   const testimonials = [
     {
       quote:
-        'BookMarket has completely changed how I buy used books. The condition ratings are honest, shipping is fast, and the sellers take great care in packaging.',
+        'BookFry has completely changed how I buy used books. The condition ratings are honest, shipping is fast, and the sellers take great care in packaging.',
       author: 'Eleanor Vance',
       role: 'Avid Collector & Reader',
       rating: 5,

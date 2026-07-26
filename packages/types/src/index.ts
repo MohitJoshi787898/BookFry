@@ -82,7 +82,21 @@ export interface BookImage {
 }
 
 export type BookCondition = 'new' | 'like_new' | 'good' | 'fair';
-export type BookStatus = 'draft' | 'active' | 'sold' | 'removed';
+export type BookStatus =
+  | 'draft'
+  | 'pending'
+  | 'active'
+  | 'rejected'
+  | 'archived'
+  | 'sold'
+  | 'removed';
+
+export interface ModerationHistoryItem {
+  status: BookStatus;
+  notes?: string;
+  moderatorId?: string;
+  timestamp: string;
+}
 
 export interface Book {
   id: string;
@@ -107,6 +121,8 @@ export interface Book {
   ratingAvg: number;
   ratingCount: number;
   viewsCount: number;
+  rejectionReason?: string;
+  moderationHistory?: ModerationHistoryItem[];
   createdAt: string;
   updatedAt: string;
 }

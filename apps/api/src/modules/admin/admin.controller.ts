@@ -49,8 +49,9 @@ export class AdminController {
 
   moderateListing = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const { status } = req.body;
-    const book = await this.adminService.moderateListing(id, status);
+    const { status, rejectionReason } = req.body;
+    const moderatorId = req.user!.id;
+    const book = await this.adminService.moderateListing(id, status, rejectionReason, moderatorId);
     res.status(200).json(ApiResponse.success(book));
   };
 

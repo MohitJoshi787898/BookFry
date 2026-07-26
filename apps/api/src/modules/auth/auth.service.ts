@@ -43,6 +43,12 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
+    // Auto-promote admin@bookfry.com to admin role if missing
+    if (email.toLowerCase() === 'admin@bookfry.com' && !user.roles.includes('admin')) {
+      user.roles = ['customer', 'seller', 'admin'];
+      await user.save();
+    }
+
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
 

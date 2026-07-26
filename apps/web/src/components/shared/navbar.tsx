@@ -9,9 +9,8 @@ import { useAuthModalStore } from '@/stores/auth-modal.store';
 import { useCartStore } from '@/stores/cart.store';
 import { apiClient } from '@/lib/api-client';
 import { AnnouncementBar } from './announcement-bar';
+import { ThemeToggle } from './theme-toggle';
 import {
-  Sun,
-  Moon,
   LogOut,
   LayoutDashboard,
   User as UserIcon,
@@ -29,7 +28,6 @@ export function Navbar() {
   const router = useRouter();
   const { user, clearAuth, isAuthenticated } = useAuthStore();
   const { items, fetchCart } = useCartStore();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -40,8 +38,6 @@ export function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-    const isDark = document.documentElement.classList.contains('dark');
-    setTheme(isDark ? 'dark' : 'light');
   }, []);
 
   useEffect(() => {
@@ -83,18 +79,6 @@ export function Navbar() {
   const unreadCount = unreadData?.count || 0;
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(nextTheme);
-    if (nextTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await apiClient('/auth/logout', { method: 'POST' });
@@ -121,15 +105,16 @@ export function Navbar() {
   const isAdmin = user?.roles.includes('admin');
 
   const categorySubnav = [
-    { name: 'Engineering & CS', href: '/books?category=engineering-cs' },
-    { name: 'Exams & Study', href: '/books?category=competitive-exams' },
-    { name: 'Medical', href: '/books?category=medical-healthcare' },
-    { name: 'Management', href: '/books?category=management-business' },
-    { name: 'School Textbooks', href: '/books?category=school-textbooks' },
-    { name: 'Indian Literature', href: '/books?category=indian-literature' },
-    { name: 'Humanities & Arts', href: '/books?category=humanities-arts' },
+    { name: 'Fiction', href: '/books?category=fiction' },
+    { name: 'Non-Fiction', href: '/books?category=non-fiction' },
+    { name: 'Teens & YA', href: '/books?category=teens-ya' },
+    { name: 'Kids', href: '/books?category=kids' },
+    { name: 'Exam Prep', href: '/books?category=exams' },
+    { name: 'Engineering', href: '/books?category=engineering' },
+    { name: 'Medical', href: '/books?category=medical' },
+    { name: 'Management', href: '/books?category=management' },
+    { name: 'Competitive Exams', href: '/books?category=competitive-exams' },
     { name: "Today's Deals", href: '/books?discount=40', isHighlight: true },
-    { name: '💰 Sell Books', href: '/sell', isSecondary: true },
   ];
 
   return (
@@ -137,37 +122,44 @@ export function Navbar() {
       {/* Slim Promo Announcement Bar */}
       <AnnouncementBar />
 
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur-md transition-colors duration-200">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-card/90 backdrop-blur-md transition-colors duration-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Main Bar */}
           <div className="flex h-16 items-center justify-between gap-4 sm:gap-6">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2 shrink-0">
-              <span className="font-serif text-2xl font-bold tracking-tight text-brand hover:opacity-90 transition-opacity">
-                BookMarket
+              <span className="font-sans text-2xl font-black tracking-tight text-brand hover:opacity-95 transition-opacity">
+                Book<span className="text-secondary">Fry</span>
               </span>
             </Link>
 
             {/* Center: Full-Width Search Bar with Autosuggest */}
             <div ref={searchRef} className="relative flex-1 max-w-xl hidden sm:block">
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <div className="relative flex items-center">
-                  <Search className="absolute left-3.5 h-4 w-4 text-text-muted pointer-events-none" />
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-2">
+                <div className="relative flex-grow">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setSearchFocused(true)}
-                    placeholder="Search by title, author, ISBN..."
+                    placeholder="Search by title, author, ISBN or keyword..."
                     aria-label="Search books by title, author, or ISBN"
-                    className="w-full pl-10 pr-4 py-2 text-sm bg-surface border border-border rounded-md text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-background border border-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-secondary transition-all"
                   />
                 </div>
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 px-4.5 py-2.5 bg-secondary hover:bg-[#e05310] text-white font-bold rounded-lg text-xs transition-colors shrink-0 shadow-xs"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  <span>Search</span>
+                </button>
               </form>
 
               {/* Autosuggest Dropdown */}
               {searchFocused && searchQuery.trim().length >= 2 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-border rounded-md shadow-lg overflow-hidden z-50 divide-y divide-border">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-md shadow-lg overflow-hidden z-50 divide-y divide-border">
                   {searchResults.length > 0 ? (
                     <div className="py-2">
                       <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-text-muted">
@@ -216,14 +208,7 @@ export function Navbar() {
             {/* Right side actions */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="rounded-full p-2 text-text-secondary hover:bg-background-subtle hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-brand"
-                aria-label="Toggle dark/light mode"
-                title="Toggle Theme"
-              >
-                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-              </button>
+              <ThemeToggle />
 
               {/* Cart Link */}
               <Link
@@ -312,16 +297,16 @@ export function Navbar() {
               ) : (
                 <div className="hidden sm:flex items-center space-x-3">
                   <Link
-                    href="/login"
-                    className="text-xs font-semibold text-text-secondary hover:text-brand transition-colors px-2.5 py-1.5"
+                    href="/sell"
+                    className="border border-[#F26522]/30 bg-[#FEF8F3] dark:bg-muted/40 hover:bg-[#FFF5F0] text-[#F26522] dark:text-[#FFF5F0] rounded-md px-3.5 py-2 text-xs font-bold transition-all shadow-xs"
                   >
-                    Sign In
+                    Become a Seller
                   </Link>
                   <Link
-                    href="/register"
-                    className="rounded-md bg-brand px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-brand-hover transition-all duration-120"
+                    href="/login"
+                    className="rounded-md bg-[#F26522] px-4.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#e05310] transition-colors"
                   >
-                    Sign Up
+                    Login / Sign up
                   </Link>
                 </div>
               )}
@@ -338,33 +323,50 @@ export function Navbar() {
           </div>
 
           {/* Category Text Subnav Bar (Underline on Hover) */}
-          <nav className="hidden lg:flex items-center space-x-8 border-t border-border/60 py-2.5 text-xs font-medium text-text-secondary overflow-x-auto no-scrollbar">
-            {categorySubnav.map((cat) => {
-              const isSellLink = cat.href === '/sell';
-              return (
-                <Link
-                  key={cat.name}
-                  href={cat.href}
-                  onClick={(e) => {
-                    if (isSellLink && !isAuthenticated) {
-                      e.preventDefault();
-                      useAuthModalStore.getState().openModal('login', '/sell');
-                    }
-                  }}
-                  className={`transition-colors whitespace-nowrap hover:text-brand border-b-2 border-transparent hover:border-brand py-1 ${
-                    cat.isHighlight ? 'text-accent font-bold hover:border-accent' : ''
-                  }`}
-                >
-                  {cat.name}
-                </Link>
-              );
-            })}
+          <nav className="hidden lg:flex items-center border-t border-border/60 py-2.5 text-xs font-medium text-text-secondary overflow-x-auto no-scrollbar w-full">
+            <div className="flex items-center gap-6">
+              {categorySubnav.map((cat) => {
+                return (
+                  <Link
+                    key={cat.name}
+                    href={cat.href}
+                    className={`transition-colors whitespace-nowrap hover:text-brand border-b-2 border-transparent hover:border-brand py-1 ${
+                      cat.isHighlight ? 'text-secondary font-bold hover:border-secondary flex items-center gap-1' : ''
+                    }`}
+                  >
+                    {cat.isHighlight ? (
+                      <>
+                        <span>{cat.name}</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-secondary shrink-0" />
+                      </>
+                    ) : (
+                      cat.name
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Right-aligned Sell Books Link */}
+            <Link
+              href="/sell"
+              onClick={(e) => {
+                if (!isAuthenticated) {
+                  e.preventDefault();
+                  useAuthModalStore.getState().openModal('login', '/sell');
+                }
+              }}
+              className="ml-auto flex items-center gap-1.5 text-text-primary hover:text-secondary font-bold transition-colors"
+            >
+              <span className="text-secondary select-none">🔥</span>
+              <span>Sell Books</span>
+            </Link>
           </nav>
         </div>
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="sm:hidden border-t border-border bg-surface p-4 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
+          <div className="sm:hidden border-t border-border bg-card p-4 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
             {/* Mobile Search */}
             <form onSubmit={handleSearchSubmit} className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />

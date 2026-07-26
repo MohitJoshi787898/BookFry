@@ -32,11 +32,19 @@ export class BooksService {
     return this.mapToDTO(doc);
   }
 
-  async getBookBySlug(slug: string): Promise<Book> {
+  async getBookBySlug(slug: string, requestingUser?: { id: string; roles: string[] }): Promise<Book> {
     const doc = await this.booksRepository.findBySlug(slug);
     if (!doc) {
       throw new NotFoundError('Book listing not found');
     }
+
+    const isOwner = requestingUser && doc.sellerId.toString() === requestingUser.id;
+    const isAdmin = requestingUser && requestingUser.roles.includes('admin');
+
+    if (doc.status !== 'active' && !isOwner && !isAdmin) {
+      throw new NotFoundError('Book listing not found or is inactive');
+    }
+
     doc.viewsCount += 1;
     await doc.save();
     return this.mapToDTO(doc);
@@ -122,13 +130,20 @@ export class BooksService {
       slug,
       category: new mongoose.Types.ObjectId(data.category),
       sellerId: new mongoose.Types.ObjectId(sellerId),
-      status: 'active',
+      status: 'pending',
       tags: data.tags || [],
       language: data.language || 'English',
       ratingAvg: 0,
       ratingCount: 0,
       viewsCount: 0,
       images: data.images || [],
+      moderationHistory: [
+        {
+          status: 'pending',
+          notes: 'Listing created and submitted for review',
+          timestamp: new Date(),
+        },
+      ],
     });
 
     return this.mapToDTO(doc);
@@ -175,6 +190,25 @@ export class BooksService {
 
     if (data.title && data.title !== book.title) {
       updateData.slug = this.generateSlug(data.title);
+    }
+
+    // Handlers for status transitions and resubmission
+    if (!isAdmin) {
+      if (book.status === 'rejected' || data.status === 'pending') {
+        updateData.status = 'pending';
+        updateData.rejectionReason = ''; // clear rejection reason
+      }
+    }
+
+    // Add entry to moderation history if status changed to pending
+    if (updateData.status === 'pending' && book.status !== 'pending') {
+      const history = book.moderationHistory || [];
+      history.push({
+        status: 'pending',
+        notes: 'Resubmitted by seller for review',
+        timestamp: new Date(),
+      } as any);
+      updateData.moderationHistory = history;
     }
 
     const updatedDoc = await this.booksRepository.update(id, updateData);
@@ -226,6 +260,13 @@ export class BooksService {
       ratingAvg: doc.ratingAvg,
       ratingCount: doc.ratingCount,
       viewsCount: doc.viewsCount,
+      rejectionReason: doc.rejectionReason,
+      moderationHistory: doc.moderationHistory?.map((item) => ({
+        status: item.status,
+        notes: item.notes,
+        moderatorId: item.moderatorId?.toString(),
+        timestamp: item.timestamp.toISOString(),
+      })),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };

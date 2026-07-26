@@ -4,6 +4,7 @@ import React from 'react';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { HeroSection } from '@/components/marketing/hero-section';
+import { FeaturesBar } from '@/components/marketing/features-bar';
 import { QuickFilterBar } from '@/components/marketing/quick-filter-bar';
 import { BookCarousel } from '@/components/marketing/book-carousel';
 import { ExchangeKnowledgeSection } from '@/components/marketing/exchange-knowledge-section';
@@ -24,6 +25,9 @@ export default function LandingPage() {
       <main className="flex-grow">
         {/* 2. Brand Hero Section */}
         <HeroSection />
+
+        {/* 2.5 Features Value Proposition Bar */}
+        <FeaturesBar />
 
         {/* 3. Quick Browse & Subject Filter Bar */}
         <QuickFilterBar />

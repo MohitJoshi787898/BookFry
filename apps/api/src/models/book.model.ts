@@ -23,6 +23,13 @@ export interface IBookDocument extends Document {
   ratingAvg: number;
   ratingCount: number;
   viewsCount: number;
+  rejectionReason?: string;
+  moderationHistory?: Array<{
+    status: BookStatus;
+    notes?: string;
+    moderatorId?: mongoose.Types.ObjectId;
+    timestamp: Date;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,8 +57,8 @@ const BookSchema = new Schema<IBookDocument>(
     sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: {
       type: String,
-      enum: ['draft', 'active', 'sold', 'removed'],
-      default: 'active',
+      enum: ['draft', 'pending', 'active', 'rejected', 'archived', 'sold', 'removed'],
+      default: 'pending',
       index: true,
     },
     tags: { type: [String], default: [] },
@@ -62,6 +69,15 @@ const BookSchema = new Schema<IBookDocument>(
     ratingAvg: { type: Number, default: 0, min: 0, max: 5 },
     ratingCount: { type: Number, default: 0, min: 0 },
     viewsCount: { type: Number, default: 0, min: 0 },
+    rejectionReason: { type: String },
+    moderationHistory: [
+      {
+        status: { type: String, required: true },
+        notes: { type: String },
+        moderatorId: { type: Schema.Types.ObjectId, ref: 'User' },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,

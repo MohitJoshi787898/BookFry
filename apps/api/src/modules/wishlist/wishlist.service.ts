@@ -51,7 +51,7 @@ export class WishlistService {
     }
 
     const books = (doc.bookIds || [])
-      .filter((b: any) => b && b._id) // filter out deleted or unpopulated books
+      .filter((b: any) => b && b._id && b.status === 'active') // filter out deleted, unpopulated, or non-active books
       .map((b: any) => this.mapBookToDTO(b));
 
     return {

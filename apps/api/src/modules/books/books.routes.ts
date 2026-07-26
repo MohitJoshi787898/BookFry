@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { BooksController } from './books.controller';
-import { requireAuth } from '../../middlewares/auth.middleware';
+import { requireAuth, optionalAuth } from '../../middlewares/auth.middleware';
 import { requireRoles } from '../../middlewares/rbac.middleware';
 import { validate } from '../../middlewares/validate.middleware';
 import { uploadMultiple } from '../../middlewares/upload.middleware';
@@ -11,7 +11,7 @@ const router = Router();
 const controller = new BooksController();
 
 router.get('/', validate({ query: queryBookSchema }), asyncHandler(controller.list));
-router.get('/:slug', asyncHandler(controller.getDetails));
+router.get('/:slug', optionalAuth, asyncHandler(controller.getDetails));
 
 // Authenticated user mutating routes
 router.post(

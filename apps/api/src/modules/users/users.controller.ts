@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { UsersService } from './users.service';
 import { ApiResponse } from '../../utils/ApiResponse';
 import { ValidationError } from '../../utils/AppError';
+import { uploadToCloudinary } from '../../config/cloudinary';
 
 export class UsersController {
   private usersService: UsersService;
@@ -17,6 +18,21 @@ export class UsersController {
     }
 
     const user = await this.usersService.getUserById(userId);
+    res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
+  };
+
+  uploadAvatar = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ValidationError('User authentication failed');
+    }
+
+    if (!req.file) {
+      throw new ValidationError('No avatar image file provided');
+    }
+
+    const uploadResult = await uploadToCloudinary(req.file.buffer, 'avatars');
+    const user = await this.usersService.updateProfile(userId, { avatarUrl: uploadResult.url });
     res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
   };
 

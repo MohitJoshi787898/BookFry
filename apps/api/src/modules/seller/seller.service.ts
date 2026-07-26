@@ -110,5 +110,58 @@ export class SellerService {
 
     return docs.map((doc) => this.mapTransactionToDTO(doc));
   }
+
+  async getListings(sellerId: string, page = 1, limit = 20, search?: string, status?: string) {
+    const query: any = { sellerId: new mongoose.Types.ObjectId(sellerId) };
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { author: { $regex: search, $options: 'i' } },
+        { isbn: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const skip = (page - 1) * limit;
+    const [docs, total] = await Promise.all([
+      BookModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('category', 'name slug')
+        .exec(),
+      BookModel.countDocuments(query),
+    ]);
+
+    const listings = docs.map((b: any) => ({
+      id: b._id.toString(),
+      title: b.title,
+      slug: b.slug,
+      author: b.author,
+      price: b.price,
+      stock: b.stock,
+      status: b.status,
+      condition: b.condition,
+      sellerId: b.sellerId.toString(),
+      category: b.category ? b.category.name : 'Uncategorized',
+      rejectionReason: b.rejectionReason,
+      createdAt: b.createdAt.toISOString(),
+      updatedAt: b.updatedAt.toISOString(),
+    }));
+
+    return {
+      listings,
+      meta: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
 }
 export default SellerService;

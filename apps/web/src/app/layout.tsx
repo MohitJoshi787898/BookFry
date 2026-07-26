@@ -1,17 +1,12 @@
 import './globals.css';
-import { Inter, Source_Serif_4, JetBrains_Mono } from 'next/font/google';
+import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import { Providers } from '@/components/providers';
 import { AuthModal } from '@/components/auth/auth-modal';
 
-const sans = Inter({
+const sans = Plus_Jakarta_Sans({
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
-  display: 'swap',
-});
-
-const serif = Source_Serif_4({
-  subsets: ['latin'],
-  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -22,18 +17,18 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: 'BookMarket — Buy & Sell New and Used Books',
-  description: 'Your premium bookstore marketplace. Buy & sell new and used books with ease.',
+  title: 'BookFry — Buy & Sell Books',
+  description: "India's book marketplace. Buy & sell new and pre-owned books with ease.",
   openGraph: {
-    title: 'BookMarket — Buy & Sell New and Used Books',
-    description: 'Your premium bookstore marketplace. Buy & sell new and used books with ease.',
+    title: 'BookFry • India\'s Book Marketplace',
+    description: 'Empowering students with affordable education and circular book sharing.',
     type: 'website',
-    siteName: 'BookMarket',
+    siteName: 'BookFry',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BookMarket — Buy & Sell New and Used Books',
-    description: 'Your premium bookstore marketplace. Buy & sell new and used books with ease.',
+    title: 'BookFry • India\'s Book Marketplace',
+    description: 'Empowering students with affordable education and circular book sharing.',
   },
 };
 
@@ -43,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

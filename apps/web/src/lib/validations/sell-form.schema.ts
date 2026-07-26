@@ -18,7 +18,7 @@ export const sellBookSchema = z
       required_error: 'Please select book condition',
     }),
     images: z
-      .array(z.string())
+      .array(z.any())
       .min(1, 'Please upload at least 1 image of your book')
       .max(4, 'Maximum 4 images allowed'),
     quantity: z.coerce.number().min(1, 'Quantity must be at least 1').default(1),

@@ -11,6 +11,7 @@ router.use(requireAuth);
 router.use(requireRoles(['seller', 'admin']));
 
 router.get('/dashboard', asyncHandler(controller.getDashboard));
+router.get('/listings', asyncHandler(controller.getListings));
 router.get('/earnings', asyncHandler(controller.getEarnings));
 
 export default router;

@@ -34,9 +34,11 @@ export async function apiClient<T = any>(
 
   const token = useAuthStore.getState().accessToken;
 
-  const defaultHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const defaultHeaders: Record<string, string> = {};
+
+  if (!(customConfig.body instanceof FormData)) {
+    defaultHeaders["Content-Type"] = "application/json";
+  }
 
   if (token) {
     defaultHeaders["Authorization"] = `Bearer ${token}`;

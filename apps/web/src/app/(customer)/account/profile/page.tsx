@@ -34,6 +34,40 @@ export default function ProfilePage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Avatar image size must be less than 5MB.');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const res = await apiClient('/users/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res && res.avatarUrl) {
+        setAvatarUrl(res.avatarUrl);
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        setUser(res);
+        alert('Avatar uploaded successfully!');
+      }
+    } catch (err) {
+      console.error('Failed to upload avatar:', err);
+      alert('Failed to upload avatar image. Please try again.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   // Address Form fields
   const [street, setStreet] = useState('');
@@ -271,6 +305,23 @@ export default function ProfilePage() {
                 </div>
                 <h3 className="font-serif text-lg font-bold text-text-primary mt-4">{profile?.name}</h3>
                 <p className="text-xs text-text-secondary">{profile?.email}</p>
+                <div className="mt-3">
+                  <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 bg-brand/10 border border-brand/20 text-brand rounded text-xs font-bold hover:bg-brand/15 transition-all">
+                    {isUploadingAvatar ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
+                    <span>{isUploadingAvatar ? 'Uploading...' : 'Upload Avatar'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                      disabled={isUploadingAvatar}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="border-t border-border pt-6">

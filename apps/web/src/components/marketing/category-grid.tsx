@@ -1,122 +1,83 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import {
-  BookOpen,
-  Compass,
-  GraduationCap,
-  Heart,
-  Sparkles,
-  Zap,
-  Ghost,
-  Feather,
-} from 'lucide-react';
+import { CategoryCard } from '../shared/category-card';
 
 export function CategoryGrid() {
   const categories = [
     {
-      title: 'Engineering & Tech',
-      subtitle: 'Computer Science, Electrical, Mechanical, Civil',
-      icon: GraduationCap,
-      href: '/books?category=engineering-cs',
-      count: '14,200+ books',
+      title: 'Fiction',
+      graphic: '📚',
+      href: '/books?category=fiction',
+      bgColor: 'bg-orange-50',
     },
     {
-      title: 'Exams & Study Prep',
-      subtitle: 'JEE, NEET, UPSC, GATE, CAT, Bank PO',
-      icon: Sparkles,
-      href: '/books?category=competitive-exams',
-      count: '11,500+ books',
+      title: 'Non-Fiction',
+      graphic: '📖',
+      href: '/books?category=non-fiction',
+      bgColor: 'bg-blue-50',
     },
     {
-      title: 'Medical & Healthcare',
-      subtitle: 'MBBS, BDS, Nursing, Pharmacy, Anatomy',
-      icon: Compass,
-      href: '/books?category=medical-healthcare',
-      count: '9,800+ books',
+      title: 'Exam Prep',
+      graphic: '🎓',
+      href: '/books?category=exams',
+      bgColor: 'bg-emerald-50',
     },
     {
-      title: 'Fiction & Novels',
-      subtitle: 'Literary fiction, Indian contemporary, classics',
-      icon: Feather,
-      href: '/books?category=indian-literature',
-      count: '18,400+ books',
+      title: 'Engineering',
+      graphic: '⚙️',
+      href: '/books?category=engineering',
+      bgColor: 'bg-indigo-50',
     },
     {
-      title: 'School K-12 Textbooks',
-      subtitle: 'NCERT, CBSE, ICSE, State Boards',
-      icon: BookOpen,
-      href: '/books?category=school-textbooks',
-      count: '12,100+ books',
+      title: 'Medical',
+      graphic: '🩺',
+      href: '/books?category=medical',
+      bgColor: 'bg-red-50',
     },
     {
-      title: 'Management & Business',
-      subtitle: 'MBA, Finance, Economics, Corporate Management',
-      icon: Zap,
-      href: '/books?category=management-business',
-      count: '7,900+ books',
+      title: 'Management',
+      graphic: '💼',
+      href: '/books?category=management',
+      bgColor: 'bg-slate-50',
     },
     {
-      title: 'Programming & CS',
-      subtitle: 'Python, Java, AI/ML, Web Dev, Algorithms',
-      icon: Ghost,
-      href: '/books?category=engineering-cs',
-      count: '6,300+ books',
+      title: 'Kids',
+      graphic: '🧸',
+      href: '/books?category=kids',
+      bgColor: 'bg-amber-50',
     },
     {
-      title: 'Humanities & Arts',
-      subtitle: 'History, Political Science, Psychology, Sociology',
-      icon: Heart,
-      href: '/books?category=humanities-arts',
-      count: '5,100+ books',
+      title: 'Teens & YA',
+      graphic: '🎒',
+      href: '/books?category=teens-ya',
+      bgColor: 'bg-rose-50',
     },
   ];
 
   return (
-    <section className="py-16 sm:py-24 bg-background font-sans border-b border-border">
+    <section className="py-16 sm:py-20 bg-background font-sans border-b border-border transition-colors duration-200">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-widest text-secondary block">
-            Explore Every Subject
-          </span>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-text-primary">
-            Digital Bookshelves by Category
+        
+        {/* Centered Heading with orange accent line */}
+        <div className="text-center space-y-2">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A3B5C] dark:text-foreground">
+            Explore By Category
           </h2>
-          <p className="text-sm text-text-secondary">
-            Find required semester courseware, competitive test prep, and leisure literature.
-          </p>
+          <div className="w-8 h-1 bg-secondary mx-auto rounded-full" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((cat) => {
-            const IconComp = cat.icon;
-            return (
-              <Link
-                key={cat.title}
-                href={cat.href}
-                className="group p-6 rounded-lg border border-border bg-surface hover:border-brand hover-page-turn flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="h-10 w-10 rounded-md bg-brand/10 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors">
-                    <IconComp className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-serif text-lg font-bold text-text-primary group-hover:text-brand transition-colors">
-                    {cat.title}
-                  </h3>
-                  <p className="text-xs text-text-secondary leading-relaxed">{cat.subtitle}</p>
-                </div>
-                <div className="pt-4 mt-2 border-t border-border/50 flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-brand uppercase tracking-wider">
-                    {cat.count}
-                  </span>
-                  <span className="text-xs font-bold text-text-muted group-hover:text-brand transition-colors">
-                    Browse →
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
+        {/* 8-Column Horizontal Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+          {categories.map((cat) => (
+            <CategoryCard
+              key={cat.title}
+              title={cat.title}
+              graphic={cat.graphic}
+              href={cat.href}
+              bgColor={cat.bgColor}
+            />
+          ))}
         </div>
       </div>
     </section>

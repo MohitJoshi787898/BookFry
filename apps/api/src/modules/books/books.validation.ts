@@ -18,7 +18,7 @@ export const createBookSchema = z.object({
 });
 
 export const updateBookSchema = createBookSchema.partial().extend({
-  status: z.enum(['draft', 'active', 'sold', 'removed']).optional(),
+  status: z.enum(['draft', 'pending', 'active', 'rejected', 'archived', 'sold', 'removed']).optional(),
 });
 
 export const queryBookSchema = z.object({

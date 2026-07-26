@@ -85,7 +85,7 @@ const config: Config = {
         info: 'var(--color-info)',
       },
       fontFamily: {
-        serif: ['var(--font-serif)', 'serif'],
+        serif: ['var(--font-sans)', 'sans-serif'],
         sans: ['var(--font-sans)', 'sans-serif'],
         mono: ['var(--font-mono)', 'monospace'],
       },

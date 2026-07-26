@@ -1,12 +1,37 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { UploadCloud, X, Image as ImageIcon, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Plus } from 'lucide-react';
 
 interface ImageUploaderProps {
-  images: string[];
-  onChange: (images: string[]) => void;
+  images: (string | File)[];
+  onChange: (images: (string | File)[]) => void;
   maxImages?: number;
+}
+
+function ImagePreview({ img }: { img: string | File }) {
+  const [preview, setPreview] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof img === 'string') {
+      setPreview(img);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(img);
+    setPreview(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [img]);
+
+  if (!preview) return null;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={preview} alt="Book Preview" className="w-full h-full object-cover" />
+  );
 }
 
 export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploaderProps) {
@@ -19,21 +44,17 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
     if (availableSlots <= 0) return;
 
     const filesArray = Array.from(files).slice(0, availableSlots);
-
-    filesArray.forEach((file) => {
-      // Basic image size check (< 5MB)
+    const validFiles = filesArray.filter((file) => {
       if (file.size > 5 * 1024 * 1024) {
         alert(`File ${file.name} exceeds 5MB limit.`);
-        return;
+        return false;
       }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          onChange([...images, e.target.result as string].slice(0, maxImages));
-        }
-      };
-      reader.readAsDataURL(file);
+      return true;
     });
+
+    if (validFiles.length > 0) {
+      onChange([...images, ...validFiles].slice(0, maxImages));
+    }
   };
 
   const removeImage = (indexToRemove: number) => {
@@ -55,84 +76,81 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
     handleFileSelect(e.dataTransfer.files);
   };
 
+  // Build items list matching mockup slots (e.g. 3 filled + 1 uploader)
+  const renderSlots = [];
+  for (let i = 0; i < images.length; i++) {
+    renderSlots.push({ type: 'image', value: images[i], index: i });
+  }
+  if (images.length < maxImages) {
+    renderSlots.push({ type: 'uploader', index: images.length });
+  }
+
   return (
-    <div className="space-y-4 font-sans">
-      {/* Upload Zone */}
-      {images.length < maxImages && (
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-all duration-150 ${
-            isDragging
-              ? 'border-brand bg-brand/10'
-              : 'border-border bg-surface hover:border-brand/50 hover:bg-background-subtle'
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => handleFileSelect(e.target.files)}
-          />
-          <div className="mx-auto h-12 w-12 rounded-full bg-brand/10 text-brand flex items-center justify-center mb-3">
-            <UploadCloud className="h-6 w-6" />
-          </div>
-          <p className="text-sm font-semibold text-text-primary">
-            Drag & drop book photos here, or <span className="text-brand underline">browse</span>
-          </p>
-          <p className="text-xs text-text-muted mt-1">
-            Upload up to {maxImages} photos (JPEG, PNG, WebP up to 5MB each). First image is your cover image.
-          </p>
-        </div>
-      )}
+    <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`font-sans p-1 rounded-2xl transition-all duration-200 ${
+        isDragging ? 'bg-brand/5 border-2 border-dashed border-[#F26522]' : ''
+      }`}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFileSelect(e.target.files)}
+      />
 
-      {/* Image Preview Grid */}
-      {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {images.map((imgUrl, idx) => (
-            <div
-              key={idx}
-              className="relative aspect-[2/3] rounded-md border border-border overflow-hidden bg-background-subtle group shadow-sm"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imgUrl} alt={`Book image ${idx + 1}`} className="w-full h-full object-cover" />
-
-              {/* Cover Badge for first image */}
-              {idx === 0 && (
-                <span className="absolute top-2 left-2 bg-brand text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" /> Cover
-                </span>
-              )}
-
-              {/* Remove button */}
-              <button
-                type="button"
-                onClick={() => removeImage(idx)}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-danger text-white shadow hover:bg-danger/90 transition-opacity"
-                title="Remove photo"
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {renderSlots.map((slot, idx) => {
+          if (slot.type === 'image' && slot.index !== undefined) {
+            return (
+              <div
+                key={`img-${slot.index}`}
+                className="relative aspect-square sm:aspect-[4/5] md:aspect-square lg:aspect-square xl:aspect-[5/6] rounded-2xl border border-border overflow-hidden bg-background-subtle shadow-xs group"
               >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
+                <ImagePreview img={slot.value!} />
 
-          {/* Add More Tile */}
-          {images.length < maxImages && (
-            <button
-              type="button"
+                {/* Cover label at top left for first index */}
+                {slot.index === 0 && (
+                  <span className="absolute top-3 left-3 bg-[#F26522] text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-sm">
+                    COVER
+                  </span>
+                )}
+
+                {/* Remove button at top right */}
+                <button
+                  type="button"
+                  onClick={() => removeImage(slot.index!)}
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white dark:bg-card border border-border/80 flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 shadow-sm transition-all hover:scale-105 active:scale-95"
+                  title="Remove photo"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            );
+          }
+
+          // Dotted Add Photo card
+          return (
+            <div
+              key="uploader-slot"
               onClick={() => fileInputRef.current?.click()}
-              className="aspect-[2/3] rounded-md border-2 border-dashed border-border bg-surface hover:bg-background-subtle flex flex-col items-center justify-center text-text-muted hover:text-brand transition-colors"
+              className="cursor-pointer aspect-square sm:aspect-[4/5] md:aspect-square lg:aspect-square xl:aspect-[5/6] rounded-2xl border-2 border-dashed border-border hover:border-[#F26522] bg-card hover:bg-[#FFF9F6] dark:hover:bg-orange-950/5 flex flex-col items-center justify-center text-center p-4 transition-all"
             >
-              <ImageIcon className="h-6 w-6 mb-1" />
-              <span className="text-xs font-semibold">+ Add Photo</span>
-            </button>
-          )}
-        </div>
-      )}
+              <div className="h-10 w-10 rounded-full bg-background-subtle border border-border/40 flex items-center justify-center text-text-muted mb-2">
+                <Plus className="h-5 w-5 text-text-muted" />
+              </div>
+              <span className="text-xs font-bold text-text-primary">Add Photo</span>
+              <span className="text-[9px] text-text-muted mt-1 leading-snug">
+                JPG, PNG, WebP<br />up to 5MB each
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

