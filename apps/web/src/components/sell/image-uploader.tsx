@@ -3,13 +3,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Plus } from 'lucide-react';
 
+type UploadableImage = string | File | { url: string };
+
 interface ImageUploaderProps {
-  images: (string | File)[];
-  onChange: (images: (string | File)[]) => void;
+  images: UploadableImage[];
+  onChange: (images: UploadableImage[]) => void;
   maxImages?: number;
 }
 
-function ImagePreview({ img }: { img: any }) {
+function ImagePreview({ img }: { img: UploadableImage }) {
   const [preview, setPreview] = useState<string>('');
 
   useEffect(() => {

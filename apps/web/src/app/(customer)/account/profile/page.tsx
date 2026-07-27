@@ -6,7 +6,7 @@ import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
-import { User, Address } from '@bookmarket/types';
+import { User, Address, Order } from '@bookmarket/types';
 import Image from 'next/image';
 import {
   User as UserIcon,
@@ -176,6 +176,10 @@ function AddressCard({
 // ─── Main Component ───────────────────────────────────────────────────
 type ActiveSection = 'overview' | 'addresses' | 'orders' | 'wishlist' | 'notifications' | 'security' | 'payment';
 
+type ProfileWithWishlist = User & {
+  wishlist?: Array<unknown>;
+};
+
 export default function ProfilePage() {
   const { isAuthenticated, setUser, clearAuth } = useAuthStore();
   const queryClient = useQueryClient();
@@ -188,7 +192,6 @@ export default function ProfilePage() {
   // Profile edit state
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState('');
@@ -212,7 +215,7 @@ export default function ProfilePage() {
   });
 
   // ── Fetch recent orders (overview) ──
-  const { data: recentOrders } = useQuery<any[]>({
+  const { data: recentOrders } = useQuery<Order[]>({
     queryKey: ['profile-orders'],
     queryFn: () => apiClient('/orders'),
     enabled: isAuthenticated && activeSection === 'overview',
@@ -223,7 +226,6 @@ export default function ProfilePage() {
     if (profile) {
       setName(profile.name);
       setPhone(profile.phone || '');
-      setAvatarUrl(profile.avatarUrl || '');
       setAvatarPreview(profile.avatarUrl || '');
     }
   }, [profile]);
@@ -247,7 +249,6 @@ export default function ProfilePage() {
       formData.append('avatar', file);
       const res = await apiClient('/users/avatar', { method: 'POST', body: formData });
       if (res?.avatarUrl) {
-        setAvatarUrl(res.avatarUrl);
         setAvatarPreview(res.avatarUrl);
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         setUser(res);
@@ -547,7 +548,7 @@ export default function ProfilePage() {
                       {/* Stats row */}
                       <div className="mt-5 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
                         <StatCard icon={<ShoppingBag className="h-4 w-4" />} value={recentOrders?.length ?? 0} label="Orders" />
-                        <StatCard icon={<Heart className="h-4 w-4" />} value={(profile as any)?.wishlist?.length ?? 0} label="Wishlist" />
+                        <StatCard icon={<Heart className="h-4 w-4" />} value={((profile as ProfileWithWishlist)?.wishlist?.length ?? 0) as number} label="Wishlist" />
                         <StatCard icon={<MapPin className="h-4 w-4" />} value={profile?.addresses?.length ?? 0} label="Addresses" />
                         <StatCard icon={<Tag className="h-4 w-4" />} value={0} label="Coupons" />
                       </div>
@@ -653,20 +654,20 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {recentOrders.slice(0, 3).map((order: any) => (
-                          <div key={order._id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border hover:border-brand/30 transition-all group">
+                        {recentOrders.slice(0, 3).map((order: Order) => (
+                          <div key={order.id} className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border hover:border-brand/30 transition-all group">
                             <div className="flex items-center gap-3">
                               <div className="w-9 h-9 rounded-lg bg-brand/10 dark:bg-primary/15 flex items-center justify-center">
                                 <Package className="h-4 w-4 text-brand dark:text-primary" />
                               </div>
                               <div>
-                                <p className="text-xs font-bold text-text-primary">{order.orderNumber || order._id?.slice(-8).toUpperCase()}</p>
+                                <p className="text-xs font-bold text-text-primary">{order.orderNumber || order.id.slice(-8).toUpperCase()}</p>
                                 <p className="text-[11px] text-text-muted">{order.items?.length ?? 0} item{(order.items?.length ?? 0) !== 1 ? 's' : ''}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
                               <div className="text-right">
-                                <p className="text-sm font-bold text-text-primary">₹{order.totalAmount?.toLocaleString('en-IN') ?? '—'}</p>
+                                <p className="text-sm font-bold text-text-primary">₹{order.total.toLocaleString('en-IN')}</p>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                   order.status === 'delivered'
                                     ? 'bg-success/15 text-success'

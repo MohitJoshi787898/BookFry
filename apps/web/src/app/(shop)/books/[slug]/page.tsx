@@ -9,6 +9,18 @@ import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 import { Book, Review, Order, Wishlist } from '@bookmarket/types';
+
+interface ListingOption {
+  id: string;
+  price?: number;
+  stock?: number;
+  condition?: Book['condition'];
+  sellerId?: string;
+}
+
+type BookWithListings = Book & {
+  listings?: ListingOption[];
+};
 import {
   Star,
   ShoppingBag,
@@ -148,7 +160,7 @@ export default function BookDetailPage() {
 
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
 
-  const availableListings: any[] = (book as any)?.listings || [];
+  const availableListings: ListingOption[] = (book as BookWithListings | null)?.listings ?? [];
   const activeListing =
     availableListings.find((l) => l.id === selectedListingId) || availableListings[0];
 
@@ -441,10 +453,10 @@ export default function BookDetailPage() {
                             />
                             <div>
                               <p className="font-bold text-text-primary capitalize">
-                                {l.condition.replace('_', ' ')} &bull; {l.sellerName}
+                                {(l.condition ?? book.condition).replace('_', ' ')} &bull; {l.sellerId ? `Seller ${l.sellerId.slice(-4)}` : 'Verified Seller'}
                               </p>
                               <p className="text-[10px] text-text-muted mt-0.5">
-                                Stock: {l.stock} copy{l.stock > 1 ? 'ies' : ''} available
+                                Stock: {l.stock ?? 0} copy{(l.stock ?? 0) > 1 ? 'ies' : ''} available
                               </p>
                             </div>
                           </div>

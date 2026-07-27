@@ -56,8 +56,7 @@ export default function CartPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [placedOrder, setPlacedOrder] = useState<any>(null);
+  const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
 
   // New Address Form fields
@@ -679,10 +678,10 @@ export default function CartPage() {
               <div className="space-y-4">
                 <AnimatePresence initial={false}>
                   {items.map((item) => {
-                    const itemKey = item.listingId || (item as any).bookId;
-                    const book = item.listingDetail?.catalog || (item as any).bookDetail;
-                    const condition = item.listingDetail?.condition || (item as any).bookDetail?.condition || 'good';
-                    const stock = item.listingDetail?.stock || (item as any).bookDetail?.stock || 1;
+                    const itemKey = item.listingId || item.bookId || '';
+                    const book = item.listingDetail?.catalog || item.bookDetail;
+                    const condition = item.listingDetail?.condition || item.bookDetail?.condition || 'good';
+                    const stock = item.listingDetail?.stock || item.bookDetail?.stock || 1;
                     if (!book) return null;
                     const imageUrl = book.images?.[0]?.url || '';
 
