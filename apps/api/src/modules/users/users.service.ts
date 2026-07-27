@@ -245,9 +245,9 @@ export class UsersService {
     // 2. Notify Sellers
     const sellerIds = new Set<string>();
     for (const item of cart.items) {
-      const book = item.bookId as any;
-      if (book && book.sellerId) {
-        sellerIds.add(book.sellerId.toString());
+      const listingOrBook = (item.listingId || (item as any).bookId) as any;
+      if (listingOrBook && listingOrBook.sellerId) {
+        sellerIds.add(listingOrBook.sellerId.toString());
       }
     }
 

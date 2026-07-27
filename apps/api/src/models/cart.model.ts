@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICartItem {
-  bookId: mongoose.Types.ObjectId;
+  listingId: mongoose.Types.ObjectId;
   quantity: number;
   priceSnapshot: number;
 }
@@ -14,19 +14,23 @@ export interface ICartDocument extends Document {
 }
 
 const CartItemSchema = new Schema<ICartItem>({
-  bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true },
+  listingId: { type: Schema.Types.ObjectId, ref: 'BookListing', required: true },
   quantity: { type: Number, required: true, min: 1 },
   priceSnapshot: { type: Number, required: true, min: 0 },
 });
 
 const CartSchema = new Schema<ICartDocument>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+      index: true,
+    },
     items: [CartItemSchema],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export const CartModel = mongoose.model<ICartDocument>('Cart', CartSchema);

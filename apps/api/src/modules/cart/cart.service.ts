@@ -1,5 +1,5 @@
 import { CartRepository } from './cart.repository';
-import { BooksRepository } from '../books/books.repository';
+import { ListingRepository } from '../books/listing.repository';
 import { ICartDocument } from '../../models/cart.model';
 import { NotFoundError, ValidationError } from '../../utils/AppError';
 import { Cart, CartItem } from '@bookmarket/types';
@@ -7,16 +7,16 @@ import mongoose from 'mongoose';
 
 export class CartService {
   private cartRepository: CartRepository;
-  private booksRepository: BooksRepository;
+  private listingRepository: ListingRepository;
 
   constructor() {
     this.cartRepository = new CartRepository();
-    this.booksRepository = new BooksRepository();
+    this.listingRepository = new ListingRepository();
   }
 
-  private getBookIdStr(bookIdField: any): string {
-    if (!bookIdField) return '';
-    return bookIdField._id ? bookIdField._id.toString() : bookIdField.toString();
+  private getListingIdStr(listingIdField: any): string {
+    if (!listingIdField) return '';
+    return listingIdField._id ? listingIdField._id.toString() : listingIdField.toString();
   }
 
   async getOrCreateCart(userId: string): Promise<Cart> {
@@ -27,14 +27,14 @@ export class CartService {
     return this.mapToDTO(doc);
   }
 
-  async addToCart(userId: string, bookId: string, quantity: number): Promise<Cart> {
-    const book = await this.booksRepository.findById(bookId);
-    if (!book || book.status !== 'active') {
+  async addToCart(userId: string, listingId: string, quantity: number): Promise<Cart> {
+    const listing = await this.listingRepository.findById(listingId);
+    if (!listing || listing.status !== 'active') {
       throw new NotFoundError('Book listing not found or is inactive');
     }
 
-    if (book.stock < quantity) {
-      throw new ValidationError(`Insufficient stock. Only ${book.stock} items left.`);
+    if (listing.stock < quantity) {
+      throw new ValidationError(`Insufficient stock. Only ${listing.stock} copies available.`);
     }
 
     let cart = await this.cartRepository.findByUserId(userId);
@@ -43,22 +43,24 @@ export class CartService {
     }
 
     const items = [...cart.items];
-    const existingIndex = items.findIndex((item) => this.getBookIdStr(item.bookId) === bookId);
+    const existingIndex = items.findIndex(
+      (item) => this.getListingIdStr(item.listingId) === listingId
+    );
 
     if (existingIndex > -1) {
       const newQty = items[existingIndex].quantity + quantity;
-      if (book.stock < newQty) {
+      if (listing.stock < newQty) {
         throw new ValidationError(
           `Insufficient stock. Total requested quantity exceeds available stock.`
         );
       }
       items[existingIndex].quantity = newQty;
-      items[existingIndex].priceSnapshot = book.price;
+      items[existingIndex].priceSnapshot = listing.price;
     } else {
       items.push({
-        bookId: new mongoose.Types.ObjectId(bookId),
+        listingId: new mongoose.Types.ObjectId(listingId),
         quantity,
-        priceSnapshot: book.price,
+        priceSnapshot: listing.price,
       } as any);
     }
 
@@ -66,72 +68,66 @@ export class CartService {
     return this.mapToDTO(updated!);
   }
 
-  async updateItemQuantity(userId: string, bookId: string, quantity: number): Promise<Cart> {
+  async updateItemQuantity(userId: string, listingId: string, quantity: number): Promise<Cart> {
     const cart = await this.cartRepository.findByUserId(userId);
-    if (!cart) {
-      throw new NotFoundError('Cart not found');
-    }
+    if (!cart) throw new NotFoundError('Cart not found');
 
     const items = [...cart.items];
-    const itemIndex = items.findIndex((item) => this.getBookIdStr(item.bookId) === bookId);
-    if (itemIndex === -1) {
-      throw new NotFoundError('Item not found in cart');
-    }
+    const itemIndex = items.findIndex(
+      (item) => this.getListingIdStr(item.listingId) === listingId
+    );
+    if (itemIndex === -1) throw new NotFoundError('Item not found in cart');
 
-    const book = await this.booksRepository.findById(bookId);
-    if (!book) {
-      throw new NotFoundError('Book listing not found');
-    }
+    const listing = await this.listingRepository.findById(listingId);
+    if (!listing) throw new NotFoundError('Book listing not found');
 
-    if (book.stock < quantity) {
-      throw new ValidationError(`Insufficient stock. Only ${book.stock} items left.`);
+    if (listing.stock < quantity) {
+      throw new ValidationError(`Insufficient stock. Only ${listing.stock} copies available.`);
     }
 
     items[itemIndex].quantity = quantity;
-    items[itemIndex].priceSnapshot = book.price;
+    items[itemIndex].priceSnapshot = listing.price;
 
     const updated = await this.cartRepository.update(userId, items);
     return this.mapToDTO(updated!);
   }
 
-  async removeItem(userId: string, bookId: string): Promise<Cart> {
+  async removeItem(userId: string, listingId: string): Promise<Cart> {
     const cart = await this.cartRepository.findByUserId(userId);
-    if (!cart) {
-      throw new NotFoundError('Cart not found');
-    }
+    if (!cart) throw new NotFoundError('Cart not found');
 
-    const items = cart.items.filter((item) => this.getBookIdStr(item.bookId) !== bookId);
+    const items = cart.items.filter(
+      (item) => this.getListingIdStr(item.listingId) !== listingId
+    );
     const updated = await this.cartRepository.update(userId, items);
     return this.mapToDTO(updated!);
   }
 
   async mergeCarts(
     userId: string,
-    guestItems: Array<{ bookId: string; quantity: number }>
+    guestItems: Array<{ listingId: string; quantity: number }>
   ): Promise<Cart> {
     let cart = await this.cartRepository.findByUserId(userId);
-    if (!cart) {
-      cart = await this.cartRepository.create(userId);
-    }
+    if (!cart) cart = await this.cartRepository.create(userId);
 
     const items = [...cart.items];
 
     for (const guestItem of guestItems) {
-      const book = await this.booksRepository.findById(guestItem.bookId);
-      if (!book || book.status !== 'active') continue;
+      const listing = await this.listingRepository.findById(guestItem.listingId);
+      if (!listing || listing.status !== 'active') continue;
 
       const existingIndex = items.findIndex(
-        (item) => this.getBookIdStr(item.bookId) === guestItem.bookId
+        (item) => this.getListingIdStr(item.listingId) === guestItem.listingId
       );
       if (existingIndex > -1) {
         const totalQty = items[existingIndex].quantity + guestItem.quantity;
-        items[existingIndex].quantity = Math.min(totalQty, book.stock);
-        items[existingIndex].priceSnapshot = book.price;
+        items[existingIndex].quantity = Math.min(totalQty, listing.stock);
+        items[existingIndex].priceSnapshot = listing.price;
       } else {
         items.push({
-          bookId: new mongoose.Types.ObjectId(guestItem.bookId),
-          quantity: Math.min(guestItem.quantity, book.stock),
-          priceSnapshot: book.price,
+          listingId: new mongoose.Types.ObjectId(guestItem.listingId),
+          quantity: Math.min(guestItem.quantity, listing.stock),
+          priceSnapshot: listing.price,
         } as any);
       }
     }
@@ -142,28 +138,30 @@ export class CartService {
 
   mapToDTO(doc: ICartDocument): Cart {
     const items: CartItem[] = doc.items
-      .filter((item) => item.bookId !== null)
+      .filter((item) => item.listingId !== null)
       .map((item) => {
-        const bookDoc = item.bookId as any;
+        const listingDoc = item.listingId as any;
+        const catalogDoc = listingDoc?.catalogId as any;
         return {
-          bookId: bookDoc._id ? bookDoc._id.toString() : bookDoc.toString(),
+          listingId: listingDoc?._id ? listingDoc._id.toString() : listingDoc?.toString() ?? '',
           quantity: item.quantity,
           priceSnapshot: item.priceSnapshot,
-          bookDetail: bookDoc._id
+          listingDetail: listingDoc?._id
             ? {
-                id: bookDoc._id.toString(),
-                title: bookDoc.title,
-                slug: bookDoc.slug,
-                author: bookDoc.author,
-                isbn: bookDoc.isbn,
-                category: bookDoc.category ? bookDoc.category.toString() : '',
-                condition: bookDoc.condition,
-                price: bookDoc.price,
-                discountPrice: bookDoc.discountPrice,
-                images: bookDoc.images,
-                stock: bookDoc.stock,
-                sellerId: bookDoc.sellerId ? bookDoc.sellerId.toString() : '',
-                status: bookDoc.status,
+                id: listingDoc._id.toString(),
+                condition: listingDoc.condition,
+                price: listingDoc.price,
+                stock: listingDoc.stock,
+                sellerId: listingDoc.sellerId?.toString() ?? '',
+                catalog: catalogDoc?._id
+                  ? {
+                      title: catalogDoc.title,
+                      author: catalogDoc.author,
+                      isbn: catalogDoc.isbn,
+                      images: catalogDoc.images ?? [],
+                      slug: catalogDoc.slug,
+                    }
+                  : undefined,
               }
             : undefined,
         };

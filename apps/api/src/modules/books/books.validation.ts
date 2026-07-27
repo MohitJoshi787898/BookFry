@@ -10,11 +10,13 @@ export const createBookSchema = z.object({
   price: z.coerce.number().min(0, 'Price must be non-negative'),
   discountPrice: z.coerce.number().min(0).optional(),
   stock: z.coerce.number().min(0, 'Stock must be non-negative').default(1),
-  tags: z.array(z.string()).optional(),
+  tags: z.union([z.array(z.string()), z.string()]).optional(),
   language: z.string().default('English'),
   publisher: z.string().optional(),
   edition: z.string().optional(),
   pageCount: z.coerce.number().optional(),
+  existingImages: z.union([z.array(z.string()), z.string()]).optional(),
+  images: z.any().optional(),
 });
 
 export const updateBookSchema = createBookSchema.partial().extend({

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const addToCartSchema = z.object({
-  bookId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid Book ID'),
+  listingId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid Listing ID'),
   quantity: z.number().min(1, 'Quantity must be at least 1').default(1),
 });
 
@@ -12,7 +12,7 @@ export const updateCartItemSchema = z.object({
 export const mergeCartSchema = z.object({
   items: z.array(
     z.object({
-      bookId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid Book ID'),
+      listingId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid Listing ID'),
       quantity: z.number().min(1, 'Quantity must be at least 1'),
     })
   ),

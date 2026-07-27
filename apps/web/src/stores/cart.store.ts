@@ -9,8 +9,8 @@ interface CartState {
   error: string | null;
   fetchCart: (isAuthenticated: boolean) => Promise<void>;
   addItem: (isAuthenticated: boolean, book: Book, quantity?: number) => Promise<void>;
-  updateQuantity: (isAuthenticated: boolean, bookId: string, quantity: number) => Promise<void>;
-  removeItem: (isAuthenticated: boolean, bookId: string) => Promise<void>;
+  updateQuantity: (isAuthenticated: boolean, listingId: string, quantity: number) => Promise<void>;
+  removeItem: (isAuthenticated: boolean, listingId: string) => Promise<void>;
   syncCart: () => Promise<void>;
   clearCart: () => void;
 }
@@ -40,12 +40,12 @@ export const useCartStore = create<CartState>()(
           if (isAuthenticated) {
             const cart = await apiClient('/cart/items', {
               method: 'POST',
-              body: JSON.stringify({ bookId: book.id, quantity }),
+              body: JSON.stringify({ listingId: book.id, quantity }),
             });
             set({ items: cart.items, isLoading: false });
           } else {
             const currentItems = [...get().items];
-            const existingIndex = currentItems.findIndex((item) => item.bookId === book.id);
+            const existingIndex = currentItems.findIndex((item) => item.listingId === book.id);
 
             if (existingIndex > -1) {
               const newQty = currentItems[existingIndex].quantity + quantity;
@@ -58,23 +58,22 @@ export const useCartStore = create<CartState>()(
                 throw new Error(`Insufficient stock. Only ${book.stock} items left.`);
               }
               currentItems.push({
-                bookId: book.id,
+                listingId: book.id,
                 quantity,
                 priceSnapshot: book.price,
-                bookDetail: {
+                listingDetail: {
                   id: book.id,
-                  title: book.title,
-                  slug: book.slug,
-                  author: book.author,
-                  isbn: book.isbn,
-                  category: book.category,
                   condition: book.condition,
                   price: book.price,
-                  discountPrice: book.discountPrice,
-                  images: book.images,
                   stock: book.stock,
                   sellerId: book.sellerId,
-                  status: book.status,
+                  catalog: {
+                    title: book.title,
+                    author: book.author,
+                    isbn: book.isbn,
+                    images: book.images,
+                    slug: book.slug,
+                  },
                 },
               });
             }
@@ -87,20 +86,20 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      updateQuantity: async (isAuthenticated, bookId, quantity) => {
+      updateQuantity: async (isAuthenticated, listingId, quantity) => {
         set({ isLoading: true, error: null });
         try {
           if (isAuthenticated) {
-            const cart = await apiClient(`/cart/items/${bookId}`, {
+            const cart = await apiClient(`/cart/items/${listingId}`, {
               method: 'PATCH',
               body: JSON.stringify({ quantity }),
             });
             set({ items: cart.items, isLoading: false });
           } else {
             const currentItems = [...get().items];
-            const existingIndex = currentItems.findIndex((item) => item.bookId === bookId);
+            const existingIndex = currentItems.findIndex((item) => item.listingId === listingId);
             if (existingIndex > -1) {
-              const stock = currentItems[existingIndex].bookDetail?.stock || 999;
+              const stock = currentItems[existingIndex].listingDetail?.stock || 999;
               if (stock < quantity) {
                 throw new Error(`Insufficient stock. Only ${stock} items left.`);
               }
@@ -115,16 +114,16 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      removeItem: async (isAuthenticated, bookId) => {
+      removeItem: async (isAuthenticated, listingId) => {
         set({ isLoading: true, error: null });
         try {
           if (isAuthenticated) {
-            const cart = await apiClient(`/cart/items/${bookId}`, {
+            const cart = await apiClient(`/cart/items/${listingId}`, {
               method: 'DELETE',
             });
             set({ items: cart.items, isLoading: false });
           } else {
-            const currentItems = get().items.filter((item) => item.bookId !== bookId);
+            const currentItems = get().items.filter((item) => item.listingId !== listingId);
             set({ items: currentItems, isLoading: false });
           }
         } catch (err) {
@@ -136,7 +135,7 @@ export const useCartStore = create<CartState>()(
 
       syncCart: async () => {
         const guestItems = get().items.map((item) => ({
-          bookId: item.bookId,
+          listingId: item.listingId,
           quantity: item.quantity,
         }));
 

@@ -71,13 +71,16 @@ export default function SellerOrdersPage() {
     statusMutation.mutate({ orderId, status, note });
   };
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     pending: 'bg-warning/10 text-warning border-warning/20',
     confirmed: 'bg-brand/10 text-brand border-brand/20',
     shipped: 'bg-accent/10 text-accent border-accent/20',
     delivered: 'bg-success/10 text-success border-success/20',
     cancelled: 'bg-danger/10 text-danger border-danger/20',
     refunded: 'bg-danger/10 text-danger border-danger/20',
+    return_requested: 'bg-warning/10 text-warning border-warning/20',
+    return_approved: 'bg-success/10 text-success border-success/20',
+    return_rejected: 'bg-danger/10 text-danger border-danger/20',
   };
 
   return (

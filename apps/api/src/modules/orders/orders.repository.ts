@@ -18,6 +18,11 @@ export class OrdersRepository {
       .exec();
   }
 
+  async findAll(statusFilter?: string): Promise<IOrderDocument[]> {
+    const query = statusFilter ? { status: statusFilter } : {};
+    return OrderModel.find(query).sort({ createdAt: -1 }).exec();
+  }
+
   async create(data: Partial<IOrderDocument>): Promise<IOrderDocument> {
     const order = new OrderModel(data);
     return order.save();

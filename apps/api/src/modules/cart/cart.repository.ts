@@ -2,7 +2,12 @@ import { CartModel, ICartDocument } from '../../models/cart.model';
 
 export class CartRepository {
   async findByUserId(userId: string): Promise<ICartDocument | null> {
-    return CartModel.findOne({ userId }).populate('items.bookId').exec();
+    return CartModel.findOne({ userId })
+      .populate({
+        path: 'items.listingId',
+        populate: { path: 'catalogId', select: 'title author isbn images slug' },
+      })
+      .exec();
   }
 
   async create(userId: string): Promise<ICartDocument> {
@@ -12,7 +17,10 @@ export class CartRepository {
 
   async update(userId: string, items: any[]): Promise<ICartDocument | null> {
     return CartModel.findOneAndUpdate({ userId }, { items }, { new: true })
-      .populate('items.bookId')
+      .populate({
+        path: 'items.listingId',
+        populate: { path: 'catalogId', select: 'title author isbn images slug' },
+      })
       .exec();
   }
 }

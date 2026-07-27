@@ -51,5 +51,27 @@ export class OrdersController {
     );
     res.status(200).json(ApiResponse.success(order));
   };
+
+  requestReturn = async (req: Request, res: Response): Promise<void> => {
+    const buyerId = req.user!.id;
+    const { id } = req.params;
+    const { reason } = req.body;
+    const order = await this.ordersService.requestReturn(id, buyerId, reason);
+    res.status(200).json(ApiResponse.success(order));
+  };
+
+  resolveReturn = async (req: Request, res: Response): Promise<void> => {
+    const adminId = req.user!.id;
+    const { id } = req.params;
+    const { action, adminNote } = req.body;
+    const order = await this.ordersService.resolveReturn(id, adminId, action, adminNote);
+    res.status(200).json(ApiResponse.success(order));
+  };
+
+  adminListAll = async (req: Request, res: Response): Promise<void> => {
+    const statusFilter = req.query.status as string | undefined;
+    const orders = await this.ordersService.getAdminOrders(statusFilter);
+    res.status(200).json(ApiResponse.success(orders));
+  };
 }
 export default OrdersController;

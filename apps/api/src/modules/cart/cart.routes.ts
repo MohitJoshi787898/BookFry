@@ -13,11 +13,11 @@ router.use(requireAuth);
 router.get('/', asyncHandler(controller.get));
 router.post('/items', validate({ body: addToCartSchema }), asyncHandler(controller.addItem));
 router.patch(
-  '/items/:bookId',
+  '/items/:listingId',
   validate({ body: updateCartItemSchema }),
   asyncHandler(controller.updateItem)
 );
-router.delete('/items/:bookId', asyncHandler(controller.removeItem));
+router.delete('/items/:listingId', asyncHandler(controller.removeItem));
 router.post('/merge', validate({ body: mergeCartSchema }), asyncHandler(controller.merge));
 
 export default router;

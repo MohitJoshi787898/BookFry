@@ -291,7 +291,7 @@ export default function CartPage() {
   };
 
   const handleQtyChange = async (
-    bookId: string,
+    itemKey: string,
     currentQty: number,
     change: number,
     stock: number
@@ -299,15 +299,15 @@ export default function CartPage() {
     const newQty = currentQty + change;
     if (newQty < 1 || newQty > stock) return;
     try {
-      await updateQuantity(isAuthenticated, bookId, newQty);
+      await updateQuantity(isAuthenticated, itemKey, newQty);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleRemove = async (bookId: string) => {
+  const handleRemove = async (itemKey: string) => {
     try {
-      await removeItem(isAuthenticated, bookId);
+      await removeItem(isAuthenticated, itemKey);
     } catch (err) {
       console.error(err);
     }
@@ -679,13 +679,16 @@ export default function CartPage() {
               <div className="space-y-4">
                 <AnimatePresence initial={false}>
                   {items.map((item) => {
-                    const book = item.bookDetail;
+                    const itemKey = item.listingId || (item as any).bookId;
+                    const book = item.listingDetail?.catalog || (item as any).bookDetail;
+                    const condition = item.listingDetail?.condition || (item as any).bookDetail?.condition || 'good';
+                    const stock = item.listingDetail?.stock || (item as any).bookDetail?.stock || 1;
                     if (!book) return null;
                     const imageUrl = book.images?.[0]?.url || '';
 
                     return (
                       <motion.div
-                        key={item.bookId}
+                        key={itemKey}
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
@@ -724,7 +727,7 @@ export default function CartPage() {
                               
                               <div className="flex flex-wrap gap-2.5 items-center mt-2.5 select-none">
                                 <span className="inline-flex items-center rounded-lg bg-[#FFF9F6] border border-[#F26522]/20 px-2 py-0.5 text-[9px] font-bold text-secondary uppercase">
-                                  {book.condition.replace('_', ' ')}
+                                  {condition.replace('_', ' ')}
                                 </span>
                                 <span className="text-[10px] text-text-secondary font-medium flex items-center gap-1">
                                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
@@ -764,7 +767,7 @@ export default function CartPage() {
                             <div className="flex items-center border border-border rounded-xl bg-background overflow-hidden">
                               <button
                                 onClick={() =>
-                                  handleQtyChange(item.bookId, item.quantity, -1, book.stock)
+                                  handleQtyChange(itemKey, item.quantity, -1, stock)
                                 }
                                 className="p-2 hover:bg-background-subtle text-text-secondary transition-colors disabled:opacity-30 active:scale-90"
                                 disabled={item.quantity <= 1 || isCartLoading}
@@ -776,17 +779,17 @@ export default function CartPage() {
                               </span>
                               <button
                                 onClick={() =>
-                                  handleQtyChange(item.bookId, item.quantity, 1, book.stock)
+                                  handleQtyChange(itemKey, item.quantity, 1, stock)
                                 }
                                 className="p-2 hover:bg-background-subtle text-text-secondary transition-colors disabled:opacity-30 active:scale-90"
-                                disabled={item.quantity >= book.stock || isCartLoading}
+                                disabled={item.quantity >= stock || isCartLoading}
                               >
                                 <Plus className="h-3.5 w-3.5" />
                               </button>
                             </div>
 
                             <button
-                              onClick={() => handleRemove(item.bookId)}
+                              onClick={() => handleRemove(itemKey)}
                               disabled={isCartLoading}
                               className="p-2 hover:bg-danger/10 rounded-xl text-text-muted hover:text-danger transition-colors shrink-0 border border-transparent hover:border-danger/20"
                               title="Remove Item"

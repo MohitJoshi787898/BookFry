@@ -12,6 +12,7 @@ const controller = new BooksController();
 
 router.get('/', validate({ query: queryBookSchema }), asyncHandler(controller.list));
 router.get('/:slug', optionalAuth, asyncHandler(controller.getDetails));
+router.get('/:slug/listings', asyncHandler(controller.getListings));
 
 // Authenticated user mutating routes
 router.post(

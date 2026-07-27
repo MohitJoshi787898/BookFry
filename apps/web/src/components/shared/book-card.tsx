@@ -126,7 +126,10 @@ export function BookCard({ book }: BookCardProps) {
 
         {/* Pricing Row */}
         <div className="flex items-baseline gap-1 pt-1 font-sans">
-          <span className="text-xs sm:text-sm font-black text-text-primary">₹{book.price.toFixed(0)}</span>
+          <span className="text-[10px] text-text-muted font-bold uppercase">From</span>
+          <span className="text-xs sm:text-sm font-black text-text-primary">
+            ₹{(book.lowestPrice ?? book.price).toFixed(0)}
+          </span>
           <span className="text-[10px] text-text-muted line-through">₹{originalPrice.toFixed(0)}</span>
           {discountPercentage > 0 && (
             <span className="text-[10px] text-emerald-600 font-bold ml-0.5">{discountPercentage}% OFF</span>
@@ -135,8 +138,12 @@ export function BookCard({ book }: BookCardProps) {
 
         {/* Seller Info Row */}
         <div className="flex items-center gap-1 text-[9px] text-text-muted font-sans font-medium pt-1.5 border-t border-border/50">
-          <span>Seller:</span>
-          <span className="text-text-secondary font-bold truncate max-w-[80px]">Bookworm</span>
+          <span>Sellers:</span>
+          <span className="text-brand font-bold">
+            {book.listingCount && book.listingCount > 1
+              ? `${book.listingCount} Available`
+              : '1 Verified Seller'}
+          </span>
           <CheckCircle2 className="h-3 w-3 text-emerald-600 fill-emerald-50 shrink-0" />
         </div>
 

@@ -123,28 +123,76 @@ export interface Book {
   viewsCount: number;
   rejectionReason?: string;
   moderationHistory?: ModerationHistoryItem[];
+  lowestPrice?: number;
+  listingCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Canonical book record — one per ISBN, shared across all sellers */
+export interface BookCatalog {
+  id: string;
+  slug: string;
+  title: string;
+  author: string;
+  isbn: string;
+  description: string;
+  category: string;
+  images: BookImage[];
+  tags: string[];
+  language: string;
+  publisher?: string;
+  edition?: string;
+  pageCount?: number;
+  ratingAvg: number;
+  ratingCount: number;
+  viewsCount: number;
+  /** Computed: cheapest active listing price */
+  lowestPrice?: number;
+  /** Computed: number of active seller listings */
+  listingCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Per-seller inventory record — references a BookCatalog */
+export interface BookListing {
+  id: string;
+  catalogId: string;
+  sellerId: string;
+  /** Populated when fetching for buyer view */
+  catalog?: BookCatalog;
+  condition: BookCondition;
+  price: number;
+  discountPrice?: number;
+  stock: number;
+  status: BookStatus;
+  rejectionReason?: string;
+  moderationHistory?: ModerationHistoryItem[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CartItem {
-  bookId: string;
+  listingId: string;
+  bookId?: string;
   quantity: number;
   priceSnapshot: number;
-  bookDetail?: Omit<
-    Book,
-    | 'description'
-    | 'tags'
-    | 'createdAt'
-    | 'updatedAt'
-    | 'publisher'
-    | 'edition'
-    | 'pageCount'
-    | 'language'
-    | 'ratingAvg'
-    | 'ratingCount'
-    | 'viewsCount'
-  >;
+  listingDetail?: {
+    id: string;
+    condition: BookCondition;
+    price: number;
+    stock: number;
+    sellerId: string;
+    catalog?: {
+      title: string;
+      author: string;
+      isbn: string;
+      images: BookImage[];
+      slug: string;
+    };
+  };
+  bookDetail?: any;
 }
 
 export interface Cart {
@@ -160,11 +208,23 @@ export type OrderStatus =
   | 'shipped'
   | 'delivered'
   | 'cancelled'
-  | 'refunded';
+  | 'refunded'
+  | 'return_requested'
+  | 'return_approved'
+  | 'return_rejected';
+
+export interface ReturnRequest {
+  reason: string;
+  requestedAt: string;
+  status: 'pending' | 'approved' | 'rejected';
+  adminNote?: string;
+  resolvedAt?: string;
+}
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface OrderItem {
+  listingId: string;
   bookId: string;
   sellerId: string;
   title: string;
@@ -199,6 +259,7 @@ export interface Order {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentRef?: string;
+  returnRequest?: ReturnRequest;
   timeline: OrderTimeline[];
   createdAt: string;
   updatedAt: string;

@@ -11,6 +11,25 @@ export const checkoutSchema = z.object({
 });
 
 export const updateOrderStatusSchema = z.object({
-  status: z.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'refunded']),
+  status: z.enum([
+    'pending',
+    'confirmed',
+    'shipped',
+    'delivered',
+    'cancelled',
+    'refunded',
+    'return_requested',
+    'return_approved',
+    'return_rejected',
+  ]),
   note: z.string().optional(),
+});
+
+export const requestReturnSchema = z.object({
+  reason: z.string().min(10, 'Please provide a reason of at least 10 characters'),
+});
+
+export const resolveReturnSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  adminNote: z.string().optional(),
 });

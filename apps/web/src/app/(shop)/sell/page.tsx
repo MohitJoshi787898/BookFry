@@ -202,7 +202,7 @@ function SellBookPageInner() {
     }
   }, [formValues.pincode, setValue]);
 
-  // ISBN Auto Fetch Helper
+  // ISBN Auto Fetch Helper (Checks BookFry Catalog first to enforce single-book deduplication)
   const handleFetchIsbnDetails = async () => {
     if (!formValues.isbn || formValues.isbn.length < 10) {
       alert('Please enter a valid 10 or 13 digit ISBN first.');
@@ -212,6 +212,38 @@ function SellBookPageInner() {
     setIsbnFoundMsg(null);
     try {
       const cleanIsbn = formValues.isbn.replace(/[^0-9X]/gi, '');
+
+      // 1. Try fetching from internal BookFry catalog first
+      try {
+        const localRes = await apiClient<{ books: Book[] }>(`/books?search=${cleanIsbn}`);
+        const existingLocalBook = localRes?.books?.find(
+          (b) => b.isbn.replace(/[^0-9X]/gi, '') === cleanIsbn
+        );
+
+        if (existingLocalBook) {
+          setValue('title', existingLocalBook.title, { shouldValidate: true });
+          setValue('author', existingLocalBook.author, { shouldValidate: true });
+          if (existingLocalBook.publisher) setValue('publisher', existingLocalBook.publisher);
+          if (existingLocalBook.edition) setValue('edition', existingLocalBook.edition);
+          if (existingLocalBook.category) setValue('category', existingLocalBook.category);
+          if (existingLocalBook.images?.length > 0) {
+            setValue(
+              'images',
+              existingLocalBook.images.map((img) => img.url),
+              { shouldValidate: true }
+            );
+          }
+          setIsbnFoundMsg(
+            `Matched existing BookFry Catalog item "${existingLocalBook.title}"! Your copy will be listed under this book.`
+          );
+          setIsFetchingIsbn(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Local ISBN lookup skipped:', err);
+      }
+
+      // 2. Fallback to OpenLibrary API
       const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${cleanIsbn}&format=json&jscmd=data`);
       const data = await res.json();
       const bookData = data[`ISBN:${cleanIsbn}`];
@@ -227,7 +259,7 @@ function SellBookPageInner() {
         if (bookData.cover?.medium) {
           setValue('images', [bookData.cover.medium], { shouldValidate: true });
         }
-        setIsbnFoundMsg(`Book details auto-filled for "${bookData.title}"!`);
+        setIsbnFoundMsg(`Book details auto-filled from OpenLibrary for "${bookData.title}"!`);
       } else {
         alert('No bibliographic record found for this ISBN. Please enter details manually.');
       }

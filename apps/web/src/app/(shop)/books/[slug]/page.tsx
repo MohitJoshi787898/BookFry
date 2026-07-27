@@ -146,8 +146,26 @@ export default function BookDetailPage() {
     });
   };
 
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+
+  const availableListings: any[] = (book as any)?.listings || [];
+  const activeListing =
+    availableListings.find((l) => l.id === selectedListingId) || availableListings[0];
+
+  const targetBookForCart: Book | null = book
+    ? {
+        ...book,
+        id: activeListing?.id || book.id,
+        price: activeListing?.price ?? book.price,
+        stock: activeListing?.stock ?? book.stock,
+        condition: activeListing?.condition ?? book.condition,
+        sellerId: activeListing?.sellerId ?? book.sellerId,
+      }
+    : null;
+
   const handleIncrement = () => {
-    if (book && quantity < book.stock) {
+    const currentStock = activeListing?.stock ?? book?.stock ?? 1;
+    if (quantity < currentStock) {
       setQuantity((q) => q + 1);
     }
   };
@@ -159,11 +177,11 @@ export default function BookDetailPage() {
   };
 
   const handleAddToCart = async () => {
-    if (!book) return;
+    if (!targetBookForCart) return;
     setAddError(null);
     setSuccessMsg(false);
     try {
-      await addItem(isAuthenticated, book, quantity);
+      await addItem(isAuthenticated, targetBookForCart, quantity);
       setSuccessMsg(true);
       setTimeout(() => setSuccessMsg(false), 3500);
     } catch (err) {
@@ -173,9 +191,9 @@ export default function BookDetailPage() {
   };
 
   const handleBuyNow = async () => {
-    if (!book) return;
+    if (!targetBookForCart) return;
     try {
-      await addItem(isAuthenticated, book, quantity);
+      await addItem(isAuthenticated, targetBookForCart, quantity);
       router.push('/cart');
     } catch (err) {
       const error = err as Error;
@@ -391,47 +409,63 @@ export default function BookDetailPage() {
           <div className="lg:col-span-3 space-y-4">
             <div className="rounded-xl border border-border bg-white p-5 shadow-xs space-y-4 font-sans">
               <div>
-                <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3">Select Condition</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">
+                    Available Sellers ({availableListings.length || 1})
+                  </h3>
+                  <span className="text-[10px] text-brand font-semibold">Best Prices</span>
+                </div>
                 
-                {/* Condition radio lists */}
+                {/* Real seller listings list */}
                 <div className="space-y-2 text-xs">
-                  {/* Current Active Listing Condition */}
-                  <label className="flex items-center justify-between p-2.5 border-2 border-brand bg-brand/5 rounded-md cursor-pointer">
-                    <div className="flex items-start gap-2">
-                      <input type="radio" name="condition" defaultChecked className="mt-0.5 accent-brand" />
-                      <div>
-                        <p className="font-bold text-text-primary capitalize">{book.condition.replace('_', ' ')}</p>
-                        <p className="text-[10px] text-text-muted mt-0.5">Pre-owned book in listed condition.</p>
-                      </div>
-                    </div>
-                    <span className="font-extrabold text-brand">₹{book.price}</span>
-                  </label>
-
-                  {/* Mock Option 2 */}
-                  {book.condition !== 'good' && (
-                    <label className="flex items-center justify-between p-2.5 border border-border hover:border-brand/40 rounded-md cursor-pointer transition-colors">
+                  {availableListings.length > 0 ? (
+                    availableListings.map((l) => {
+                      const isSelected = (selectedListingId || availableListings[0].id) === l.id;
+                      return (
+                        <label
+                          key={l.id}
+                          onClick={() => setSelectedListingId(l.id)}
+                          className={`flex items-center justify-between p-2.5 rounded-md cursor-pointer transition-all ${
+                            isSelected
+                              ? 'border-2 border-brand bg-brand/5'
+                              : 'border border-border hover:border-brand/40'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            <input
+                              type="radio"
+                              name="sellerListing"
+                              checked={isSelected}
+                              onChange={() => setSelectedListingId(l.id)}
+                              className="mt-0.5 accent-brand"
+                            />
+                            <div>
+                              <p className="font-bold text-text-primary capitalize">
+                                {l.condition.replace('_', ' ')} &bull; {l.sellerName}
+                              </p>
+                              <p className="text-[10px] text-text-muted mt-0.5">
+                                Stock: {l.stock} copy{l.stock > 1 ? 'ies' : ''} available
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`font-extrabold ${isSelected ? 'text-brand' : 'text-text-primary'}`}>
+                            ₹{l.price}
+                          </span>
+                        </label>
+                      );
+                    })
+                  ) : (
+                    <label className="flex items-center justify-between p-2.5 border-2 border-brand bg-brand/5 rounded-md cursor-pointer">
                       <div className="flex items-start gap-2">
-                        <input type="radio" name="condition" className="mt-0.5 accent-brand" />
+                        <input type="radio" name="sellerListing" defaultChecked className="mt-0.5 accent-brand" />
                         <div>
-                          <p className="font-bold text-text-primary">Good</p>
-                          <p className="text-[10px] text-text-muted mt-0.5">Minor signs of wear & tear.</p>
+                          <p className="font-bold text-text-primary capitalize">
+                            {book.condition.replace('_', ' ')}
+                          </p>
+                          <p className="text-[10px] text-text-muted mt-0.5">Verified Seller</p>
                         </div>
                       </div>
-                      <span className="font-extrabold text-text-primary">₹{Math.round(book.price * 0.8)}</span>
-                    </label>
-                  )}
-
-                  {/* Mock Option 3 */}
-                  {book.condition !== 'like_new' && (
-                    <label className="flex items-center justify-between p-2.5 border border-border hover:border-brand/40 rounded-md cursor-pointer transition-colors">
-                      <div className="flex items-start gap-2">
-                        <input type="radio" name="condition" className="mt-0.5 accent-brand" />
-                        <div>
-                          <p className="font-bold text-text-primary">Like New</p>
-                          <p className="text-[10px] text-text-muted mt-0.5">Excellent near-pristine condition.</p>
-                        </div>
-                      </div>
-                      <span className="font-extrabold text-text-primary">₹{Math.round(book.price * 1.3)}</span>
+                      <span className="font-extrabold text-brand">₹{book.price}</span>
                     </label>
                   )}
                 </div>

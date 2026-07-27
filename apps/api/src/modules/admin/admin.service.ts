@@ -1,5 +1,6 @@
 import { UserModel } from '../../models/user.model';
-import { BookModel } from '../../models/book.model';
+import { BookListingModel } from '../../models/book-listing.model';
+import { BookCatalogModel } from '../../models/book-catalog.model';
 import { OrderModel } from '../../models/order.model';
 import { ContactModel } from '../../models/contact.model';
 import { NotFoundError, ValidationError } from '../../utils/AppError';
@@ -8,7 +9,7 @@ import mongoose from 'mongoose';
 export class AdminService {
   async getDashboardStats() {
     const totalUsers = await UserModel.countDocuments();
-    const activeListings = await BookModel.countDocuments({ status: 'active' });
+    const activeListings = await BookListingModel.countDocuments({ status: 'active' });
     const totalOrders = await OrderModel.countDocuments();
 
     const revenueResult = await OrderModel.aggregate([
@@ -114,41 +115,60 @@ export class AdminService {
 
   async getListings(page = 1, limit = 20, search?: string, status?: string) {
     const query: any = {};
-
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { author: { $regex: search, $options: 'i' } },
-        { isbn: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    if (status) {
-      query.status = status;
-    }
+    if (status) query.status = status;
 
     const skip = (page - 1) * limit;
-    const [docs, total] = await Promise.all([
-      BookModel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('category', 'name slug')
-        .exec(),
-      BookModel.countDocuments(query),
+
+    const pipeline: any[] = [
+      { $match: query },
+      {
+        $lookup: {
+          from: 'bookcatalogs',
+          localField: 'catalogId',
+          foreignField: '_id',
+          as: 'catalog',
+        },
+      },
+      { $unwind: '$catalog' },
+    ];
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'catalog.title': { $regex: search, $options: 'i' } },
+            { 'catalog.author': { $regex: search, $options: 'i' } },
+            { 'catalog.isbn': { $regex: search, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    const countPipeline = [...pipeline, { $count: 'total' }];
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    );
+
+    const [docs, countResult] = await Promise.all([
+      BookListingModel.aggregate(pipeline).exec(),
+      BookListingModel.aggregate(countPipeline).exec(),
     ]);
+
+    const total = countResult[0]?.total ?? 0;
 
     const listings = docs.map((b: any) => ({
       id: b._id.toString(),
-      title: b.title,
-      slug: b.slug,
-      author: b.author,
+      title: b.catalog.title,
+      slug: b.catalog.slug,
+      author: b.catalog.author,
       price: b.price,
       stock: b.stock,
       status: b.status,
       condition: b.condition,
       sellerId: b.sellerId.toString(),
-      category: b.category ? b.category.name : 'Uncategorized',
+      category: b.catalog.category ? b.catalog.category.toString() : 'Uncategorized',
       createdAt: b.createdAt.toISOString(),
     }));
 
@@ -163,9 +183,9 @@ export class AdminService {
     };
   }
 
-  async moderateListing(bookId: string, status: string, rejectionReason?: string, moderatorId?: string) {
-    const book = await BookModel.findById(bookId);
-    if (!book) {
+  async moderateListing(listingId: string, status: string, rejectionReason?: string, moderatorId?: string) {
+    const listing = await BookListingModel.findById(listingId);
+    if (!listing) {
       throw new NotFoundError('Book listing not found');
     }
 
@@ -173,32 +193,34 @@ export class AdminService {
       if (!rejectionReason || !rejectionReason.trim()) {
         throw new ValidationError('Rejection reason is required');
       }
-      book.rejectionReason = rejectionReason;
+      listing.rejectionReason = rejectionReason;
     } else {
-      book.rejectionReason = undefined;
+      listing.rejectionReason = undefined;
     }
 
-    book.status = status as any;
+    listing.status = status as any;
 
-    if (!book.moderationHistory) {
-      book.moderationHistory = [];
+    if (!listing.moderationHistory) {
+      listing.moderationHistory = [];
     }
 
-    book.moderationHistory.push({
+    listing.moderationHistory.push({
       status: status as any,
       notes: status === 'rejected' ? rejectionReason : `Listing moderated to ${status}`,
       moderatorId: moderatorId ? new mongoose.Types.ObjectId(moderatorId) : undefined,
       timestamp: new Date(),
     });
 
-    await book.save();
+    await listing.save();
+
+    const catalog = await BookCatalogModel.findById(listing.catalogId);
 
     return {
-      id: book._id.toString(),
-      title: book.title,
-      status: book.status,
-      rejectionReason: book.rejectionReason,
-      moderationHistory: book.moderationHistory,
+      id: listing._id.toString(),
+      title: catalog ? catalog.title : 'Book',
+      status: listing.status,
+      rejectionReason: listing.rejectionReason,
+      moderationHistory: listing.moderationHistory,
     };
   }
 

@@ -17,23 +17,23 @@ export class CartController {
 
   addItem = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.id;
-    const { bookId, quantity } = req.body;
-    const cart = await this.cartService.addToCart(userId, bookId, quantity);
+    const { listingId, quantity } = req.body;
+    const cart = await this.cartService.addToCart(userId, listingId, quantity);
     res.status(200).json(ApiResponse.success(cart));
   };
 
   updateItem = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.id;
-    const { bookId } = req.params;
+    const { listingId } = req.params;
     const { quantity } = req.body;
-    const cart = await this.cartService.updateItemQuantity(userId, bookId, quantity);
+    const cart = await this.cartService.updateItemQuantity(userId, listingId, quantity);
     res.status(200).json(ApiResponse.success(cart));
   };
 
   removeItem = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.id;
-    const { bookId } = req.params;
-    const cart = await this.cartService.removeItem(userId, bookId);
+    const { listingId } = req.params;
+    const cart = await this.cartService.removeItem(userId, listingId);
     res.status(200).json(ApiResponse.success(cart));
   };
 

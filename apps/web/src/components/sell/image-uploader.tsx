@@ -9,21 +9,37 @@ interface ImageUploaderProps {
   maxImages?: number;
 }
 
-function ImagePreview({ img }: { img: string | File }) {
+function ImagePreview({ img }: { img: any }) {
   const [preview, setPreview] = useState<string>('');
 
   useEffect(() => {
+    if (!img) {
+      setPreview('');
+      return;
+    }
+
     if (typeof img === 'string') {
       setPreview(img);
       return;
     }
 
-    const objectUrl = URL.createObjectURL(img);
-    setPreview(objectUrl);
+    if (typeof img === 'object' && 'url' in img && typeof img.url === 'string') {
+      setPreview(img.url);
+      return;
+    }
 
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
+    if (img instanceof Blob || img instanceof File) {
+      try {
+        const objectUrl = URL.createObjectURL(img);
+        setPreview(objectUrl);
+
+        return () => {
+          URL.revokeObjectURL(objectUrl);
+        };
+      } catch (err) {
+        console.error('Failed to create Object URL for image:', err);
+      }
+    }
   }, [img]);
 
   if (!preview) return null;

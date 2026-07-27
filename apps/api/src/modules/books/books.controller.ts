@@ -45,10 +45,31 @@ export class BooksController {
     res.status(200).json(ApiResponse.success(book));
   };
 
+  getListings = async (req: Request, res: Response): Promise<void> => {
+    const { slug } = req.params;
+    const listings = await this.booksService.getListingsForCatalog(slug);
+    res.status(200).json(ApiResponse.success({ listings }));
+  };
+
   create = async (req: Request, res: Response): Promise<void> => {
     const sellerId = req.user!.id;
     const images: Array<{ url: string; publicId: string }> = [];
 
+    // 1. Process existing / string image URLs sent in body
+    const bodyImages = req.body.existingImages || req.body.images;
+    if (bodyImages) {
+      const urlList = Array.isArray(bodyImages) ? bodyImages : [bodyImages];
+      for (const urlStr of urlList) {
+        if (typeof urlStr === 'string' && urlStr.trim() && urlStr !== '[object Object]') {
+          images.push({
+            url: urlStr.trim(),
+            publicId: `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          });
+        }
+      }
+    }
+
+    // 2. Process binary uploaded files from req.files / req.file
     if (req.files && Array.isArray(req.files)) {
       for (const file of req.files) {
         try {
@@ -87,6 +108,22 @@ export class BooksController {
     const { id } = req.params;
 
     const images: Array<{ url: string; publicId: string }> = [];
+
+    // 1. Process existing / string image URLs sent in body
+    const bodyImages = req.body.existingImages || req.body.images;
+    if (bodyImages) {
+      const urlList = Array.isArray(bodyImages) ? bodyImages : [bodyImages];
+      for (const urlStr of urlList) {
+        if (typeof urlStr === 'string' && urlStr.trim() && urlStr !== '[object Object]') {
+          images.push({
+            url: urlStr.trim(),
+            publicId: `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          });
+        }
+      }
+    }
+
+    // 2. Process binary uploaded files from req.files / req.file
     if (req.files && Array.isArray(req.files)) {
       for (const file of req.files) {
         try {

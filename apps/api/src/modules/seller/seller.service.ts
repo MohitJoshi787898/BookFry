@@ -1,4 +1,4 @@
-import { BookModel } from '../../models/book.model';
+import { BookListingModel } from '../../models/book-listing.model';
 import { OrderModel } from '../../models/order.model';
 import { TransactionModel } from '../../models/transaction.model';
 import { OrdersService } from '../orders/orders.service';
@@ -46,7 +46,7 @@ export class SellerService {
     const totalEarnings = earningsStats.length > 0 ? parseFloat(earningsStats[0].sum.toFixed(2)) : 0;
 
     // 3. Active Listings Count
-    const activeListingsCount = await BookModel.countDocuments({
+    const activeListingsCount = await BookListingModel.countDocuments({
       sellerId: sellerObjId,
       status: 'active',
     });
@@ -113,41 +113,60 @@ export class SellerService {
 
   async getListings(sellerId: string, page = 1, limit = 20, search?: string, status?: string) {
     const query: any = { sellerId: new mongoose.Types.ObjectId(sellerId) };
-
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { author: { $regex: search, $options: 'i' } },
-        { isbn: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    if (status) {
-      query.status = status;
-    }
+    if (status) query.status = status;
 
     const skip = (page - 1) * limit;
-    const [docs, total] = await Promise.all([
-      BookModel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('category', 'name slug')
-        .exec(),
-      BookModel.countDocuments(query),
+
+    const pipeline: any[] = [
+      { $match: query },
+      {
+        $lookup: {
+          from: 'bookcatalogs',
+          localField: 'catalogId',
+          foreignField: '_id',
+          as: 'catalog',
+        },
+      },
+      { $unwind: '$catalog' },
+    ];
+
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'catalog.title': { $regex: search, $options: 'i' } },
+            { 'catalog.author': { $regex: search, $options: 'i' } },
+            { 'catalog.isbn': { $regex: search, $options: 'i' } },
+          ],
+        },
+      });
+    }
+
+    const countPipeline = [...pipeline, { $count: 'total' }];
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    );
+
+    const [docs, countResult] = await Promise.all([
+      BookListingModel.aggregate(pipeline).exec(),
+      BookListingModel.aggregate(countPipeline).exec(),
     ]);
+
+    const total = countResult[0]?.total ?? 0;
 
     const listings = docs.map((b: any) => ({
       id: b._id.toString(),
-      title: b.title,
-      slug: b.slug,
-      author: b.author,
+      title: b.catalog.title,
+      slug: b.catalog.slug,
+      author: b.catalog.author,
       price: b.price,
       stock: b.stock,
       status: b.status,
       condition: b.condition,
       sellerId: b.sellerId.toString(),
-      category: b.category ? b.category.name : 'Uncategorized',
+      category: b.catalog.category ? b.catalog.category.toString() : 'Uncategorized',
       rejectionReason: b.rejectionReason,
       createdAt: b.createdAt.toISOString(),
       updatedAt: b.updatedAt.toISOString(),

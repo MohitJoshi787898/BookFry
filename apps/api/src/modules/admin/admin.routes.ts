@@ -3,6 +3,8 @@ import { AdminController } from './admin.controller';
 import { requireAuth } from '../../middlewares/auth.middleware';
 import { requireRoles } from '../../middlewares/rbac.middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
+import { validate } from '../../middlewares/validate.middleware';
+import { updateOrderStatusSchema, resolveReturnSchema } from '../orders/orders.validation';
 
 const router = Router();
 const controller = new AdminController();
@@ -22,5 +24,18 @@ router.get('/reports', asyncHandler(controller.getReports));
 
 router.get('/support-tickets', asyncHandler(controller.getSupportTickets));
 router.patch('/support-tickets/:id/resolve', asyncHandler(controller.resolveSupportTicket));
+
+// Orders management
+router.get('/orders', asyncHandler(controller.getAdminOrders));
+router.patch(
+  '/orders/:id/status',
+  validate({ body: updateOrderStatusSchema }),
+  asyncHandler(controller.updateOrderStatus)
+);
+router.patch(
+  '/orders/:id/return/resolve',
+  validate({ body: resolveReturnSchema }),
+  asyncHandler(controller.resolveReturn)
+);
 
 export default router;

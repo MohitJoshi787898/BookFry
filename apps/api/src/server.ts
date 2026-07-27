@@ -6,6 +6,10 @@ import { logger } from './utils/logger';
 const startServer = async () => {
   try {
     await connectDB();
+    const { migrateBooksToCatalogAndListings } = await import('./scripts/migrate-books');
+    await migrateBooksToCatalogAndListings().catch((err) =>
+      logger.error('Auto migration failed:', err)
+    );
 
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${env.PORT}`);

@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { OrderStatus, PaymentStatus, BookCondition } from '@bookmarket/types';
 
 export interface IOrderItem {
+  listingId?: mongoose.Types.ObjectId;
   bookId: mongoose.Types.ObjectId;
   sellerId: mongoose.Types.ObjectId;
   title: string;
@@ -14,6 +15,14 @@ export interface IOrderTimeline {
   status: OrderStatus;
   note?: string;
   timestamp: Date;
+}
+
+export interface IReturnRequest {
+  reason: string;
+  requestedAt: Date;
+  status: 'pending' | 'approved' | 'rejected';
+  adminNote?: string;
+  resolvedAt?: Date;
 }
 
 export interface IOrderDocument extends Document {
@@ -35,13 +44,15 @@ export interface IOrderDocument extends Document {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentRef?: string;
+  returnRequest?: IReturnRequest;
   timeline: IOrderTimeline[];
   createdAt: Date;
   updatedAt: Date;
 }
 
 const OrderItemSchema = new Schema<IOrderItem>({
-  bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true },
+  listingId: { type: Schema.Types.ObjectId, ref: 'BookListing' },
+  bookId: { type: Schema.Types.ObjectId },
   sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   title: { type: String, required: true },
   price: { type: Number, required: true, min: 0 },
@@ -53,11 +64,49 @@ const OrderTimelineSchema = new Schema<IOrderTimeline>({
   status: {
     type: String,
     required: true,
-    enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'refunded'],
+    enum: [
+      'pending',
+      'confirmed',
+      'shipped',
+      'delivered',
+      'cancelled',
+      'refunded',
+      'return_requested',
+      'return_approved',
+      'return_rejected',
+    ],
   },
   note: { type: String },
   timestamp: { type: Date, default: Date.now },
 });
+
+const ReturnRequestSchema = new Schema<IReturnRequest>(
+  {
+    reason: { type: String, required: true },
+    requestedAt: { type: Date, default: Date.now },
+    status: {
+      type: String,
+      required: true,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    adminNote: { type: String },
+    resolvedAt: { type: Date },
+  },
+  { _id: false }
+);
+
+const ALL_STATUSES = [
+  'pending',
+  'confirmed',
+  'shipped',
+  'delivered',
+  'cancelled',
+  'refunded',
+  'return_requested',
+  'return_approved',
+  'return_rejected',
+];
 
 const OrderSchema = new Schema<IOrderDocument>(
   {
@@ -79,7 +128,7 @@ const OrderSchema = new Schema<IOrderDocument>(
     status: {
       type: String,
       required: true,
-      enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'refunded'],
+      enum: ALL_STATUSES,
       default: 'pending',
       index: true,
     },
@@ -90,6 +139,7 @@ const OrderSchema = new Schema<IOrderDocument>(
       default: 'pending',
     },
     paymentRef: { type: String },
+    returnRequest: { type: ReturnRequestSchema, default: undefined },
     timeline: { type: [OrderTimelineSchema], default: [] },
   },
   {
