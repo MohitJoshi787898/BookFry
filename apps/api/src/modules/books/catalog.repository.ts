@@ -82,6 +82,7 @@ export class CatalogRepository {
         $addFields: {
           lowestPrice: { $min: '$activeListings.price' },
           listingCount: { $size: '$activeListings' },
+          primaryListingId: { $arrayElemAt: ['$activeListings._id', 0] },
         },
       },
       { $project: { activeListings: 0 } },

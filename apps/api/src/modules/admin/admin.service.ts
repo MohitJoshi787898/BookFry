@@ -284,6 +284,94 @@ export class AdminService {
       status: doc.status,
     };
   }
+
+  // CMS Methods
+  async getCms() {
+    const { CmsModel } = await import('../../models/cms.model');
+    let cms = await CmsModel.findOne();
+    if (!cms) {
+      cms = await CmsModel.create({});
+    }
+    return cms;
+  }
+
+  async updateCms(data: { announcementText?: string; announcementEnabled?: boolean; announcementLink?: string; faqs?: any[] }) {
+    const { CmsModel } = await import('../../models/cms.model');
+    let cms = await CmsModel.findOne();
+    if (!cms) {
+      cms = new CmsModel();
+    }
+    if (data.announcementText !== undefined) cms.announcementText = data.announcementText;
+    if (data.announcementEnabled !== undefined) cms.announcementEnabled = data.announcementEnabled;
+    if (data.announcementLink !== undefined) cms.announcementLink = data.announcementLink;
+    if (data.faqs !== undefined) cms.faqs = data.faqs;
+    await cms.save();
+    return cms;
+  }
+
+  // Coupon Methods
+  async getCoupons() {
+    const { CouponModel } = await import('../../models/coupon.model');
+    return CouponModel.find().sort({ createdAt: -1 });
+  }
+
+  async createCoupon(data: { code: string; discountType: 'percentage' | 'flat'; discountValue: number; minOrderSubtotal?: number; maxUses?: number; expiryDate?: string }) {
+    const { CouponModel } = await import('../../models/coupon.model');
+    const existing = await CouponModel.findOne({ code: data.code.toUpperCase() });
+    if (existing) throw new ValidationError('Coupon code already exists');
+    return CouponModel.create({
+      code: data.code.toUpperCase(),
+      discountType: data.discountType,
+      discountValue: data.discountValue,
+      minOrderSubtotal: data.minOrderSubtotal || 0,
+      maxUses: data.maxUses || 1000,
+      expiryDate: data.expiryDate ? new Date(data.expiryDate) : undefined,
+    });
+  }
+
+  async deleteCoupon(id: string) {
+    const { CouponModel } = await import('../../models/coupon.model');
+    const deleted = await CouponModel.findByIdAndDelete(id);
+    if (!deleted) throw new NotFoundError('Coupon not found');
+    return deleted;
+  }
+
+  // Settings Methods
+  async getPlatformSettings() {
+    const { PlatformSettingsModel } = await import('../../models/platform-settings.model');
+    let settings = await PlatformSettingsModel.findOne();
+    if (!settings) {
+      settings = await PlatformSettingsModel.create({});
+    }
+    return settings;
+  }
+
+  async updatePlatformSettings(data: any) {
+    const { PlatformSettingsModel } = await import('../../models/platform-settings.model');
+    let settings = await PlatformSettingsModel.findOne();
+    if (!settings) {
+      settings = new PlatformSettingsModel();
+    }
+    if (data.commissionPercent !== undefined) settings.commissionPercent = data.commissionPercent;
+    if (data.flatShippingFee !== undefined) settings.flatShippingFee = data.flatShippingFee;
+    if (data.taxPercent !== undefined) settings.taxPercent = data.taxPercent;
+    if (data.returnWindowDays !== undefined) settings.returnWindowDays = data.returnWindowDays;
+    if (data.maintenanceMode !== undefined) settings.maintenanceMode = data.maintenanceMode;
+    if (data.supportEmail !== undefined) settings.supportEmail = data.supportEmail;
+    if (data.supportPhone !== undefined) settings.supportPhone = data.supportPhone;
+    await settings.save();
+    return settings;
+  }
+
+  // Export CSV Report
+  async exportCsvReport(): Promise<string> {
+    const orders = await OrderModel.find().sort({ createdAt: -1 });
+    let csv = 'OrderNumber,BuyerID,Total,Status,PaymentStatus,Date\n';
+    for (const order of orders) {
+      csv += `${order.orderNumber},${order.buyerId.toString()},${order.total},${order.status},${order.paymentStatus},${order.createdAt.toISOString()}\n`;
+    }
+    return csv;
+  }
 }
 
 export default AdminService;

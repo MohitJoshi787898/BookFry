@@ -1,31 +1,55 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useAuthStore } from '@/stores/auth.store';
+import { apiClient } from '@/lib/api-client';
 import { FileText, ShieldAlert, Save, Megaphone, HelpCircle } from 'lucide-react';
+
+interface CmsData {
+  announcementText: string;
+  announcementEnabled: boolean;
+  announcementLink?: string;
+  faqs: { question: string; answer: string; category?: string }[];
+}
 
 export default function AdminCMSPage() {
   const { user: currentUser } = useAuthStore();
   const isAdmin = currentUser?.roles.includes('admin');
+  const queryClient = useQueryClient();
 
-  const [announcement, setAnnouncement] = useState(
-    '🎉 Free Shipping on Student Book Exchanges above ₹499 across India! Use Code: WELCOME100'
-  );
-  const [faqs, setFaqs] = useState([
-    {
-      q: 'How does BookFry ensure authentic books?',
-      a: 'Every listing undergoes strict ISBN & seller rating verification before going live.',
-    },
-    {
-      q: 'How long does campus book delivery take in India?',
-      a: 'Orders are dispatched within 24 hours and delivered across Indian cities in 2-4 business days.',
-    },
-  ]);
+  const { data: cmsData } = useQuery<CmsData>({
+    queryKey: ['admin-cms'],
+    queryFn: () => apiClient('/admin/cms'),
+    enabled: !!isAdmin,
+  });
 
+  const [announcement, setAnnouncement] = useState('');
+  const [faqs, setFaqs] = useState<{ question: string; answer: string }[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
   const [newAnswer, setNewAnswer] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  useEffect(() => {
+    if (cmsData) {
+      setAnnouncement(cmsData.announcementText || '');
+      setFaqs(cmsData.faqs || []);
+    }
+  }, [cmsData]);
+
+  const updateCmsMutation = useMutation({
+    mutationFn: (payload: Partial<CmsData>) =>
+      apiClient('/admin/cms', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-cms'] });
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    },
+  });
 
   if (!isAdmin) {
     return (
@@ -40,14 +64,15 @@ export default function AdminCMSPage() {
 
   const handleSaveBanner = (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    updateCmsMutation.mutate({ announcementText: announcement });
   };
 
   const handleAddFaq = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newQuestion.trim() || !newAnswer.trim()) return;
-    setFaqs([...faqs, { q: newQuestion.trim(), a: newAnswer.trim() }]);
+    const updatedFaqs = [...faqs, { question: newQuestion.trim(), answer: newAnswer.trim() }];
+    setFaqs(updatedFaqs);
+    updateCmsMutation.mutate({ faqs: updatedFaqs });
     setNewQuestion('');
     setNewAnswer('');
   };
@@ -113,9 +138,9 @@ export default function AdminCMSPage() {
 
           <div className="space-y-3">
             {faqs.map((faq, idx) => (
-              <div key={idx} className="p-3.5 border border-border rounded bg-background-subtle space-y-1">
-                <p className="text-xs font-bold text-text-primary">Q: {faq.q}</p>
-                <p className="text-xs text-text-secondary">A: {faq.a}</p>
+              <div key={idx} className="p-3 border border-border bg-background rounded-lg space-y-1 text-xs">
+                <p className="font-bold text-text-primary">Q: {faq.question}</p>
+                <p className="text-text-secondary font-sans">A: {faq.answer}</p>
               </div>
             ))}
           </div>

@@ -6,6 +6,7 @@ import { Book } from '@bookmarket/types';
 import { Star, ShoppingBag, Check, CheckCircle2, Heart } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 interface BookCardProps {
   book: Book;
@@ -15,9 +16,10 @@ interface BookCardProps {
 export function BookCard({ book }: BookCardProps) {
   const { addItem } = useCartStore();
   const { isAuthenticated } = useAuthStore();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const inWishlist = isWishlisted(book.id);
 
   const displayCondition = {
     new: 'New',
@@ -60,10 +62,10 @@ export function BookCard({ book }: BookCardProps) {
     }
   };
 
-  const handleWishlistToggle = (e: React.MouseEvent) => {
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    await toggleWishlist(book.id);
   };
 
   return (
@@ -84,17 +86,17 @@ export function BookCard({ book }: BookCardProps) {
         />
 
         {/* Bestseller overlay tag */}
-        <span className="absolute top-2.5 left-2.5 bg-[#E11D48] text-white text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm shadow-xs select-none">
+        <span className="absolute top-2.5 left-2.5 bg-danger text-danger-foreground text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm shadow-xs select-none">
           Bestseller
         </span>
 
         {/* Wishlist Heart Overlay - Always Visible */}
         <button
           onClick={handleWishlistToggle}
-          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white dark:bg-[#121C2C] text-slate-400 hover:text-secondary shadow-xs hover:shadow-sm transition-all z-10 focus:outline-none"
+          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-card text-muted-foreground hover:text-secondary shadow-xs hover:shadow-sm transition-all z-10 focus:outline-none"
           title="Add to Wishlist"
         >
-          <Heart className={`h-3.5 w-3.5 transition-colors ${isWishlisted ? 'fill-secondary text-secondary' : ''}`} />
+          <Heart className={`h-3.5 w-3.5 transition-colors ${inWishlist ? 'fill-secondary text-secondary' : ''}`} />
         </button>
       </Link>
 

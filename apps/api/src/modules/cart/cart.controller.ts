@@ -17,8 +17,9 @@ export class CartController {
 
   addItem = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.id;
-    const { listingId, quantity } = req.body;
-    const cart = await this.cartService.addToCart(userId, listingId, quantity);
+    const targetListingId = req.body.listingId || req.body.bookId;
+    const quantity = req.body.quantity;
+    const cart = await this.cartService.addToCart(userId, targetListingId, quantity);
     res.status(200).json(ApiResponse.success(cart));
   };
 

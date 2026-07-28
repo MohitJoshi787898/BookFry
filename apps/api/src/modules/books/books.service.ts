@@ -54,28 +54,26 @@ export class BooksService {
     }
 
     await this.catalogRepository.incrementViewCount(catalog._id.toString());
+    catalog.viewsCount = (catalog.viewsCount || 0) + 1;
 
     // Fetch all active listings for this catalog entry
     const activeListings = await this.listingRepository.findByCatalogId(catalog._id.toString());
 
-    // Populate seller information for each listing
-    const listingsWithSeller = await Promise.all(
-      activeListings.map(async (l) => {
-        const populated = await l.populate('sellerId', 'name email avatar');
-        const sellerObj = populated.sellerId as any;
-        return {
-          id: l._id.toString(),
-          sellerId: sellerObj?._id ? sellerObj._id.toString() : l.sellerId.toString(),
-          sellerName: sellerObj?.name || 'Verified Seller',
-          condition: l.condition,
-          price: l.price,
-          discountPrice: l.discountPrice,
-          stock: l.stock,
-          status: l.status,
-          createdAt: l.createdAt.toISOString(),
-        };
-      })
-    );
+    // Use pre-populated seller information
+    const listingsWithSeller = activeListings.map((l) => {
+      const sellerObj = l.sellerId as any;
+      return {
+        id: l._id.toString(),
+        sellerId: sellerObj?._id ? sellerObj._id.toString() : (l.sellerId ? l.sellerId.toString() : ''),
+        sellerName: sellerObj?.name || 'Verified Seller',
+        condition: l.condition,
+        price: l.price,
+        discountPrice: l.discountPrice,
+        stock: l.stock,
+        status: l.status,
+        createdAt: l.createdAt.toISOString(),
+      };
+    });
 
     const cheapestListing = activeListings[0];
     const bookDTO = this.mapCatalogAndListingToBook(catalog, cheapestListing);
@@ -93,23 +91,20 @@ export class BooksService {
     if (!catalog) throw new NotFoundError('Book catalog not found');
 
     const activeListings = await this.listingRepository.findByCatalogId(catalog._id.toString());
-    return Promise.all(
-      activeListings.map(async (l) => {
-        const populated = await l.populate('sellerId', 'name email avatar');
-        const sellerObj = populated.sellerId as any;
-        return {
-          id: l._id.toString(),
-          sellerId: sellerObj?._id ? sellerObj._id.toString() : l.sellerId.toString(),
-          sellerName: sellerObj?.name || 'Verified Seller',
-          condition: l.condition,
-          price: l.price,
-          discountPrice: l.discountPrice,
-          stock: l.stock,
-          status: l.status,
-          createdAt: l.createdAt.toISOString(),
-        };
-      })
-    );
+    return activeListings.map((l) => {
+      const sellerObj = l.sellerId as any;
+      return {
+        id: l._id.toString(),
+        sellerId: sellerObj?._id ? sellerObj._id.toString() : (l.sellerId ? l.sellerId.toString() : ''),
+        sellerName: sellerObj?.name || 'Verified Seller',
+        condition: l.condition,
+        price: l.price,
+        discountPrice: l.discountPrice,
+        stock: l.stock,
+        status: l.status,
+        createdAt: l.createdAt.toISOString(),
+      };
+    });
   }
 
   async listBooks(query: {
@@ -156,8 +151,12 @@ export class BooksService {
           : doc.category.toString()
         : '';
 
+      const bookId = doc.primaryListingId
+        ? doc.primaryListingId.toString()
+        : doc._id.toString();
+
       return {
-        id: doc._id.toString(),
+        id: bookId,
         title: doc.title,
         slug: doc.slug,
         author: doc.author,
@@ -357,7 +356,7 @@ export class BooksService {
     await this.listingRepository.delete(id);
   }
 
-  private mapCatalogAndListingToBook(
+  public mapCatalogAndListingToBook(
     catalog: IBookCatalogDocument,
     listing?: IBookListingDocument | null
   ): Book {

@@ -153,6 +153,16 @@ export class UsersController {
     await this.usersService.checkoutIntent(userId, addressId);
     res.status(200).json(ApiResponse.success({ message: 'Checkout interest registered' }));
   };
+
+  updateSellerPayout = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ValidationError('User authentication failed');
+    }
+
+    const user = await this.usersService.updateSellerPayout(userId, req.body);
+    res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
+  };
 }
 
 export default UsersController;

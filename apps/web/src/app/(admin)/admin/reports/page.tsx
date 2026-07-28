@@ -92,8 +92,21 @@ export default function AdminReportsPage() {
         </div>
 
         <button
-          onClick={() => alert('Exporting CSV financial statement...')}
-          className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover transition-colors shadow flex items-center space-x-1.5 self-start sm:self-auto"
+          onClick={async () => {
+            try {
+              const res = await apiClient<string>('/admin/reports/export');
+              const blob = new Blob([res], { type: 'text/csv' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'bookfry-sales-report.csv';
+              a.click();
+              window.URL.revokeObjectURL(url);
+            } catch (err) {
+              console.error('Failed to export CSV', err);
+            }
+          }}
+          className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover transition-colors shadow flex items-center space-x-1.5 self-start sm:self-auto cursor-pointer"
         >
           <Download className="h-4 w-4" />
           <span>Export CSV Statement</span>

@@ -273,5 +273,29 @@ export class UsersService {
       );
     }
   }
+
+  async updateSellerPayout(
+    userId: string,
+    payoutDetails: { upiId?: string; accountNumber?: string; ifscCode?: string; accountName?: string }
+  ): Promise<IUserDocument> {
+    const user = await this.getUserById(userId);
+    if (!user.roles.includes('seller')) {
+      user.roles.push('seller');
+    }
+    user.sellerProfile = {
+      storeName: user.sellerProfile?.storeName || `${user.name}'s BookStore`,
+      bio: user.sellerProfile?.bio || '',
+      rating: user.sellerProfile?.rating || 5,
+      totalSales: user.sellerProfile?.totalSales || 0,
+      payoutDetails: {
+        upiId: payoutDetails.upiId || user.sellerProfile?.payoutDetails?.upiId,
+        accountNumber: payoutDetails.accountNumber || user.sellerProfile?.payoutDetails?.accountNumber,
+        ifscCode: payoutDetails.ifscCode || user.sellerProfile?.payoutDetails?.ifscCode,
+        accountName: payoutDetails.accountName || user.sellerProfile?.payoutDetails?.accountName,
+      },
+    };
+    await user.save();
+    return user;
+  }
 }
 export default UsersService;

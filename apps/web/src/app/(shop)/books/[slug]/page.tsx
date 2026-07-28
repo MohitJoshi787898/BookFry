@@ -40,6 +40,8 @@ import { Button } from '@/components/ui/button';
 import { Rating } from '@/components/ui/marketplace';
 import Link from 'next/link';
 import { BookJsonLd, BreadcrumbJsonLd } from '@/components/seo/json-ld';
+import { SellerOffersList, SellerOffer } from '@/components/shared/seller-offers-list';
+import { BookCarousel } from '@/components/marketing/book-carousel';
 
 export default function BookDetailPage() {
   const params = useParams();
@@ -68,6 +70,25 @@ export default function BookDetailPage() {
     queryKey: ['book', slug],
     queryFn: () => apiClient(`/books/${slug}`),
     enabled: !!slug,
+  });
+
+  // Track book detail view event
+  React.useEffect(() => {
+    if (book?.id) {
+      apiClient('/events/view', {
+        method: 'POST',
+        body: JSON.stringify({ bookId: book.id, categoryId: book.category }),
+      }).catch(() => {});
+    }
+  }, [book?.id, book?.category]);
+
+  const { data: recData } = useQuery<{
+    frequentlyBoughtTogether: Book[];
+    similarCategory: Book[];
+  }>({
+    queryKey: ['bookRecommendations', book?.id],
+    queryFn: () => apiClient(`/recommendations/${book?.id}`),
+    enabled: !!book?.id,
   });
 
   const { data: wishlistData } = useQuery<{ wishlist: Wishlist; books: Book[] }>({
@@ -583,6 +604,11 @@ export default function BookDetailPage() {
           </div>
         </div>
 
+        {/* Multi-Seller Comparison Offers */}
+        <div className="mb-12">
+          <SellerOffersList catalogBook={book} offers={(book as BookWithListings).listings as unknown as SellerOffer[] || []} />
+        </div>
+
         {/* 3. Horizontal Features Trust Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-b border-border py-4 my-8 font-sans text-xs text-text-secondary text-center">
           <div className="flex items-center justify-center gap-1.5 py-1">
@@ -1014,6 +1040,18 @@ export default function BookDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Frequently Bought Together / Recommended Books */}
+        {recData?.frequentlyBoughtTogether && recData.frequentlyBoughtTogether.length > 0 && (
+          <div className="border-t border-border mt-12 pt-8">
+            <BookCarousel
+              eyebrow="Customers Also Bought"
+              title="Frequently Bought Together"
+              subtitle="Students who viewed this book also bought these items"
+              customBooks={recData.frequentlyBoughtTogether}
+            />
+          </div>
+        )}
       </main>
 
       <Footer />

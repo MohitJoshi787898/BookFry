@@ -4,6 +4,8 @@ import { ListingRepository } from '../books/listing.repository';
 import { CatalogRepository } from '../books/catalog.repository';
 import { TransactionModel } from '../../models/transaction.model';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../../services/email.service';
+import { UserModel } from '../../models/user.model';
 import { NotFoundError, ValidationError, UnauthorizedError } from '../../utils/AppError';
 import { Order, OrderStatus } from '@bookmarket/types';
 import mongoose from 'mongoose';
@@ -117,6 +119,42 @@ export class OrdersService {
 
     await this.cartRepository.update(buyerId, []);
 
+    // Async Email Notifications Dispatch (Non-blocking)
+    try {
+      const emailService = new EmailService();
+      const buyerUser = await UserModel.findById(buyerId);
+      if (buyerUser) {
+        await emailService.sendOrderConfirmationToBuyer(
+          buyerUser.email,
+          buyerUser.name,
+          orderNumber,
+          orderItems.map((item) => ({
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          total
+        );
+      }
+
+      // Notify sellers of each unique item
+      for (const item of orderItems) {
+        const sellerUser = await UserModel.findById(item.sellerId);
+        if (sellerUser) {
+          const payoutAmount = item.price * 0.9; // 10% platform fee
+          await emailService.sendSaleNotificationToSeller(
+            sellerUser.email,
+            sellerUser.name,
+            orderNumber,
+            item.title,
+            payoutAmount
+          );
+        }
+      }
+    } catch (emailErr) {
+      console.error('[Order Email Notification Warning] Non-blocking email error:', emailErr);
+    }
+
     return this.mapToDTO(orderDoc);
   }
 
@@ -170,6 +208,28 @@ export class OrdersService {
 
     if (!isAdmin && !isSellerOfItem) {
       throw new UnauthorizedError('Not authorized to update order status');
+    }
+
+    // State machine transition validation
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      pending: ['confirmed', 'cancelled'],
+      confirmed: ['shipped', 'cancelled'],
+      shipped: ['delivered', 'cancelled'],
+      delivered: ['return_requested'],
+      return_requested: ['return_approved', 'return_rejected'],
+      cancelled: [],
+      refunded: [],
+      return_approved: [],
+      return_rejected: [],
+    };
+
+    const allowedNextStatuses = VALID_TRANSITIONS[order.status] || [];
+    if (!isAdmin && !allowedNextStatuses.includes(newStatus)) {
+      throw new ValidationError(
+        `Invalid order status transition from "${order.status}" to "${newStatus}". Allowed next statuses: ${
+          allowedNextStatuses.join(', ') || 'none'
+        }`
+      );
     }
 
     order.status = newStatus;

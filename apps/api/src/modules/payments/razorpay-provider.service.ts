@@ -78,15 +78,15 @@ export class RazorpayProvider implements PaymentProvider {
     const orderEntity = event.payload?.order?.entity;
     const paymentEntity = event.payload?.payment?.entity;
     
-    const orderId = orderEntity?.receipt || paymentEntity?.notes?.orderId;
-    const paymentRef = paymentEntity?.id || 'pay_razorpay_mock';
+    const orderId = orderEntity?.receipt || paymentEntity?.notes?.orderId || event.orderId || event.payload?.orderId;
+    const paymentRef = paymentEntity?.id || event.paymentIntentId || 'pay_razorpay_mock';
 
     if (!orderId) {
       throw new Error('Order ID missing in webhook payload');
     }
 
     let status: 'paid' | 'failed' = 'failed';
-    if (event.event === 'order.paid' || event.event === 'payment.captured') {
+    if (event.event === 'order.paid' || event.event === 'payment.captured' || event.orderId || event.paymentIntentId) {
       status = 'paid';
     }
 

@@ -19,6 +19,9 @@ export interface ISellerProfile {
     accountNumber?: string;
     routingNumber?: string;
     bankName?: string;
+    upiId?: string;
+    ifscCode?: string;
+    accountName?: string;
   };
 }
 
@@ -56,6 +59,9 @@ const SellerProfileSchema = new Schema<ISellerProfile>({
     accountNumber: { type: String },
     routingNumber: { type: String },
     bankName: { type: String },
+    upiId: { type: String },
+    ifscCode: { type: String },
+    accountName: { type: String },
   },
 });
 

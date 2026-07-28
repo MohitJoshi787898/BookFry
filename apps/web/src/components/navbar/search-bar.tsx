@@ -55,7 +55,7 @@ export function SearchBar({ variant, className }: SearchBarProps) {
       <div ref={searchRef} className={cn('relative flex-grow max-w-2xl font-sans', className)}>
         <form
           onSubmit={handleSearchSubmit}
-          className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-[#F26522]/20 focus-within:border-[#F26522] h-11 rounded-full overflow-hidden"
+          className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-secondary/20 focus-within:border-secondary h-11 rounded-full overflow-hidden"
         >
           {/* Category Dropdown */}
           <div className="px-4 flex items-center gap-1 text-[11px] font-bold text-text-secondary border-r border-border hover:bg-background-subtle cursor-pointer select-none shrink-0 h-full">
@@ -76,7 +76,7 @@ export function SearchBar({ variant, className }: SearchBarProps) {
           {/* Search Button */}
           <button
             type="submit"
-            className="bg-[#F26522] hover:bg-[#e05310] text-white font-bold text-xs px-6 flex items-center gap-1.5 h-full transition-colors shrink-0"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold text-xs px-6 flex items-center gap-1.5 h-full transition-colors shrink-0"
           >
             {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
             <span>Search</span>
@@ -100,7 +100,7 @@ export function SearchBar({ variant, className }: SearchBarProps) {
     <div ref={searchRef} className={cn('relative font-sans', className)}>
       <form
         onSubmit={handleSearchSubmit}
-        className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-[#F26522]/20 focus-within:border-[#F26522] h-10 rounded-full overflow-hidden"
+        className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-secondary/20 focus-within:border-secondary h-10 rounded-full overflow-hidden"
       >
         <div className="relative flex-grow flex items-center pl-3">
           <Search className="h-3.5 w-3.5 text-text-muted shrink-0" />
@@ -116,7 +116,7 @@ export function SearchBar({ variant, className }: SearchBarProps) {
 
         <button
           type="submit"
-          className="bg-[#F26522] hover:bg-[#e05310] text-white p-2.5 flex items-center justify-center h-full transition-colors shrink-0"
+          className="bg-secondary hover:bg-secondary/90 text-secondary-foreground p-2.5 flex items-center justify-center h-full transition-colors shrink-0"
         >
           {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
         </button>
@@ -180,7 +180,7 @@ function SuggestionsList({ results, query, onClose }: SuggestionsListProps) {
       <Link
         href={`/books?search=${encodeURIComponent(query)}`}
         onClick={onClose}
-        className="block px-3 py-2 text-center text-xs font-bold text-[#F26522] hover:bg-background-subtle transition-colors"
+        className="block px-3 py-2 text-center text-xs font-bold text-secondary hover:bg-background-subtle transition-colors"
       >
         View all search results →
       </Link>

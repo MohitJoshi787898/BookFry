@@ -10,6 +10,9 @@ import { CartModel } from '../../src/models/cart.model';
 import jwt from 'jsonwebtoken';
 import { env } from '../../src/config/env';
 
+import { BookListingModel } from '../../src/models/book-listing.model';
+import { BookCatalogModel } from '../../src/models/book-catalog.model';
+
 describe('Marketplace Modules Integration Tests', () => {
   let mongoServer: MongoMemoryServer;
   let adminToken: string;
@@ -129,6 +132,8 @@ describe('Marketplace Modules Integration Tests', () => {
       expect(response.body.data.title).toBe('The Great Gatsby');
       expect(response.body.data.sellerId).toBe(sellerId);
       bookId = response.body.data.id;
+      // Approve listing so it becomes active for marketplace tests
+      await BookListingModel.findByIdAndUpdate(bookId, { status: 'active' });
     });
 
     it('POST /api/v1/books should fail for standard Customer role', async () => {
@@ -165,8 +170,9 @@ describe('Marketplace Modules Integration Tests', () => {
     });
 
     it('GET /api/v1/books/:slug should fetch detailed book properties', async () => {
-      const gatsby = await BookModel.findById(bookId);
-      const response = await request(app).get(`/api/v1/books/${gatsby?.slug}`);
+      const listing = await BookListingModel.findById(bookId).populate('catalogId');
+      const catalog = listing?.catalogId as any;
+      const response = await request(app).get(`/api/v1/books/${catalog?.slug}`);
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);

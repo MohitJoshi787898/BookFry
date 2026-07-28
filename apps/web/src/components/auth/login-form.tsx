@@ -1,15 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, LoginFormData } from '@/lib/validations/auth-schemas';
-import { useAuthStore } from '@/stores/auth.store';
-import { useAuthModalStore } from '@/stores/auth-modal.store';
-import { useCartStore } from '@/stores/cart.store';
-import { apiClient } from '@/lib/api-client';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, LoginFormData } from "@/lib/validations/auth-schemas";
+import { useAuthStore } from "@/stores/auth.store";
+import { useAuthModalStore } from "@/stores/auth-modal.store";
+import { useCartStore } from "@/stores/cart.store";
+import { apiClient } from "@/lib/api-client";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import { IconInputField } from "../shared/icon-input-field";
 
 export function LoginForm() {
   const router = useRouter();
@@ -29,9 +30,12 @@ export function LoginForm() {
   const onSubmit = async (values: LoginFormData) => {
     setApiError(null);
     try {
-      const data = await apiClient('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email: values.email, password: values.password }),
+      const data = await apiClient("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+        }),
       });
 
       setAuth(data.user, data.accessToken);
@@ -46,118 +50,116 @@ export function LoginForm() {
       }
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setApiError(error.message || 'Invalid email or password credentials.');
+      setApiError(error.message || "Invalid email or password credentials.");
     }
   };
 
   return (
-    <div className="space-y-6 font-sans">
-      {/* Header */}
+    <div className="space-y-6">
       <div>
-        <h3 className="font-serif text-2xl font-bold text-text-primary">Welcome Back to BookFry</h3>
-        <p className="text-xs text-text-secondary mt-1">
+        <h3 className="text-2xl font-bold text-text-primary">
+          Welcome back to Bookfry
+        </h3>
+        <p className="mt-1 text-xs text-text-secondary">
           Sign in to manage your listings, orders, and seller dashboard.
         </p>
       </div>
 
-      {/* API Error Alert */}
+      {/* aria-live so screen reader users hear a failed login attempt,
+          not just sighted users seeing the red banner appear */}
       {apiError && (
-        <div className="p-3.5 rounded-md bg-danger/10 border border-danger/20 text-xs font-semibold text-danger">
-          {apiError}
+        <div
+          role="alert"
+          aria-live="polite"
+          className="flex items-start gap-2 rounded-md border border-danger/20 bg-danger/10 p-3.5 text-xs font-semibold text-danger"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{apiError}</span>
         </div>
       )}
 
-      {/* Login Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email Field */}
-        <div className="space-y-1">
-          <label className="text-xs font-bold text-text-primary uppercase tracking-wider block">
-            Email Address
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-            <input
-              type="email"
-              placeholder="name@domain.com"
-              {...register('email')}
-              className={`w-full pl-9 pr-3 py-2.5 text-sm bg-surface border rounded-md text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-brand ${
-                errors.email ? 'border-danger' : 'border-border'
-              }`}
-            />
-          </div>
-          {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <IconInputField
+          label="Email address"
+          icon={Mail}
+          type="email"
+          autoComplete="email"
+          placeholder="name@domain.com"
+          error={errors.email?.message}
+          {...register("email")}
+        />
 
-        {/* Password Field */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-text-primary uppercase tracking-wider block">
-              Password
-            </label>
+        <IconInputField
+          label="Password"
+          icon={Lock}
+          type={showPassword ? "text" : "password"}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          error={errors.password?.message}
+          headerSlot={
             <button
               type="button"
-              onClick={() => setScreen('forgot_password')}
-              className="text-xs font-semibold text-brand hover:underline"
+              onClick={() => setScreen("forgot_password")}
+              className="focus-ring rounded text-xs font-semibold text-brand hover:underline"
             >
               Forgot password?
             </button>
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
-              {...register('password')}
-              className={`w-full pl-9 pr-10 py-2.5 text-sm bg-surface border rounded-md text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-brand ${
-                errors.password ? 'border-danger' : 'border-border'
-              }`}
-            />
+          }
+          rightSlot={
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="focus-ring absolute right-3 top-1/2 -translate-y-1/2 rounded text-text-muted hover:text-text-primary"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
             </button>
-          </div>
-          {errors.password && <p className="text-xs text-danger">{errors.password.message}</p>}
-        </div>
+          }
+          {...register("password")}
+        />
 
-        {/* Remember Me */}
         <div className="flex items-center justify-between">
-          <label className="flex items-center space-x-2 text-xs font-medium text-text-secondary cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-text-secondary">
             <input
               type="checkbox"
-              {...register('rememberMe')}
-              className="text-brand focus:ring-brand rounded border-border"
+              {...register("rememberMe")}
+              className="focus-ring rounded border-border text-brand"
             />
             <span>Remember me on this browser</span>
           </label>
         </div>
 
-        {/* Submit Button */}
+        {/* Was bg-brand (navy) — switched to secondary (orange) so the
+            primary action inside the modal matches the orange "Login /
+            Sign up" button in the navbar that opened it, instead of
+            switching accent color mid-flow. */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3 bg-brand hover:bg-brand-hover text-white font-bold text-xs uppercase tracking-wider rounded-md transition-colors shadow flex items-center justify-center space-x-2 disabled:opacity-50"
+          className="focus-ring flex w-full items-center justify-center gap-2 rounded-md bg-secondary py-3 text-xs font-bold uppercase tracking-wider text-secondary-foreground shadow transition-colors hover:bg-secondary/90 disabled:opacity-50"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Signing In...</span>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              <span>Signing in…</span>
             </>
           ) : (
-            <span>Sign In to Continue</span>
+            <span>Sign in</span>
           )}
         </button>
       </form>
 
-      {/* Switch to Signup */}
-      <div className="pt-4 border-t border-border text-center text-xs text-text-secondary">
-        Don&apos;t have a BookFry account yet?{' '}
+      <div className="border-t border-border pt-4 text-center text-xs text-text-secondary">
+        Don&apos;t have a Bookfry account yet?{" "}
         <button
-          onClick={() => setScreen('signup')}
-          className="font-bold text-brand hover:underline font-sans"
+          type="button"
+          onClick={() => setScreen("signup")}
+          className="focus-ring rounded font-bold text-brand hover:underline"
         >
           Create free account
         </button>

@@ -1,57 +1,59 @@
 'use client';
 
 import React from 'react';
-import { CategoryCard } from '../shared/category-card';
+import Link from 'next/link';
+import { 
+  BookOpen, 
+  BookText, 
+  GraduationCap, 
+  Wrench, 
+  Stethoscope, 
+  Briefcase, 
+  Baby, 
+  Backpack 
+} from 'lucide-react';
 
 export function CategoryGrid() {
   const categories = [
     {
       title: 'Fiction',
-      graphic: '📚',
+      icon: BookOpen,
       href: '/books?category=fiction',
-      bgColor: 'bg-orange-50',
     },
     {
       title: 'Non-Fiction',
-      graphic: '📖',
+      icon: BookText,
       href: '/books?category=non-fiction',
-      bgColor: 'bg-blue-50',
     },
     {
       title: 'Exam Prep',
-      graphic: '🎓',
+      icon: GraduationCap,
       href: '/books?category=exams',
-      bgColor: 'bg-emerald-50',
     },
     {
       title: 'Engineering',
-      graphic: '⚙️',
+      icon: Wrench,
       href: '/books?category=engineering',
-      bgColor: 'bg-indigo-50',
     },
     {
       title: 'Medical',
-      graphic: '🩺',
+      icon: Stethoscope,
       href: '/books?category=medical',
-      bgColor: 'bg-red-50',
     },
     {
       title: 'Management',
-      graphic: '💼',
+      icon: Briefcase,
       href: '/books?category=management',
-      bgColor: 'bg-slate-50',
     },
     {
       title: 'Kids',
-      graphic: '🧸',
+      icon: Baby,
       href: '/books?category=kids',
-      bgColor: 'bg-amber-50',
     },
     {
       title: 'Teens & YA',
-      graphic: '🎒',
+      icon: Backpack,
       href: '/books?category=teens-ya',
-      bgColor: 'bg-rose-50',
     },
   ];
 
@@ -61,7 +63,7 @@ export function CategoryGrid() {
         
         {/* Centered Heading with orange accent line */}
         <div className="text-center space-y-2">
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A3B5C] dark:text-foreground">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-primary dark:text-foreground">
             Explore By Category
           </h2>
           <div className="w-8 h-1 bg-secondary mx-auto rounded-full" />
@@ -69,15 +71,23 @@ export function CategoryGrid() {
 
         {/* 8-Column Horizontal Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-          {categories.map((cat) => (
-            <CategoryCard
-              key={cat.title}
-              title={cat.title}
-              graphic={cat.graphic}
-              href={cat.href}
-              bgColor={cat.bgColor}
-            />
-          ))}
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            return (
+              <Link
+                key={cat.title}
+                href={cat.href}
+                className="group flex flex-col items-center justify-center p-4 rounded-xl border border-border bg-card hover:border-secondary/50 hover:shadow-md transition-all duration-200 hover-page-turn text-center"
+              >
+                <div className="h-10 w-10 rounded-full bg-secondary/10 border border-secondary/15 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform mb-2">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-bold text-text-primary group-hover:text-secondary transition-colors">
+                  {cat.title}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

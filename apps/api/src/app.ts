@@ -54,6 +54,13 @@ if (env.NODE_ENV !== "test") {
   app.use("/api", limiter);
 }
 
+import { serverAdapter } from "./jobs/bull-board";
+import { requireAuth } from "./middlewares/auth.middleware";
+import { requireAdmin } from "./middlewares/rbac.middleware";
+
+// Mount Bull Board Admin Dashboard
+app.use("/api/v1/admin/queues", requireAuth, requireAdmin, serverAdapter.getRouter());
+
 // Mount API routes under /api/v1
 app.use("/api/v1", routes);
 

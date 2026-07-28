@@ -3,17 +3,27 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Search, ArrowRight, BookOpen, Tag, ShieldCheck } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  Search,
+  ArrowRight,
+  BookOpen,
+  Tag,
+  ShieldCheck,
+  Bookmark,
+} from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthModalStore } from "@/stores/auth-modal.store";
 import { StatItem } from "../shared/stat-item";
 import { SearchPillChip } from "../shared/search-pill-chip";
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
 export function HeroSection() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [query, setQuery] = useState("");
+  const prefersReducedMotion = useReducedMotion();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,66 +43,79 @@ export function HeroSection() {
     { label: "B.Sc. Books", href: "/books?search=B.Sc" },
   ];
 
-  return (
-    <section className="relative overflow-hidden py-16 sm:py-20 bg-[#FEF8F3] dark:bg-[#0B1320] border-b border-border transition-colors duration-200">
-      {/* Decorative light drawings/sketches background overlay */}
-      <div className="absolute inset-0 opacity-[0.04] pointer-events-none select-none bg-[radial-gradient(#F26522_1px,transparent_1px)] [background-size:16px_16px]" />
+  const reveal = (delay = 0) =>
+    prefersReducedMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 16 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.5, delay, ease: EASE },
+        };
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* Left Column: Editorial Copy */}
-          <div className="lg:col-span-4 space-y-6 text-center lg:text-left">
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {/* Slogan badge pill */}
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#FFF5F0] dark:bg-muted/60 text-[#F26522] text-xs font-bold uppercase tracking-wider mb-4 border border-[#FFF0E8]/50 dark:border-border/40">
-                <BookOpen className="h-3.5 w-3.5 text-[#F26522]" />
-                <span className="font-serif tracking-wide text-xs">
-                  पढ़िये, बचाइये और बेचिये
+  return (
+    <section className="relative overflow-hidden border-b border-border bg-background transition-colors duration-200">
+      {/* Ambient wash + bookshelf texture — both already defined in globals.css,
+          reused here instead of a bespoke inline background hack */}
+      <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
+      <div className="absolute inset-0 bg-bookshelf-pattern opacity-[0.35] pointer-events-none" />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-6">
+          {/* ---------------------------------------------------------------
+              Left: editorial copy — widened to 5/12 so it leads the page
+              instead of splitting attention evenly across three columns
+             --------------------------------------------------------------- */}
+          <div className="relative lg:col-span-5">
+            <motion.div {...reveal(0)}>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-secondary">
+                <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="tracking-wide">
+                  क्योंकि.. पढ़ाई रुकनी नहीं चाहिए
                 </span>
               </div>
 
-              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#1A3B5C] dark:text-foreground leading-[1.1]">
-                Books you love. <br />
-                Deals you&apos;ll <br />
-                <span className="text-[#F26522] italic font-serif">adore.</span>
+              <h1 className="text-4xl font-bold leading-[1.08] tracking-tight text-primary dark:text-foreground sm:text-5xl lg:text-6xl">
+                Books you love.
+                <br />
+                Deals you&apos;ll{" "}
+                <span className="relative inline-block text-secondary">
+                  adore.
+                  <svg
+                    className="absolute -bottom-1 left-0 w-full text-secondary/40"
+                    height="8"
+                    viewBox="0 0 120 8"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M2 5.5C30 1 90 1 118 5.5"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
               </h1>
             </motion.div>
 
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.5,
-                delay: 0.1,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="text-xs sm:text-sm text-text-secondary font-sans leading-relaxed max-w-md mx-auto lg:mx-0 font-medium"
+              {...reveal(0.08)}
+              className="mt-5 max-w-md text-sm font-medium leading-relaxed text-muted-foreground sm:text-base"
             >
-              Buy, sell and discover new & used books at the best prices. Read
-              more, spend less, and make every page count.
+              Buy, sell and discover new &amp; used books at the best prices.
+              Read more, spend less, and make every page count.
             </motion.p>
 
-            {/* CTAs */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.5,
-                delay: 0.2,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2 font-sans"
+              {...reveal(0.16)}
+              className="mt-7 flex flex-col gap-3.5 sm:flex-row"
             >
               <Link
                 href="/books"
-                className="w-full sm:w-auto rounded-lg bg-[#0B1E36] dark:bg-primary dark:hover:bg-primary/95 hover:bg-[#061224] px-6 py-3 text-xs font-bold text-white shadow-xs transition-all flex items-center justify-center space-x-1.5"
+                className="focus-ring inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-brand px-6 py-3 text-xs font-bold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5"
               >
-                <span>Buy Books</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                Buy books
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
               <Link
                 href="/sell"
@@ -102,88 +125,112 @@ export function HeroSection() {
                     useAuthModalStore.getState().openModal("login", "/sell");
                   }
                 }}
-                className="w-full sm:w-auto rounded-lg border border-[#F26522] text-[#F26522] bg-white dark:bg-transparent dark:text-secondary dark:hover:bg-white/5 px-6 py-3 text-xs font-bold shadow-xs hover:bg-[#FFF5F0] transition-all flex items-center justify-center space-x-1.5"
+                className="focus-ring inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary bg-background px-6 py-3 text-xs font-bold text-secondary shadow-sm transition-colors hover:bg-secondary/10"
               >
-                <span>Sell Your Books</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                Sell your books
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </motion.div>
 
-            {/* Impact Stats */}
-            <div className="pt-6 border-t border-border/60 flex flex-wrap gap-4 items-center justify-between font-sans">
-              <StatItem icon={BookOpen} value="50,000+" label="Books Listed" />
-              <StatItem icon={Tag} value="₹1.2Cr+" label="Saved by Students" />
-              <StatItem
-                icon={ShieldCheck}
-                value="99.4%"
-                label="Verified Quality"
-              />
-            </div>
+            <motion.div
+              {...reveal(0.24)}
+              className="mt-8 flex flex-wrap items-center gap-3 border-t border-border/60 pt-6"
+            >
+              <div className="hover-page-turn rounded-lg px-2 py-1">
+                <StatItem
+                  icon={BookOpen}
+                  value="50,000+"
+                  label="Books listed"
+                />
+              </div>
+              <div className="hover-page-turn rounded-lg px-2 py-1">
+                <StatItem
+                  icon={Tag}
+                  value="₹1.2Cr+"
+                  label="Saved by students"
+                />
+              </div>
+              <div className="hover-page-turn rounded-lg px-2 py-1">
+                <StatItem
+                  icon={ShieldCheck}
+                  value="99.4%"
+                  label="Verified quality"
+                />
+              </div>
+            </motion.div>
           </div>
 
-          {/* Center Column: Wise Fox Reading Mascot (Blended) */}
+          {/* ---------------------------------------------------------------
+              Center: mascot — freed from its own bordered box so it reads as
+              part of the page rather than a floating tile; a soft radial glow
+              grounds it instead
+             --------------------------------------------------------------- */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.15,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="lg:col-span-4 flex justify-center items-center"
+            {...reveal(0.1)}
+            className="relative order-first flex items-center justify-center lg:order-none lg:col-span-3"
           >
-            <div className="relative w-full max-w-[340px] aspect-square flex items-center justify-center rounded-2xl dark:bg-card dark:border dark:border-border/60 p-4 transition-colors">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/fox_reading_178491148655455.png"
-                alt="BookFry Mascot Wise Fox Reading"
-                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal select-none"
-              />
-            </div>
+            <div
+              className="pointer-events-none absolute h-64 w-64 rounded-full bg-secondary/10 blur-3xl"
+              aria-hidden="true"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/fox_reading_178491148655455.png"
+              alt="BookFry mascot — a fox reading a book"
+              className="relative w-full max-w-[280px] select-none object-contain mix-blend-multiply dark:mix-blend-normal"
+            />
           </motion.div>
 
-          {/* Right Column: Search Box Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-4"
-          >
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm dark:shadow-none space-y-5 relative overflow-hidden transition-colors">
-              <div className="space-y-1">
-                <h3 className="font-serif text-lg font-bold text-[#1A3B5C] dark:text-foreground">
-                  Find Your Next Read
-                </h3>
-                <p className="text-xs text-text-secondary font-sans font-medium">
+          {/* ---------------------------------------------------------------
+              Right: search card — glass-surface + a bookmark-ribbon tag as
+              the page's one signature flourish, tied directly to the book
+              metaphor rather than a generic corner badge
+             --------------------------------------------------------------- */}
+          <motion.div {...reveal(0.2)} className="lg:col-span-4">
+            <div className="glass-surface relative space-y-5 overflow-visible rounded-2xl p-6 shadow-lg">
+              <div className="bookmark-badge absolute -top-3 right-6 flex items-center gap-1 bg-secondary px-3 pb-2.5 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-secondary-foreground">
+                <Bookmark className="h-3 w-3" aria-hidden="true" />
+                Trending now
+              </div>
+
+              <div className="space-y-1 pt-1">
+                <h2 className="text-lg font-bold text-primary dark:text-foreground">
+                  Find your next read
+                </h2>
+                <p className="text-xs font-medium text-muted-foreground">
                   Search from millions of books at the best prices
                 </p>
               </div>
 
-              <form
-                onSubmit={handleSearchSubmit}
-                className="space-y-3 font-sans"
-              >
+              <form onSubmit={handleSearchSubmit} className="space-y-3">
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+                  <Search
+                    className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <label htmlFor="hero-search" className="sr-only">
+                    Search by title, author, or ISBN
+                  </label>
                   <input
+                    id="hero-search"
                     type="text"
-                    placeholder="e.g. Engineering Mathematics or 978013427741"
+                    placeholder="e.g. Engineering Mathematics or 9780134277141"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-border rounded-lg text-xs bg-background dark:bg-background/45 text-text-primary focus:outline-none focus:ring-1 focus:ring-[#F26522] placeholder:text-text-muted font-medium"
+                    className="focus-ring w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-4 text-xs font-medium text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-[#F26522] hover:bg-[#e05310] text-white font-bold rounded-lg text-xs uppercase tracking-wider transition-colors shadow-xs"
+                  className="focus-ring w-full rounded-lg bg-gradient-flame py-2.5 text-xs font-bold uppercase tracking-wider text-secondary-foreground shadow-sm transition-transform hover:-translate-y-0.5"
                 >
-                  Search Books
+                  Search books
                 </button>
               </form>
 
-              <div className="space-y-2 pt-2 border-t border-border/40">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
-                  Popular Searches
+              <div className="space-y-2 border-t border-border/40 pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Popular searches
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {quickTags.map((tag) => (

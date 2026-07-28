@@ -224,7 +224,7 @@ function BooksCatalog() {
                           setCategory(cat.id);
                           setPage(1);
                         }}
-                        className="accent-[#F26522]"
+                        className="accent-secondary"
                       />
                       <span className={`truncate ${category === cat.id ? 'text-secondary font-bold' : ''}`}>{cat.name}</span>
                     </label>
@@ -258,7 +258,7 @@ function BooksCatalog() {
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleCondition(cond)}
-                          className="rounded border-border text-brand focus:ring-brand accent-[#F26522]"
+                          className="rounded border-border text-brand focus:ring-brand accent-secondary"
                         />
                         <span className={isChecked ? 'text-secondary font-bold' : ''}>{label}</span>
                       </label>
@@ -302,7 +302,7 @@ function BooksCatalog() {
                   </div>
                   <button
                     onClick={() => setPage(1)}
-                    className="w-full py-2 bg-[#F26522] hover:bg-[#e05310] text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-xs"
+                    className="w-full py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors shadow-xs"
                   >
                     Apply Filters
                   </button>

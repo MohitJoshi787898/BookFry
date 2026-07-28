@@ -22,5 +22,6 @@ router.delete('/addresses/:id', asyncHandler(controller.deleteAddress));
 
 router.get('/reverse-geocode', asyncHandler(controller.reverseGeocode));
 router.post('/checkout-intent', asyncHandler(controller.checkoutIntent));
+router.patch('/seller-payout', asyncHandler(controller.updateSellerPayout));
 
 export default router;

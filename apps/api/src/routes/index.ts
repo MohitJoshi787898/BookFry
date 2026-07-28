@@ -12,6 +12,8 @@ import sellerRoutes from '../modules/seller/seller.routes';
 import adminRoutes from '../modules/admin/admin.routes';
 import contactRoutes from '../modules/contact/contact.routes';
 import usersRoutes from '../modules/users/users.routes';
+import eventsRoutes from '../modules/events/events.routes';
+import recommendationsRoutes from '../modules/recommendations/recommendations.routes';
 
 const router = Router();
 
@@ -28,5 +30,7 @@ router.use('/seller', sellerRoutes);
 router.use('/admin', adminRoutes);
 router.use('/contact', contactRoutes);
 router.use('/users', usersRoutes);
+router.use('/events', eventsRoutes);
+router.use('/recommendations', recommendationsRoutes);
 
 export default router;

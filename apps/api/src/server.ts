@@ -11,6 +11,11 @@ const startServer = async () => {
       logger.error('Auto migration failed:', err)
     );
 
+    const { startWorkerPool } = await import('./jobs/worker-runner');
+    await startWorkerPool().catch((err) =>
+      logger.error('Worker Pool initialization warning:', err)
+    );
+
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${env.PORT}`);
     });

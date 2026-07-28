@@ -8,5 +8,6 @@ const router = Router();
 const controller = new ContactController();
 
 router.post('/', validate({ body: contactSubmitSchema }), asyncHandler(controller.submit));
+router.get('/cms', asyncHandler(controller.getPublicCms));
 
 export default router;

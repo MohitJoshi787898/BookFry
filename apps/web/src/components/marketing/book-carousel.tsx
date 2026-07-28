@@ -14,7 +14,9 @@ interface BookCarouselProps {
   subtitle?: string;
   href?: string;
   queryParam?: string;
-  filterFn?: (books: Book[]) => Book[];
+  endpoint?: string;
+  customBooks?: Book[];
+  filterFn?: (data: Record<string, unknown> | Book[]) => Book[];
   tintBackground?: boolean;
 }
 
@@ -24,6 +26,8 @@ export function BookCarousel({
   subtitle,
   href = '/books',
   queryParam = '',
+  endpoint,
+  customBooks,
   filterFn,
   tintBackground = false,
 }: BookCarouselProps) {
@@ -35,16 +39,19 @@ export function BookCarousel({
     isLoading,
     isError,
   } = useQuery<Book[]>({
-    queryKey: ['carousel-books', title, queryParam],
+    queryKey: ['carousel-books', title, queryParam, endpoint],
     queryFn: async () => {
-      const endpoint = queryParam ? `/books?${queryParam}` : '/books?limit=12';
-      const res = await apiClient<{ books: Book[] }>(endpoint);
-      return res.books || [];
+      if (customBooks) return customBooks;
+      const targetEndpoint = endpoint || (queryParam ? `/books?${queryParam}` : '/books?limit=12');
+      const res = await apiClient<Record<string, unknown>>(targetEndpoint);
+      if (Array.isArray(res)) return res as unknown as Book[];
+      return (res.books || res.popular || res.trending || res.personalized || []) as unknown as Book[];
     },
+    enabled: !customBooks,
     staleTime: 5 * 60 * 1000,
   });
 
-  const books = filterFn ? filterFn(fetchedBooks) : fetchedBooks;
+  const books = customBooks || (filterFn ? filterFn(fetchedBooks) : fetchedBooks);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {

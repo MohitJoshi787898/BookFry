@@ -106,6 +106,53 @@ export class AdminController {
     const order = await this.ordersService.resolveReturn(id, adminId, action, adminNote);
     res.status(200).json(ApiResponse.success(order));
   };
+
+  // CMS Handlers
+  getCms = async (req: Request, res: Response): Promise<void> => {
+    const cms = await this.adminService.getCms();
+    res.status(200).json(ApiResponse.success(cms));
+  };
+
+  updateCms = async (req: Request, res: Response): Promise<void> => {
+    const cms = await this.adminService.updateCms(req.body);
+    res.status(200).json(ApiResponse.success(cms));
+  };
+
+  // Coupon Handlers
+  getCoupons = async (req: Request, res: Response): Promise<void> => {
+    const coupons = await this.adminService.getCoupons();
+    res.status(200).json(ApiResponse.success(coupons));
+  };
+
+  createCoupon = async (req: Request, res: Response): Promise<void> => {
+    const coupon = await this.adminService.createCoupon(req.body);
+    res.status(201).json(ApiResponse.success(coupon));
+  };
+
+  deleteCoupon = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    await this.adminService.deleteCoupon(id);
+    res.status(200).json(ApiResponse.success({ deleted: true }));
+  };
+
+  // Settings Handlers
+  getPlatformSettings = async (req: Request, res: Response): Promise<void> => {
+    const settings = await this.adminService.getPlatformSettings();
+    res.status(200).json(ApiResponse.success(settings));
+  };
+
+  updatePlatformSettings = async (req: Request, res: Response): Promise<void> => {
+    const settings = await this.adminService.updatePlatformSettings(req.body);
+    res.status(200).json(ApiResponse.success(settings));
+  };
+
+  // Reports CSV Export
+  exportCsvReport = async (req: Request, res: Response): Promise<void> => {
+    const csv = await this.adminService.exportCsvReport();
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="bookfry-sales-report.csv"');
+    res.status(200).send(csv);
+  };
 }
 
 export default AdminController;

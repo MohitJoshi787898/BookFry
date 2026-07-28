@@ -24,6 +24,31 @@ export default function SellerEarningsPage() {
     enabled: isAuthenticated,
   });
 
+  const { user } = useAuthStore();
+  const [upiId, setUpiId] = React.useState(user?.sellerProfile?.payoutDetails?.upiId || '');
+  const [accountName, setAccountName] = React.useState(user?.sellerProfile?.payoutDetails?.accountName || '');
+  const [accountNumber, setAccountNumber] = React.useState(user?.sellerProfile?.payoutDetails?.accountNumber || '');
+  const [ifscCode, setIfscCode] = React.useState(user?.sellerProfile?.payoutDetails?.ifscCode || '');
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const handleSavePayout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      await apiClient('/users/seller-payout', {
+        method: 'PATCH',
+        body: JSON.stringify({ upiId, accountName, accountNumber, ifscCode }),
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error('Failed to save payout settings', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const statusColors = {
     pending: 'bg-warning/10 text-warning border-warning/20',
     released: 'bg-success/10 text-success border-success/20',
@@ -127,6 +152,74 @@ export default function SellerEarningsPage() {
             </div>
           </div>
         )}
+
+        {/* Seller Payout Method Setup Card */}
+        <div className="border border-border bg-card rounded-xl p-6 shadow-sm space-y-4 font-sans">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <div>
+              <h3 className="font-serif text-lg font-bold text-text-primary">Payout Account Settings</h3>
+              <p className="text-xs text-text-muted mt-0.5">Configure your UPI ID or Bank Account for automated earnings payouts upon order delivery.</p>
+            </div>
+            <span className="text-xs font-bold text-success bg-success/10 px-2.5 py-1 rounded-full border border-success/20">
+              Active Escrow Payouts
+            </span>
+          </div>
+
+          <form onSubmit={handleSavePayout} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans pt-2">
+            <div className="space-y-1.5">
+              <label className="font-bold text-text-primary block">UPI VPA Handle (Recommended)</label>
+              <input
+                type="text"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="e.g. mobile@upi or name@okicici"
+                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-medium"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-bold text-text-primary block">Account Holder Name</label>
+              <input
+                type="text"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                placeholder="As per bank passbook"
+                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-medium"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-bold text-text-primary block">Bank Account Number</label>
+              <input
+                type="text"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="Enter 9–18 digit account number"
+                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-mono"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-bold text-text-primary block">Bank IFSC Code</label>
+              <input
+                type="text"
+                value={ifscCode}
+                onChange={(e) => setIfscCode(e.target.value)}
+                placeholder="e.g. SBIN0001234"
+                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-mono uppercase"
+              />
+            </div>
+            <div className="sm:col-span-2 pt-2 flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-6 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-lg text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50"
+              >
+                {isSaving ? 'Saving...' : 'Save Payout Settings'}
+              </button>
+              {saveSuccess && (
+                <span className="text-xs font-bold text-success font-sans">✓ Payout settings saved!</span>
+              )}
+            </div>
+          </form>
+        </div>
       </main>
 
       <Footer />

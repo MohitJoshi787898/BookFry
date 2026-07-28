@@ -27,6 +27,9 @@ export interface SellerProfile {
     accountNumber?: string;
     routingNumber?: string;
     bankName?: string;
+    upiId?: string;
+    ifscCode?: string;
+    accountName?: string;
   };
 }
 

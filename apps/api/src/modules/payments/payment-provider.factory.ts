@@ -9,12 +9,14 @@ let provider: PaymentProvider | null = null;
 export const getPaymentProvider = (): PaymentProvider => {
   if (!provider) {
     if (
+      process.env.NODE_ENV !== 'test' &&
       process.env.RAZORPAY_KEY_ID &&
       process.env.RAZORPAY_KEY_ID !== 'rzp_test_placeholder'
     ) {
       logger.info('💳 Using Live Razorpay Payment Provider');
       provider = new RazorpayProvider();
     } else if (
+      process.env.NODE_ENV !== 'test' &&
       process.env.STRIPE_SECRET_KEY &&
       process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder'
     ) {

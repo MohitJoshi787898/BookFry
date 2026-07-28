@@ -1,19 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useAuthStore } from '@/stores/auth.store';
+import { apiClient } from '@/lib/api-client';
 import { Settings, ShieldAlert, Save, ShieldCheck, CreditCard, Truck, AlertTriangle } from 'lucide-react';
+
+interface PlatformSettings {
+  commissionPercent: number;
+  flatShippingFee: number;
+  taxPercent: number;
+  returnWindowDays: number;
+  maintenanceMode: boolean;
+}
 
 export default function AdminSettingsPage() {
   const { user: currentUser } = useAuthStore();
   const isAdmin = currentUser?.roles.includes('admin');
+  const queryClient = useQueryClient();
+
+  const { data: settingsData } = useQuery<PlatformSettings>({
+    queryKey: ['admin-settings'],
+    queryFn: () => apiClient('/admin/settings'),
+    enabled: !!isAdmin,
+  });
 
   const [commission, setCommission] = useState(10);
   const [shippingFee, setShippingFee] = useState(40);
   const [gstRate, setGstRate] = useState(18);
+  const [returnWindow, setReturnWindow] = useState(7);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (settingsData) {
+      setCommission(settingsData.commissionPercent ?? 10);
+      setShippingFee(settingsData.flatShippingFee ?? 40);
+      setGstRate(settingsData.taxPercent ?? 18);
+      setReturnWindow(settingsData.returnWindowDays ?? 7);
+      setMaintenanceMode(settingsData.maintenanceMode ?? false);
+    }
+  }, [settingsData]);
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: (payload: Partial<PlatformSettings>) =>
+      apiClient('/admin/settings', {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    },
+  });
 
   if (!isAdmin) {
     return (
@@ -28,8 +69,13 @@ export default function AdminSettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    updateSettingsMutation.mutate({
+      commissionPercent: Number(commission),
+      flatShippingFee: Number(shippingFee),
+      taxPercent: Number(gstRate),
+      returnWindowDays: Number(returnWindow),
+      maintenanceMode,
+    });
   };
 
   return (

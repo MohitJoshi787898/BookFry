@@ -30,6 +30,15 @@ export class ContactController {
       })
     );
   };
+
+  getPublicCms = async (req: Request, res: Response): Promise<void> => {
+    const { CmsModel } = await import('../../models/cms.model');
+    let cms = await CmsModel.findOne();
+    if (!cms) {
+      cms = await CmsModel.create({});
+    }
+    res.status(200).json(ApiResponse.success(cms));
+  };
 }
 
 export default ContactController;

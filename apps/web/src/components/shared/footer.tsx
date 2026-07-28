@@ -95,7 +95,7 @@ export function Footer() {
               return (
                 <div 
                   key={item.title} 
-                  className="flex items-center space-x-3.5 shrink-0 w-[240px] lg:w-auto snap-center bg-[#FEF8F3] dark:bg-primary-950/10 p-3.5 rounded-xl lg:bg-transparent lg:dark:bg-transparent lg:p-0 border border-[#FFF0E8] dark:border-border/30 lg:border-none"
+                  className="flex items-center space-x-3.5 shrink-0 w-[240px] lg:w-auto snap-center bg-muted/40 p-3.5 rounded-xl lg:bg-transparent lg:p-0 border border-border lg:border-none"
                 >
                   <div className="h-10 w-10 rounded-full bg-secondary/10 border border-secondary/15 flex items-center justify-center shrink-0">
                     <Icon className="h-5 w-5 text-secondary" />
@@ -183,7 +183,7 @@ export function Footer() {
                 </div>
                 <Link 
                   href="/sell" 
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary hover:text-secondary-600 transition-colors pt-1"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary hover:text-secondary/80 transition-colors pt-1"
                 >
                   <span>Start Selling Now</span>
                   <ArrowRight className="h-3 w-3" />
@@ -194,7 +194,7 @@ export function Footer() {
         </div>
 
         {/* 3. Newsletter Section */}
-        <div className="bg-[#FEF8F3] dark:bg-[#1A2838]/30 border border-[#FFF0E8] dark:border-border/30 rounded-2xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-5 mt-6">
+        <div className="bg-card border border-border rounded-2xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-5 mt-6 shadow-sm">
           <div className="flex items-start gap-3.5 w-full lg:w-auto">
             <div className="p-2.5 rounded-full bg-secondary/10 text-secondary shrink-0">
               <Mail className="h-5 w-5" />
@@ -211,9 +211,9 @@ export function Footer() {
             <input
               type="email"
               placeholder="Enter your email address"
-              className="bg-white dark:bg-[#0B1320] border border-border text-xs rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-1 focus:ring-secondary w-full lg:w-60 font-medium"
+              className="bg-background border border-border text-xs rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-secondary w-full lg:w-60 font-medium"
             />
-            <button className="bg-secondary hover:bg-secondary-600 text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg transition-colors shrink-0">
+            <button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg transition-colors shrink-0">
               Subscribe
             </button>
           </form>

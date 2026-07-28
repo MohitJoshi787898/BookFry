@@ -1,38 +1,68 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { useAuthStore } from '@/stores/auth.store';
-import { Tag, Plus, CheckCircle2, ShieldAlert, Copy } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+import { Tag, Plus, ShieldAlert, Trash2 } from 'lucide-react';
 
 interface PromoCode {
   id: string;
+  _id?: string;
   code: string;
-  type: 'percentage' | 'flat';
-  value: number;
-  minOrderValue: number;
-  usageCount: number;
-  maxUsage: number;
-  status: 'active' | 'expired';
+  discountType: 'percentage' | 'flat';
+  discountValue: number;
+  minOrderSubtotal: number;
+  usedCount: number;
+  maxUses: number;
+  status: 'active' | 'expired' | 'disabled';
 }
-
-const mockPromos: PromoCode[] = [
-  { id: '1', code: 'WELCOME100', type: 'flat', value: 100, minOrderValue: 499, usageCount: 142, maxUsage: 500, status: 'active' },
-  { id: '2', code: 'CAMPUS20', type: 'percentage', value: 20, minOrderValue: 299, usageCount: 88, maxUsage: 200, status: 'active' },
-  { id: '3', code: 'BOOKFRY50', type: 'flat', value: 50, minOrderValue: 199, usageCount: 310, maxUsage: 1000, status: 'active' },
-  { id: '4', code: 'MONSOON15', type: 'percentage', value: 15, minOrderValue: 399, usageCount: 50, maxUsage: 50, status: 'expired' },
-];
 
 export default function AdminPromotionsPage() {
   const { user: currentUser } = useAuthStore();
   const isAdmin = currentUser?.roles.includes('admin');
+  const queryClient = useQueryClient();
 
-  const [promos, setPromos] = useState<PromoCode[]>(mockPromos);
+  const { data: rawPromos = [], isLoading } = useQuery<PromoCode[]>({
+    queryKey: ['admin-coupons'],
+    queryFn: () => apiClient('/admin/coupons'),
+    enabled: !!isAdmin,
+  });
+
+  const promos: PromoCode[] = rawPromos.map((p) => ({
+    ...p,
+    id: p.id || (p as unknown as { _id?: string })._id || '',
+  }));
+
   const [code, setCode] = useState('');
   const [value, setValue] = useState(100);
   const [type, setType] = useState<'percentage' | 'flat'>('flat');
   const [minOrder, setMinOrder] = useState(299);
+
+  const createCouponMutation = useMutation({
+    mutationFn: (payload: Partial<PromoCode>) =>
+      apiClient('/admin/coupons', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
+      setCode('');
+      setValue(100);
+    },
+  });
+
+  const deleteCouponMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiClient(`/admin/coupons/${id}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
+    },
+  });
 
   if (!isAdmin) {
     return (
@@ -49,19 +79,12 @@ export default function AdminPromotionsPage() {
     e.preventDefault();
     if (!code.trim()) return;
 
-    const newPromo: PromoCode = {
-      id: String(Date.now()),
-      code: code.toUpperCase().trim(),
-      type,
-      value: Number(value),
-      minOrderValue: Number(minOrder),
-      usageCount: 0,
-      maxUsage: 500,
-      status: 'active',
-    };
-
-    setPromos([newPromo, ...promos]);
-    setCode('');
+    createCouponMutation.mutate({
+      code: code.trim().toUpperCase(),
+      discountType: type,
+      discountValue: Number(value),
+      minOrderSubtotal: Number(minOrder),
+    });
   };
 
   const columns: Column<PromoCode>[] = [
@@ -70,7 +93,6 @@ export default function AdminPromotionsPage() {
       cell: (p) => (
         <div className="inline-flex items-center space-x-2 font-mono font-bold text-brand bg-brand/10 border border-brand/20 px-2.5 py-1 rounded">
           <span>{p.code}</span>
-          <Copy className="h-3 w-3 text-text-muted hover:text-brand cursor-pointer" onClick={() => navigator.clipboard.writeText(p.code)} />
         </div>
       ),
     },
@@ -78,19 +100,19 @@ export default function AdminPromotionsPage() {
       header: 'Discount Value',
       cell: (p) => (
         <span className="font-bold text-text-primary">
-          {p.type === 'percentage' ? `${p.value}% OFF` : `₹${p.value} OFF`}
+          {p.discountType === 'percentage' ? `${p.discountValue}% OFF` : `₹${p.discountValue} OFF`}
         </span>
       ),
     },
     {
-      header: 'Min Order Amount',
-      cell: (p) => <span className="font-mono">₹{p.minOrderValue}</span>,
+      header: 'Min Order Subtotal',
+      cell: (p) => <span className="font-mono">₹{p.minOrderSubtotal || 0}</span>,
     },
     {
       header: 'Usage Metrics',
       cell: (p) => (
         <span className="text-xs text-text-secondary font-mono">
-          {p.usageCount} / {p.maxUsage} claimed
+          {p.usedCount || 0} / {p.maxUses || 1000} claimed
         </span>
       ),
     },
@@ -101,12 +123,23 @@ export default function AdminPromotionsPage() {
           className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
             p.status === 'active'
               ? 'bg-success/10 text-success border border-success/20'
-              : 'bg-danger/10 text-danger border border-danger/20'
+              : 'bg-text-muted/10 text-text-muted border border-border'
           }`}
         >
-          <CheckCircle2 className="h-3 w-3" />
           <span>{p.status}</span>
         </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      cell: (p) => (
+        <button
+          onClick={() => deleteCouponMutation.mutate(p.id)}
+          className="p-1.5 text-danger hover:bg-danger/10 rounded transition-colors"
+          title="Delete Coupon"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       ),
     },
   ];
@@ -118,98 +151,87 @@ export default function AdminPromotionsPage() {
         <div>
           <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
             <Tag className="h-7 w-7 text-brand" />
-            <span>Promotions & Coupon Codes</span>
+            <span>Promotions & Coupon Discounts</span>
           </h1>
           <p className="text-xs text-text-secondary mt-1">
-            Create discount codes, campus promotional offers, and order cashback vouchers.
+            Create and manage promotional discount coupons for student purchases.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 font-sans">
-        {/* Create Coupon Form Card */}
-        <div className="border border-border bg-surface rounded-md p-6 shadow-sm space-y-4 h-fit">
-          <h2 className="font-serif text-lg font-bold text-text-primary flex items-center space-x-2 border-b border-border pb-3">
-            <Plus className="h-5 w-5 text-brand" />
-            <span>Create Coupon Code</span>
-          </h2>
+        {/* Create Coupon Form */}
+        <div className="border border-border bg-card rounded-xl p-6 shadow-sm space-y-4 font-sans self-start">
+          <h3 className="font-serif text-lg font-bold text-text-primary border-b border-border pb-3">
+            Create Promo Coupon
+          </h3>
 
-          <form onSubmit={handleCreate} className="space-y-4 text-xs">
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">
-                Coupon Code Name
-              </label>
+          <form onSubmit={handleCreate} className="space-y-4 text-xs font-sans">
+            <div className="space-y-1.5">
+              <label className="font-bold text-text-primary block">Coupon Code</label>
               <input
                 type="text"
-                required
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="e.g. EXAM2026"
-                className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary uppercase font-mono font-bold focus:ring-2 focus:ring-brand focus:outline-none"
+                placeholder="e.g. WELCOME100"
+                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary uppercase font-mono font-bold focus:ring-2 focus:ring-secondary"
+                required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">
-                  Discount Type
-                </label>
+              <div className="space-y-1.5">
+                <label className="font-bold text-text-primary block">Discount Type</label>
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value as 'percentage' | 'flat')}
-                  className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary focus:ring-2 focus:ring-brand"
+                  className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary font-medium"
                 >
-                  <option value="flat">Flat Amount (₹)</option>
-                  <option value="percentage">Percentage (%)</option>
+                  <option value="flat">Flat ₹ OFF</option>
+                  <option value="percentage">Percentage % OFF</option>
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">
-                  Discount Value
-                </label>
+              <div className="space-y-1.5">
+                <label className="font-bold text-text-primary block">Value</label>
                 <input
                   type="number"
-                  required
                   value={value}
                   onChange={(e) => setValue(Number(e.target.value))}
-                  className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary font-mono focus:ring-2 focus:ring-brand"
+                  className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary font-mono font-bold"
+                  required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">
-                Minimum Order Amount (₹)
-              </label>
+            <div className="space-y-1.5">
+              <label className="font-bold text-text-primary block">Min Order Subtotal (₹)</label>
               <input
                 type="number"
-                required
                 value={minOrder}
                 onChange={(e) => setMinOrder(Number(e.target.value))}
-                className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary font-mono focus:ring-2 focus:ring-brand"
+                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary font-mono"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white font-bold rounded transition-all shadow text-xs uppercase tracking-wider"
+              disabled={createCouponMutation.isPending}
+              className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white font-bold rounded-lg text-xs uppercase tracking-wider transition-colors shadow-xs flex items-center justify-center space-x-1 disabled:opacity-50"
             >
-              Issue Coupon Code
+              <Plus className="h-4 w-4" />
+              <span>{createCouponMutation.isPending ? 'Creating...' : 'Create Coupon'}</span>
             </button>
           </form>
         </div>
 
-        {/* Existing Coupons Table */}
+        {/* Coupons Table */}
         <div className="lg:col-span-2">
-          <AdminDataTable
-            title="Active Promotional Coupons"
-            subtitle="Campus discounts & vouchers"
-            data={promos}
-            columns={columns}
-            searchField="code"
-            searchPlaceholder="Search coupon code..."
-          />
+          {isLoading ? (
+            <div className="h-64 border border-border bg-card rounded-xl animate-pulse" />
+          ) : (
+            <AdminDataTable title="Active Promo Coupons" columns={columns} data={promos} />
+          )}
         </div>
       </div>
     </AdminLayout>

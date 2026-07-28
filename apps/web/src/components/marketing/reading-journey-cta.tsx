@@ -32,7 +32,7 @@ export function ReadingJourneyCTA() {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
               <Link
                 href="/books"
-                className="w-full sm:w-auto px-6 py-3.5 bg-secondary hover:bg-secondary-600 text-white font-bold rounded-md text-xs uppercase tracking-wider transition-colors shadow flex items-center justify-center space-x-2"
+                className="w-full sm:w-auto px-6 py-3.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-md text-xs uppercase tracking-wider transition-colors shadow flex items-center justify-center space-x-2"
               >
                 <span>📚 Explore Catalog</span>
                 <ArrowRight className="h-4 w-4" />

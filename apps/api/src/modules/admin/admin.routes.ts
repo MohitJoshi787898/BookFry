@@ -21,6 +21,17 @@ router.get('/listings', asyncHandler(controller.getListings));
 router.patch('/listings/:id/moderate', asyncHandler(controller.moderateListing));
 
 router.get('/reports', asyncHandler(controller.getReports));
+router.get('/reports/export', asyncHandler(controller.exportCsvReport));
+
+router.get('/cms', asyncHandler(controller.getCms));
+router.patch('/cms', asyncHandler(controller.updateCms));
+
+router.get('/coupons', asyncHandler(controller.getCoupons));
+router.post('/coupons', asyncHandler(controller.createCoupon));
+router.delete('/coupons/:id', asyncHandler(controller.deleteCoupon));
+
+router.get('/settings', asyncHandler(controller.getPlatformSettings));
+router.patch('/settings', asyncHandler(controller.updatePlatformSettings));
 
 router.get('/support-tickets', asyncHandler(controller.getSupportTickets));
 router.patch('/support-tickets/:id/resolve', asyncHandler(controller.resolveSupportTicket));
