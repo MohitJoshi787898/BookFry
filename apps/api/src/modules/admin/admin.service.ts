@@ -372,6 +372,120 @@ export class AdminService {
     }
     return csv;
   }
+
+  // Expanded Admin CRUD operations
+  async getUserById(userId: string) {
+    const user = await UserModel.findById(userId).select('-passwordHash -refreshTokenHash');
+    if (!user) throw new NotFoundError('User not found');
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      roles: user.roles,
+      phone: user.phone,
+      isEmailVerified: user.isEmailVerified,
+      isBanned: user.isBanned || false,
+      addresses: user.addresses || [],
+      sellerProfile: user.sellerProfile || null,
+      createdAt: user.createdAt.toISOString(),
+    };
+  }
+
+  async updateUser(userId: string, data: { name?: string; email?: string; roles?: string[]; isBanned?: boolean }) {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+    if (data.name !== undefined) user.name = data.name;
+    if (data.email !== undefined) user.email = data.email;
+    if (data.roles !== undefined) user.roles = data.roles as any;
+    if (data.isBanned !== undefined) user.isBanned = data.isBanned;
+    await user.save();
+    return this.getUserById(userId);
+  }
+
+  async softDeleteUser(userId: string) {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+    user.isBanned = true;
+    await user.save();
+    return { id: userId, isBanned: true, status: 'deleted' };
+  }
+
+  async getListingById(listingId: string) {
+    const listing = await BookListingModel.findById(listingId);
+    if (!listing) throw new NotFoundError('Listing not found');
+    const catalog = await BookCatalogModel.findById(listing.catalogId);
+    return {
+      id: listing._id.toString(),
+      title: catalog ? catalog.title : 'Book',
+      slug: catalog ? catalog.slug : '',
+      author: catalog ? catalog.author : '',
+      description: catalog ? catalog.description : '',
+      isbn: catalog ? catalog.isbn : '',
+      price: listing.price,
+      stock: listing.stock,
+      status: listing.status,
+      condition: listing.condition,
+      sellerId: listing.sellerId.toString(),
+      images: (listing as any).images || (catalog ? catalog.images : []),
+      moderationHistory: listing.moderationHistory || [],
+      createdAt: listing.createdAt.toISOString(),
+    };
+  }
+
+  async updateListing(listingId: string, data: { price?: number; stock?: number; status?: string; condition?: string; title?: string }) {
+    const listing = await BookListingModel.findById(listingId);
+    if (!listing) throw new NotFoundError('Listing not found');
+    if (data.price !== undefined) listing.price = data.price;
+    if (data.stock !== undefined) listing.stock = data.stock;
+    if (data.status !== undefined) listing.status = data.status as any;
+    if (data.condition !== undefined) listing.condition = data.condition as any;
+    await listing.save();
+
+    if (data.title && listing.catalogId) {
+      await BookCatalogModel.findByIdAndUpdate(listing.catalogId, { title: data.title });
+    }
+
+    return this.getListingById(listingId);
+  }
+
+  async softDeleteListing(listingId: string) {
+    const listing = await BookListingModel.findById(listingId);
+    if (!listing) throw new NotFoundError('Listing not found');
+    listing.status = 'removed' as any;
+    await listing.save();
+    return { id: listingId, status: 'removed' };
+  }
+
+  async updateCoupon(id: string, data: any) {
+    const { CouponModel } = await import('../../models/coupon.model');
+    const coupon = await CouponModel.findById(id);
+    if (!coupon) throw new NotFoundError('Coupon not found');
+    if (data.code) coupon.code = data.code.toUpperCase();
+    if (data.discountType) coupon.discountType = data.discountType;
+    if (data.discountValue !== undefined) coupon.discountValue = data.discountValue;
+    if (data.minOrderSubtotal !== undefined) coupon.minOrderSubtotal = data.minOrderSubtotal;
+    if (data.maxUses !== undefined) coupon.maxUses = data.maxUses;
+    if (data.expiryDate) coupon.expiryDate = new Date(data.expiryDate);
+    await coupon.save();
+    return coupon;
+  }
+
+  async updateSupportTicket(id: string, data: any) {
+    const doc = await ContactModel.findById(id);
+    if (!doc) throw new NotFoundError('Support ticket not found');
+    if (data.status) doc.status = data.status;
+    if (data.subject) doc.subject = data.subject;
+    await doc.save();
+    return doc;
+  }
+
+  async softDeleteSupportTicket(id: string) {
+    const doc = await ContactModel.findById(id);
+    if (!doc) throw new NotFoundError('Support ticket not found');
+    doc.status = 'resolved';
+    await doc.save();
+    return { id, status: 'resolved' };
+  }
 }
 
 export default AdminService;

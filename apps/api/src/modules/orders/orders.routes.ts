@@ -16,6 +16,14 @@ const controller = new OrdersController();
 
 router.use(requireAuth);
 
+// Specific static sub-path routes (MUST come before /:id)
+router.get('/seller', requireRoles(['seller', 'admin', 'customer']), asyncHandler(controller.listSellerOrders));
+router.get(
+  '/admin/all',
+  requireRoles(['admin']),
+  asyncHandler(controller.adminListAll)
+);
+
 // Buyer routes
 router.post('/', validate({ body: checkoutSchema }), asyncHandler(controller.create));
 router.get('/', asyncHandler(controller.listBuyerOrders));
@@ -26,11 +34,10 @@ router.post(
   asyncHandler(controller.requestReturn)
 );
 
-// Seller / Admin routes
-router.get('/seller', requireRoles(['seller', 'admin']), asyncHandler(controller.listSellerOrders));
+// Order status mutation & returns resolution
 router.patch(
   '/:id/status',
-  requireRoles(['seller', 'admin']),
+  requireRoles(['seller', 'admin', 'customer']),
   validate({ body: updateOrderStatusSchema }),
   asyncHandler(controller.updateStatus)
 );
@@ -39,13 +46,6 @@ router.patch(
   requireRoles(['admin']),
   validate({ body: resolveReturnSchema }),
   asyncHandler(controller.resolveReturn)
-);
-
-// Admin all-orders listing
-router.get(
-  '/admin/all',
-  requireRoles(['admin']),
-  asyncHandler(controller.adminListAll)
 );
 
 export default router;

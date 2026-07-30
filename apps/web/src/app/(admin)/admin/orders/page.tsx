@@ -16,9 +16,12 @@ import {
   Truck,
   RefreshCw,
   Eye,
+  Pencil,
+  Trash2,
   XCircle,
   RotateCcw,
   AlertTriangle,
+  X,
 } from 'lucide-react';
 
 const ALL_STATUSES: OrderStatus[] = [
@@ -88,7 +91,6 @@ function InlineStatusSelect({
   currentStatus: string;
 }) {
   const queryClient = useQueryClient();
-  const [value, setValue] = useState(currentStatus);
 
   const mutation = useMutation({
     mutationFn: (newStatus: string) =>
@@ -99,48 +101,37 @@ function InlineStatusSelect({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
     },
-    onError: () => {
-      setValue(currentStatus); // revert on error
-    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = e.target.value;
-    setValue(newStatus);
-    mutation.mutate(newStatus);
-  };
-
   return (
-    <div className="relative flex items-center gap-1.5">
-      <select
-        value={value}
-        onChange={handleChange}
-        disabled={mutation.isPending}
-        aria-label={`Change status for order`}
-        className="text-[10px] font-bold uppercase px-2 py-1 border border-border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-brand focus:outline-none disabled:opacity-50 cursor-pointer hover:border-brand/50 transition-colors pr-6 appearance-none"
-      >
-        {ALL_STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {STATUS_LABELS[s]}
-          </option>
-        ))}
-      </select>
-      {mutation.isPending && (
-        <RefreshCw className="h-3 w-3 text-brand animate-spin flex-shrink-0" />
-      )}
-      {mutation.isError && (
-        <span className="text-[9px] text-danger font-bold">Failed</span>
-      )}
-    </div>
+    <select
+      value={currentStatus}
+      onChange={(e) => mutation.mutate(e.target.value)}
+      disabled={mutation.isPending}
+      className="px-2 py-1 text-xs border border-border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-brand font-medium"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {ALL_STATUSES.map((s) => (
+        <option key={s} value={s}>
+          {STATUS_LABELS[s]}
+        </option>
+      ))}
+    </select>
   );
 }
 
 export default function AdminOrdersPage() {
-  const { isAuthenticated, user: currentUser } = useAuthStore();
+  const { user: currentUser } = useAuthStore();
   const isAdmin = currentUser?.roles.includes('admin');
+  const queryClient = useQueryClient();
 
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  
+  // Modals state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ status: 'confirmed', note: '' });
 
   const {
     data: ordersData = [],
@@ -161,7 +152,33 @@ export default function AdminOrdersPage() {
         return [];
       }
     },
-    enabled: isAuthenticated && isAdmin,
+    enabled: !!isAdmin,
+  });
+
+  const updateOrderMutation = useMutation({
+    mutationFn: ({ orderId, data }: { orderId: string; data: Record<string, unknown> }) =>
+      apiClient(`/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      setEditModalOpen(false);
+      setSelectedOrder(null);
+    },
+  });
+
+  const softDeleteMutation = useMutation({
+    mutationFn: (orderId: string) =>
+      apiClient(`/admin/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'cancelled', note: 'Soft deleted by administrator' }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      setDeleteModalOpen(false);
+      setSelectedOrder(null);
+    },
   });
 
   if (!isAdmin) {
@@ -175,7 +192,7 @@ export default function AdminOrdersPage() {
     );
   }
 
-  const pendingReturns = ordersData.filter(
+  const returnRequestsCount = ordersData.filter(
     (o) => o.returnRequest?.status === 'pending'
   ).length;
 
@@ -230,17 +247,46 @@ export default function AdminOrdersPage() {
     {
       header: 'Actions',
       cell: (o) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedOrder(o);
-          }}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold border border-brand/40 text-brand rounded-lg hover:bg-brand/5 transition-colors"
-          aria-label={`View order ${o.orderNumber}`}
-        >
-          <Eye className="h-3 w-3" />
-          View
-        </button>
+        <div className="flex items-center space-x-1.5 font-sans">
+          {/* View Details */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedOrder(o);
+            }}
+            className="p-1.5 rounded-lg border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-brand transition-colors"
+            title="View Order Details"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Edit Order */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedOrder(o);
+              setEditForm({ status: o.status, note: '' });
+              setEditModalOpen(true);
+            }}
+            className="p-1.5 rounded-lg border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-accent transition-colors"
+            title="Edit Order"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Soft Delete Order */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedOrder(o);
+              setDeleteModalOpen(true);
+            }}
+            className="p-1.5 rounded-lg border border-danger/20 bg-danger/10 text-danger hover:bg-danger hover:text-white transition-colors"
+            title="Soft Delete Order"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -250,30 +296,24 @@ export default function AdminOrdersPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center gap-2">
+          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
             <ShoppingBag className="h-7 w-7 text-brand" />
-            Marketplace Orders
-            {pendingReturns > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-warning/10 border border-warning/30 text-warning text-xs font-bold flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                {pendingReturns} Return{pendingReturns > 1 ? 's' : ''} Pending
-              </span>
-            )}
+            <span>Marketplace Order Operations</span>
           </h1>
           <p className="text-xs text-text-secondary mt-1">
-            Monitor purchases, update shipment status, and manage return requests.
+            Track customer textbook fulfillments, process shipping status updates, and manage buyer return requests.
           </p>
         </div>
 
-        {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-text-muted flex-shrink-0" />
+        {/* Filter Dropdown */}
+        <div className="flex items-center space-x-2">
+          <Filter className="h-4 w-4 text-text-muted" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold border border-border rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-brand focus:outline-none"
+            className="px-3 py-1.5 text-xs font-semibold border border-border rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-brand"
           >
-            <option value="">All Statuses</option>
+            <option value="">All Orders ({ordersData.length})</option>
             {ALL_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABELS[s]}
@@ -283,20 +323,39 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {returnRequestsCount > 0 && (
+        <div className="p-4 bg-warning/10 border border-warning/30 rounded-xl flex items-center justify-between font-sans">
+          <div className="flex items-center space-x-3 text-warning">
+            <AlertTriangle className="h-5 w-5 shrink-0" />
+            <div>
+              <p className="text-xs font-bold">Action Required: {returnRequestsCount} Buyer Return Requests Pending</p>
+              <p className="text-[11px] text-text-secondary">Click on any order flagged with Return Pending to inspect buyer notes and proof images.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setStatusFilter('return_requested')}
+            className="px-3 py-1 bg-warning text-white font-bold text-xs rounded hover:bg-warning/90 transition-colors"
+          >
+            Review Returns
+          </button>
+        </div>
+      )}
+
+      {/* Main Data Table */}
       {isError ? (
         <div className="p-8 text-center border border-border bg-surface rounded-md font-sans space-y-3">
-          <p className="text-sm font-bold text-danger">Failed to load orders.</p>
+          <p className="text-sm font-bold text-danger">Failed to load marketplace orders.</p>
           <button
             onClick={() => refetch()}
             className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
           >
-            Retry
+            Retry Orders Fetch
           </button>
         </div>
       ) : (
         <AdminDataTable
-          title="Orders Ledger"
-          subtitle="Real-time transaction & shipping management"
+          title="Marketplace Orders Directory"
+          subtitle="Real-time fulfillment and buyer transaction pipeline"
           data={ordersData}
           columns={columns}
           searchField="orderNumber"
@@ -305,12 +364,116 @@ export default function AdminOrdersPage() {
         />
       )}
 
-      {/* Order Detail Modal */}
-      {selectedOrder && (
+      {/* VIEW ORDER DETAILS MODAL */}
+      {selectedOrder && !editModalOpen && !deleteModalOpen && (
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
         />
+      )}
+
+      {/* EDIT ORDER MODAL */}
+      {editModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <button
+              onClick={() => setEditModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <Pencil className="h-6 w-6 text-accent" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Edit Order #{selectedOrder.orderNumber}</h3>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateOrderMutation.mutate({ orderId: selectedOrder.id, data: editForm });
+              }}
+              className="space-y-4 text-xs"
+            >
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Order Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary font-medium"
+                >
+                  {ALL_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Admin Fulfill Note</label>
+                <textarea
+                  rows={3}
+                  value={editForm.note}
+                  onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
+                  placeholder="Optional fulfillment tracking notes or shipping status update..."
+                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateOrderMutation.isPending}
+                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90 flex items-center space-x-1"
+                >
+                  {updateOrderMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                  <span>Update Order</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SOFT DELETE CONFIRMATION MODAL */}
+      {deleteModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <Trash2 className="h-6 w-6 text-danger" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Confirm Soft Delete / Cancel Order</h3>
+            </div>
+
+            <p className="text-xs text-text-secondary mb-4">
+              Are you sure you want to soft delete order <span className="font-bold text-text-primary">#{selectedOrder.orderNumber}</span>? The order status will be updated to <span className="font-bold text-danger">Cancelled</span>.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
+              >
+                Keep Order
+              </button>
+              <button
+                onClick={() => softDeleteMutation.mutate(selectedOrder.id)}
+                disabled={softDeleteMutation.isPending}
+                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover flex items-center space-x-1"
+              >
+                {softDeleteMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                <span>Soft Delete Order</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </AdminLayout>
   );

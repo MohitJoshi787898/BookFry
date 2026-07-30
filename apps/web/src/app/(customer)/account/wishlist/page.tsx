@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 import { Wishlist, Book } from '@bookmarket/types';
-import { Heart, Trash2, ShoppingCart, ArrowLeft, Star, HeartCrack } from 'lucide-react';
+import { Heart, Trash2, ShoppingCart, ArrowLeft, Star, HeartCrack, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function WishlistPage() {
@@ -44,7 +45,6 @@ export default function WishlistPage() {
   const handleAddToCart = async (book: Book) => {
     try {
       await addItem(isAuthenticated, book, 1);
-      // Automatically remove from wishlist once added to cart (optional, but standard practice)
       handleRemove(book.id);
     } catch (err) {
       console.error(err);
@@ -52,141 +52,160 @@ export default function WishlistPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background text-text-primary transition-colors duration-200">
       <Navbar />
 
-      <main className="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 font-sans">
+        {/* Navigation Breadcrumb */}
         <Link
           href="/books"
-          className="inline-flex items-center space-x-2 text-sm text-text-secondary hover:text-brand mb-6 transition-colors font-sans"
+          className="inline-flex items-center space-x-2 text-xs font-bold text-text-muted hover:text-secondary mb-6 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Catalog</span>
         </Link>
 
-        <h1 className="font-serif text-3xl font-bold text-text-primary mb-8 flex items-center space-x-3">
-          <Heart className="h-8 w-8 text-brand fill-brand" />
-          <span>My Wishlist</span>
-        </h1>
+        {/* Page Title */}
+        <div className="flex items-center justify-between border-b border-border pb-5 mb-8">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-2xl bg-secondary/10 border border-secondary/20 text-secondary">
+              <Heart className="h-7 w-7 fill-secondary" />
+            </div>
+            <div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-primary dark:text-foreground">
+                My Saved Wishlist
+              </h1>
+              <p className="text-xs font-medium text-text-muted">
+                {wishlistData.books.length} saved items ready for purchase
+              </p>
+            </div>
+          </div>
+        </div>
 
         {!isAuthenticated ? (
-          <div className="text-center py-16 border border-border bg-surface rounded-md space-y-6">
-            <HeartCrack className="h-12 w-12 text-text-muted mx-auto" />
-            <div>
-              <h2 className="font-serif text-xl font-bold text-text-primary">Please log in</h2>
-              <p className="text-sm text-text-secondary max-w-sm mx-auto mt-2 font-sans">
-                You must be logged in to view your wishlist.
+          <div className="text-center py-20 border border-border bg-card rounded-3xl space-y-6 max-w-md mx-auto shadow-sm">
+            <HeartCrack className="h-14 w-14 text-text-muted mx-auto" />
+            <div className="space-y-2 px-6">
+              <h2 className="font-serif text-xl font-bold text-text-primary">Log in to view your wishlist</h2>
+              <p className="text-xs text-text-muted font-medium leading-relaxed">
+                Save your favorite textbooks and storybooks to keep track of price drops and availability.
               </p>
             </div>
             <Link
               href="/login"
-              className="inline-block px-6 py-2.5 bg-brand text-white font-semibold rounded hover:bg-brand-hover font-sans text-sm"
+              className="inline-flex items-center gap-2 px-7 py-3 bg-secondary text-secondary-foreground font-bold rounded-xl hover:bg-secondary/90 text-xs uppercase tracking-wider transition-colors shadow-sm"
             >
-              Sign In
+              <Sparkles className="h-4 w-4" />
+              <span>Sign In Now</span>
             </Link>
           </div>
         ) : isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 animate-pulse">
-            {Array.from({ length: 3 }).map((_, idx) => (
-              <div key={idx} className="h-96 border border-border bg-surface rounded-md" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-pulse">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="h-80 border border-border bg-card rounded-2xl" />
             ))}
           </div>
         ) : isError ? (
-          <div className="text-center py-12 border border-border bg-surface rounded-md">
-            <h2 className="text-lg font-bold text-text-primary mb-2 font-serif">
-              Failed to load wishlist
+          <div className="text-center py-16 border border-border bg-card rounded-3xl space-y-4 max-w-md mx-auto">
+            <h2 className="text-base font-bold text-text-primary font-serif">
+              Failed to load wishlist items
             </h2>
             <button
               onClick={() => refetch()}
-              className="px-4 py-2 bg-brand text-white rounded hover:bg-brand-hover text-sm font-semibold font-sans"
+              className="px-5 py-2.5 bg-secondary text-secondary-foreground rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-secondary/90 transition-colors shadow-xs"
             >
               Retry
             </button>
           </div>
         ) : wishlistData.books.length === 0 ? (
-          <div className="text-center py-16 border border-border bg-surface rounded-md space-y-6">
-            <Heart className="h-12 w-12 text-text-muted mx-auto" />
-            <div>
+          <div className="text-center py-20 border border-border bg-card rounded-3xl space-y-6 max-w-md mx-auto shadow-2xs">
+            <div className="w-16 h-16 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center mx-auto text-secondary">
+              <Heart className="h-8 w-8" />
+            </div>
+            <div className="space-y-2 px-6">
               <h2 className="font-serif text-xl font-bold text-text-primary">
                 Your wishlist is empty
               </h2>
-              <p className="text-sm text-text-secondary max-w-sm mx-auto mt-2 font-sans">
-                Save items you like in your wishlist to buy them later.
+              <p className="text-xs text-text-muted font-medium leading-relaxed">
+                Tap the heart icon on any book card to save it here for future reading or price drop alerts.
               </p>
             </div>
             <Link
               href="/books"
-              className="inline-block px-6 py-2.5 bg-brand text-white font-semibold rounded hover:bg-brand-hover font-sans text-sm"
+              className="inline-flex items-center gap-2 px-7 py-3 bg-gradient-brand text-primary-foreground font-bold rounded-xl text-xs uppercase tracking-wider shadow-sm hover:scale-[1.02] transition-transform"
             >
-              Browse Books
+              Browse Catalog
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 font-sans">
-            {wishlistData.books.map((book) => {
-              const imageUrl = book.images?.[0]?.url || '';
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {wishlistData.books.map((book, idx) => {
+              const imageUrl =
+                book.images?.[0]?.url ||
+                'https://placehold.co/400x600/163A63/ffffff?text=' + encodeURIComponent(book.title || 'BookFry');
               return (
-                <div
+                <motion.div
                   key={book.id}
-                  className="flex flex-col h-full rounded-md border border-border bg-surface overflow-hidden hover:shadow-md transition-all duration-120 relative group"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                  className="flex flex-col h-full rounded-2xl border border-border bg-card overflow-hidden hover:shadow-md transition-all duration-300 relative group"
                 >
                   {/* Remove Button */}
                   <button
                     onClick={() => handleRemove(book.id)}
-                    className="absolute top-2 right-2 z-10 p-2 bg-surface/80 hover:bg-danger/10 hover:text-danger text-text-secondary rounded-full border border-border backdrop-blur-sm transition-colors"
+                    className="absolute top-2.5 right-2.5 z-10 p-2 bg-card/90 hover:bg-danger/10 hover:text-danger text-text-muted rounded-full border border-border/80 backdrop-blur-md transition-colors"
                     title="Remove from Wishlist"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
 
                   {/* Book Image Cover Link */}
-                  <Link href={`/books/${book.slug}`} className="relative w-full aspect-[2/3] bg-background-subtle overflow-hidden block">
+                  <Link href={`/books/${book.slug}`} className="relative w-full aspect-[2/3] bg-background-subtle overflow-hidden block border-b border-border/60">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={imageUrl}
                       alt={book.title}
-                      className="w-full h-full object-cover object-center group-hover:opacity-95 transition-opacity"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          'https://placehold.co/400x600/16523d/ffffff?text=' + encodeURIComponent(book.title);
+                          'https://placehold.co/400x600/163A63/ffffff?text=' + encodeURIComponent(book.title);
                       }}
                     />
                   </Link>
 
                   {/* Content */}
-                  <div className="flex flex-col flex-grow p-4">
-                    <h3 className="font-sans text-sm font-semibold text-text-primary group-hover:text-brand transition-colors line-clamp-1 mb-1">
+                  <div className="flex flex-col flex-grow p-3.5 space-y-2">
+                    <h3 className="text-xs font-bold text-text-primary group-hover:text-secondary transition-colors line-clamp-1">
                       <Link href={`/books/${book.slug}`}>{book.title}</Link>
                     </h3>
-                    <p className="text-xs text-text-secondary font-medium mb-3">by {book.author}</p>
+                    <p className="text-[10px] text-text-muted font-medium line-clamp-1">by {book.author}</p>
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between pt-1">
                       <div className="flex items-baseline space-x-1">
-                        <span className="text-sm font-bold text-text-primary">${book.price.toFixed(2)}</span>
+                        <span className="text-xs font-black text-text-primary">₹{(book.lowestPrice ?? book.price).toFixed(0)}</span>
                         {book.discountPrice && (
-                          <span className="text-xs text-text-muted line-through">
-                            ${book.discountPrice.toFixed(2)}
+                          <span className="text-[10px] text-text-muted line-through">
+                            ₹{book.discountPrice.toFixed(0)}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center space-x-1 text-xs text-text-secondary">
-                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                        <span className="font-semibold">
-                          {book.ratingAvg > 0 ? book.ratingAvg.toFixed(1) : '5.0'}
-                        </span>
+                      <div className="flex items-center space-x-1 text-[10px] text-text-muted font-bold">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        <span>{book.ratingAvg > 0 ? book.ratingAvg.toFixed(1) : '4.8'}</span>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handleAddToCart(book)}
                       disabled={book.stock === 0}
-                      className="w-full mt-auto py-2 bg-brand hover:bg-brand-hover disabled:bg-border disabled:text-text-muted text-white text-xs font-bold rounded flex items-center justify-center space-x-2 transition-all"
+                      className="w-full mt-auto py-2 bg-secondary hover:bg-secondary/90 disabled:bg-border disabled:text-text-muted text-secondary-foreground text-[10px] font-extrabold uppercase tracking-wider rounded-lg flex items-center justify-center space-x-1.5 transition-colors shadow-2xs"
                     >
                       <ShoppingCart className="h-3.5 w-3.5" />
-                      <span>{book.stock > 0 ? 'Add to Cart' : 'Out of Stock'}</span>
+                      <span>{book.stock > 0 ? 'Move to Cart' : 'Out of Stock'}</span>
                     </button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

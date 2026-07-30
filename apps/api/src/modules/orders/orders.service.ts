@@ -40,7 +40,8 @@ export class OrdersService {
       state: string;
       zipCode: string;
       country: string;
-    }
+    },
+    couponCode?: string
   ): Promise<Order> {
     const cart = await this.cartRepository.findByUserId(buyerId);
     if (!cart || cart.items.length === 0) {
@@ -90,9 +91,28 @@ export class OrdersService {
       });
     }
 
-    const shippingFee = subtotal > 35 ? 0 : 4.99;
-    const tax = parseFloat((subtotal * 0.08).toFixed(2));
-    const total = parseFloat((subtotal + shippingFee + tax).toFixed(2));
+    let discountAmount = 0;
+    let appliedCouponCode: string | undefined = undefined;
+
+    if (couponCode) {
+      try {
+        const { CouponsService } = await import('../coupons/coupons.service');
+        const couponsService = new CouponsService();
+        const validation = await couponsService.validateCoupon(couponCode, subtotal);
+        if (validation.valid) {
+          discountAmount = validation.coupon.discountAmount;
+          appliedCouponCode = validation.coupon.code;
+          await couponsService.incrementUsage(appliedCouponCode);
+        }
+      } catch (err) {
+        console.warn(`Coupon validation warning for code "${couponCode}":`, err);
+      }
+    }
+
+    const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+    const shippingFee = discountedSubtotal > 35 ? 0 : 4.99;
+    const tax = parseFloat((discountedSubtotal * 0.08).toFixed(2));
+    const total = parseFloat((discountedSubtotal + shippingFee + tax).toFixed(2));
 
     const orderNumber = this.generateOrderNumber();
 
@@ -102,6 +122,8 @@ export class OrdersService {
       items: orderItems,
       shippingAddress,
       subtotal,
+      discountAmount,
+      couponCode: appliedCouponCode,
       shippingFee,
       tax,
       total,

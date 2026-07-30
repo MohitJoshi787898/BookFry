@@ -37,6 +37,8 @@ export interface IOrderDocument extends Document {
     country: string;
   };
   subtotal: number;
+  discountAmount?: number;
+  couponCode?: string;
   shippingFee: number;
   tax: number;
   total: number;
@@ -121,6 +123,8 @@ const OrderSchema = new Schema<IOrderDocument>(
       country: { type: String, required: true },
     },
     subtotal: { type: Number, required: true, min: 0 },
+    discountAmount: { type: Number, default: 0 },
+    couponCode: { type: String },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },
     tax: { type: Number, required: true, min: 0, default: 0 },
     total: { type: Number, required: true, min: 0 },

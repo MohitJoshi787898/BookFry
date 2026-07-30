@@ -14,6 +14,7 @@ import contactRoutes from '../modules/contact/contact.routes';
 import usersRoutes from '../modules/users/users.routes';
 import eventsRoutes from '../modules/events/events.routes';
 import recommendationsRoutes from '../modules/recommendations/recommendations.routes';
+import couponsRoutes from '../modules/coupons/coupons.routes';
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use('/contact', contactRoutes);
 router.use('/users', usersRoutes);
 router.use('/events', eventsRoutes);
 router.use('/recommendations', recommendationsRoutes);
+router.use('/coupons', couponsRoutes);
 
 export default router;

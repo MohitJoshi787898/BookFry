@@ -54,11 +54,15 @@ export default function SellerDashboardPage() {
     enabled: isAuthenticated,
   });
 
-  const { data: listings = [], refetch: refetchListings } = useQuery<Book[]>({
+  const { data: listingsRaw, refetch: refetchListings } = useQuery<{ listings?: Book[] } | Book[]>({
     queryKey: ['seller-listings-dashboard'],
     queryFn: () => apiClient('/seller/listings?page=1&limit=100'),
     enabled: isAuthenticated,
   });
+
+  const listings: Book[] = Array.isArray(listingsRaw)
+    ? listingsRaw
+    : listingsRaw?.listings || [];
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['categories'],

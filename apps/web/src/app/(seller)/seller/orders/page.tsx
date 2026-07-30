@@ -25,14 +25,18 @@ export default function SellerOrdersPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const {
-    data: orders = [],
+    data: ordersRaw,
     isLoading,
     isError,
     refetch,
-  } = useQuery<Order[]>({
+  } = useQuery<{ data?: Order[]; orders?: Order[] } | Order[]>({
     queryKey: ['seller-orders'],
     queryFn: () => apiClient('/orders/seller'),
   });
+
+  const orders: Order[] = Array.isArray(ordersRaw)
+    ? ordersRaw
+    : ordersRaw?.data || ordersRaw?.orders || [];
 
   const statusMutation = useMutation({
     mutationFn: ({

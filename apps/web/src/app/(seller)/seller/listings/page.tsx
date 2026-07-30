@@ -35,7 +35,7 @@ export default function SellerListingsPage() {
     isLoading,
     isError,
     refetch,
-  } = useQuery<Book[]>({
+  } = useQuery<{ listings?: Book[] } | Book[]>({
     queryKey: ['seller-listings', statusFilter],
     queryFn: () => apiClient(`/seller/listings?page=1&limit=100&status=${statusFilter}`),
     enabled: isAuthenticated,
@@ -72,7 +72,9 @@ export default function SellerListingsPage() {
   };
 
   // Safe listings extraction
-  const listings = responseData || [];
+  const listings: Book[] = Array.isArray(responseData)
+    ? responseData
+    : responseData?.listings || [];
 
   // Filter listings locally by search query
   const filteredListings = listings.filter((listing) => {

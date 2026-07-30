@@ -536,10 +536,11 @@ export default function ProfilePage() {
                         </div>
                         {/* Decorative book stack illustration */}
                         <div className="hidden sm:flex items-end gap-1 pb-2 opacity-70">
-                          {['#F26522', '#1A3B5C', '#FF9900', '#1e8e5a'].map((c, i) => (
+                          {['bg-secondary', 'bg-primary', 'bg-amber-500', 'bg-emerald-600'].map((cls, i) => (
                             <div
                               key={i}
-                              style={{ backgroundColor: c, height: `${28 + i * 8}px`, width: '14px', borderRadius: '3px' }}
+                              className={`${cls} rounded-sm`}
+                              style={{ height: `${28 + i * 8}px`, width: '14px' }}
                             />
                           ))}
                         </div>

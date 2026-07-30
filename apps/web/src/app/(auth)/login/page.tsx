@@ -63,14 +63,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FB] dark:bg-background text-text-primary">
+    <div className="flex flex-col min-h-screen bg-background text-text-primary">
       <Navbar />
 
       <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         {/* Main login container card */}
-        <Card className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden shadow-md border-border bg-white dark:bg-card">
-          {/* A. Left Column (Warm Cream Background / Dark Slate) */}
-          <div className="bg-[#FEF8F3] dark:bg-primary-950/15 p-8 flex flex-col items-center justify-between text-center border-b md:border-b-0 md:border-r border-border">
+        <Card className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden shadow-md border-border bg-card">
+          {/* A. Left Column */}
+          <div className="bg-secondary/5 dark:bg-primary-950/15 p-8 flex flex-col items-center justify-between text-center border-b md:border-b-0 md:border-r border-border">
             {/* Mascot Image */}
             <div className="w-full max-w-[220px] aspect-square flex items-center justify-center bg-white/40 dark:bg-white/95 rounded-2xl p-4 shadow-xs select-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -83,7 +83,7 @@ export default function LoginPage() {
 
             {/* Editorial headings */}
             <div className="space-y-2 mt-4">
-              <h2 className="font-serif text-2xl font-bold text-[#1A3B5C] dark:text-[#85B7E5]">
+              <h2 className="font-serif text-2xl font-bold text-brand dark:text-foreground">
                 Welcome Back!
               </h2>
               <p className="text-xs text-text-secondary font-sans font-medium">
@@ -94,8 +94,8 @@ export default function LoginPage() {
             {/* Trust points list */}
             <div className="w-full space-y-3.5 pt-6 border-t border-border/60 mt-6 font-sans text-xs text-left">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
-                  <Tag className="h-4 w-4 text-[#F26522]" />
+                <div className="h-8 w-8 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                  <Tag className="h-4 w-4 text-secondary" />
                 </div>
                 <div>
                   <p className="font-bold text-text-primary">Great Deals</p>
@@ -104,8 +104,8 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="h-4 w-4 text-[#F26522]" />
+                <div className="h-8 w-8 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="h-4 w-4 text-secondary" />
                 </div>
                 <div>
                   <p className="font-bold text-text-primary">100% Safe</p>
@@ -114,8 +114,8 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
-                  <BookOpen className="h-4 w-4 text-[#F26522]" />
+                <div className="h-8 w-8 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                  <BookOpen className="h-4 w-4 text-secondary" />
                 </div>
                 <div>
                   <p className="font-bold text-text-primary">Wide Collection</p>
@@ -127,10 +127,10 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* B. Right Column (White Form Panel / Dark Card) */}
-          <div className="bg-white dark:bg-card p-8 flex flex-col justify-center space-y-6 font-sans">
+          {/* B. Right Column */}
+          <div className="bg-card p-8 flex flex-col justify-center space-y-6 font-sans">
             <div className="space-y-1.5">
-              <h1 className="font-serif text-2xl font-bold text-[#1A3B5C] dark:text-[#85B7E5]">
+              <h1 className="font-serif text-2xl font-bold text-brand dark:text-foreground">
                 Sign in to BookFry
               </h1>
               <p className="text-xs text-text-secondary font-medium">
@@ -228,7 +228,7 @@ export default function LoginPage() {
               New to BookFry?{" "}
               <Link
                 href="/register"
-                className="font-bold text-[#F26522] hover:underline"
+                className="font-bold text-secondary hover:underline"
               >
                 Create an account
               </Link>
@@ -238,12 +238,12 @@ export default function LoginPage() {
       </main>
 
       {/* Horizontal Trust bar */}
-      <div className="bg-white dark:bg-card border-t border-b border-border/60 py-5 font-sans">
+      <div className="bg-card border-t border-b border-border/60 py-5 font-sans">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-center justify-between text-left">
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
-                <Tag className="h-5 w-5 text-[#F26522]" />
+              <div className="h-10 w-10 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                <Tag className="h-5 w-5 text-secondary" />
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-bold text-text-primary">
@@ -256,8 +256,8 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
-                <Truck className="h-5 w-5 text-[#F26522]" />
+              <div className="h-10 w-10 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                <Truck className="h-5 w-5 text-secondary" />
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-bold text-text-primary">
@@ -270,8 +270,8 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
-                <ShieldCheck className="h-5 w-5 text-[#F26522]" />
+              <div className="h-10 w-10 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                <ShieldCheck className="h-5 w-5 text-secondary" />
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-bold text-text-primary">
@@ -284,8 +284,8 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center space-x-3.5 py-1">
-              <div className="h-10 w-10 rounded-full bg-[#FFF5F0] dark:bg-secondary-950/40 border border-[#FFF0E8] dark:border-secondary-900/30 flex items-center justify-center shrink-0">
-                <RotateCcw className="h-5 w-5 text-[#F26522]" />
+              <div className="h-10 w-10 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
+                <RotateCcw className="h-5 w-5 text-secondary" />
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-bold text-text-primary">

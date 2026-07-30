@@ -158,7 +158,7 @@ function SalesOverviewChart() {
         {/* Tooltip Overlay */}
         <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-slate-800 text-white rounded-lg p-2 shadow-sm text-[10px] font-bold text-center z-10">
           <p className="text-[8px] opacity-70">Jun 06, 2025</p>
-          <p className="text-[#F26522]">₹18,650</p>
+          <p className="text-secondary">₹18,650</p>
         </div>
 
         {/* SVG Spark Area Chart */}
@@ -350,7 +350,7 @@ function ExecutiveDashboardHeader() {
 
         <Link
           href="/admin/listings"
-          className="px-4 py-2 bg-[#F26522] hover:bg-[#e05310] text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center space-x-1.5 active:scale-95"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center space-x-1.5 active:scale-95"
         >
           <span>Review Pending Books</span>
           <ArrowRight className="h-4 w-4" />
@@ -489,7 +489,7 @@ function AdminDashboardPage() {
           <p className="text-sm font-bold text-danger">Failed to load live administrative telemetry data.</p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 bg-[#F26522] hover:bg-[#e05310] text-white text-xs font-bold rounded-xl"
+            className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-white text-xs font-bold rounded-xl"
           >
             Retry Data Load
           </button>

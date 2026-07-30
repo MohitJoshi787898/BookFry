@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { useAuthStore } from '@/stores/auth.store';
-import { Star, ShieldAlert, CheckCircle2, Trash2 } from 'lucide-react';
+import { Star, ShieldAlert, Trash2, Eye, Pencil, X } from 'lucide-react';
 
 interface BookReview {
   id: string;
@@ -52,6 +52,17 @@ export default function AdminReviewsPage() {
 
   const [reviews, setReviews] = useState<BookReview[]>(mockReviews);
 
+  // Modals state
+  const [selectedReview, setSelectedReview] = useState<BookReview | null>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    rating: 5,
+    comment: '',
+    status: 'approved' as 'approved' | 'flagged',
+  });
+
   if (!isAdmin) {
     return (
       <AdminLayout>
@@ -63,12 +74,26 @@ export default function AdminReviewsPage() {
     );
   }
 
-  const handleToggleStatus = (id: string) => {
+
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedReview) return;
     setReviews(
       reviews.map((r) =>
-        r.id === id ? { ...r, status: r.status === 'approved' ? 'flagged' : 'approved' } : r
+        r.id === selectedReview.id
+          ? { ...r, rating: editForm.rating, comment: editForm.comment, status: editForm.status }
+          : r
       )
     );
+    setEditModalOpen(false);
+    setSelectedReview(null);
+  };
+
+  const handleDeleteReview = (id: string) => {
+    setReviews(reviews.filter((r) => r.id !== id));
+    setDeleteModalOpen(false);
+    setSelectedReview(null);
   };
 
   const columns: Column<BookReview>[] = [
@@ -116,29 +141,47 @@ export default function AdminReviewsPage() {
       header: 'Actions',
       className: 'text-right',
       cell: (r) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggleStatus(r.id);
-          }}
-          className={`px-3 py-1 text-xs font-bold rounded flex items-center space-x-1 ml-auto transition-all ${
-            r.status === 'approved'
-              ? 'bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20'
-              : 'bg-success hover:bg-success/90 text-white'
-          }`}
-        >
-          {r.status === 'approved' ? (
-            <>
-              <Trash2 className="h-3 w-3" />
-              <span>Flag Review</span>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-3 w-3" />
-              <span>Approve Review</span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center justify-end space-x-1.5 font-sans">
+          {/* View Details */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedReview(r);
+              setViewModalOpen(true);
+            }}
+            className="p-1.5 rounded border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-brand transition-colors"
+            title="View Details"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Edit Review */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedReview(r);
+              setEditForm({ rating: r.rating, comment: r.comment, status: r.status });
+              setEditModalOpen(true);
+            }}
+            className="p-1.5 rounded border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-accent transition-colors"
+            title="Edit Review"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Soft Delete */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedReview(r);
+              setDeleteModalOpen(true);
+            }}
+            className="p-1.5 rounded border border-danger/20 bg-danger/10 text-danger hover:bg-danger hover:text-white transition-colors"
+            title="Soft Delete / Remove Review"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -166,6 +209,152 @@ export default function AdminReviewsPage() {
         searchField="bookTitle"
         searchPlaceholder="Search title or reviewer..."
       />
+
+      {/* VIEW DETAILS MODAL */}
+      {viewModalOpen && selectedReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <button
+              onClick={() => setViewModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <Star className="h-6 w-6 text-brand" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Review Details</h3>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="bg-background-subtle p-3 rounded-lg border border-border space-y-1.5">
+                <p><span className="font-bold text-text-muted">Book:</span> <span className="font-bold text-text-primary">{selectedReview.bookTitle}</span></p>
+                <p><span className="font-bold text-text-muted">Reviewer:</span> <span className="text-text-primary">{selectedReview.reviewerName}</span></p>
+                <p><span className="font-bold text-text-muted">Date:</span> <span className="text-text-primary">{selectedReview.createdAt}</span></p>
+                <p><span className="font-bold text-text-muted">Rating:</span> <span className="font-bold text-accent">{selectedReview.rating} / 5 Stars</span></p>
+              </div>
+
+              <div>
+                <p className="font-bold text-text-muted uppercase text-[10px] mb-1">Comment Text</p>
+                <p className="p-3 bg-surface border border-border rounded-lg text-text-primary italic">&quot;{selectedReview.comment}&quot;</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-border mt-4">
+              <button
+                onClick={() => setViewModalOpen(false)}
+                className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT REVIEW MODAL */}
+      {editModalOpen && selectedReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <button
+              onClick={() => setEditModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <Pencil className="h-6 w-6 text-accent" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Edit Review</h3>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Star Rating (1-5)</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={5}
+                  required
+                  value={editForm.rating}
+                  onChange={(e) => setEditForm({ ...editForm, rating: Number(e.target.value) })}
+                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Comment Text</label>
+                <textarea
+                  rows={4}
+                  required
+                  value={editForm.comment}
+                  onChange={(e) => setEditForm({ ...editForm, comment: e.target.value })}
+                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'approved' | 'flagged' })}
+                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                >
+                  <option value="approved">Approved</option>
+                  <option value="flagged">Flagged</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SOFT DELETE CONFIRMATION MODAL */}
+      {deleteModalOpen && selectedReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <Trash2 className="h-6 w-6 text-danger" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Confirm Delete Review</h3>
+            </div>
+
+            <p className="text-xs text-text-secondary mb-4">
+              Are you sure you want to soft delete/remove this review for <span className="font-bold text-text-primary">{selectedReview.bookTitle}</span>?
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteReview(selectedReview.id)}
+                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover"
+              >
+                Delete Review
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

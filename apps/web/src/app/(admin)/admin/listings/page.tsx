@@ -16,6 +16,9 @@ import {
   AlertOctagon,
   X,
   RefreshCw,
+  Eye,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,6 +31,7 @@ interface AdminListing {
   stock: number;
   status: string;
   category: string;
+  condition?: string;
   rejectionReason?: string;
 }
 
@@ -38,6 +42,19 @@ export default function AdminListingsPage() {
 
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
+
+  // Modals state
+  const [selectedListing, setSelectedListing] = useState<AdminListing | null>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    price: 0,
+    stock: 0,
+    status: 'active',
+    condition: 'good',
+  });
 
   // Rejection modal state
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -80,6 +97,31 @@ export default function AdminListingsPage() {
     },
   });
 
+  const editMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      apiClient(`/admin/listings/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-listings'] });
+      setEditModalOpen(false);
+      setSelectedListing(null);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiClient(`/admin/listings/${id}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-listings'] });
+      setDeleteModalOpen(false);
+      setSelectedListing(null);
+    },
+  });
+
   const handleApprove = (id: string) => {
     moderateMutation.mutate({ id, status: 'active' });
   };
@@ -106,7 +148,6 @@ export default function AdminListingsPage() {
     }
   };
 
-  // Fix: apiClient returns data.data directly
   const listings = responseData || [];
 
   if (!isAdmin) {
@@ -183,11 +224,44 @@ export default function AdminListingsPage() {
       },
     },
     {
-      header: 'Moderation Actions',
+      header: 'Actions',
       className: 'text-right',
       cell: (b) => (
-        <div className="flex justify-end gap-2">
-          {/* Approve button: Visible for pending, rejected, archived */}
+        <div className="flex items-center justify-end gap-1.5 font-sans">
+          {/* View Details Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedListing(b);
+              setViewModalOpen(true);
+            }}
+            className="p-1.5 rounded border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-brand transition-colors"
+            title="View Listing Details"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Edit Listing Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedListing(b);
+              setEditForm({
+                title: b.title,
+                price: b.price,
+                stock: b.stock,
+                status: b.status,
+                condition: b.condition || 'good',
+              });
+              setEditModalOpen(true);
+            }}
+            className="p-1.5 rounded border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-accent transition-colors"
+            title="Edit Listing"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Moderate Approve */}
           {b.status !== 'active' && (
             <button
               onClick={(e) => {
@@ -195,14 +269,14 @@ export default function AdminListingsPage() {
                 handleApprove(b.id);
               }}
               disabled={moderateMutation.isPending}
-              className="px-2.5 py-1.5 text-xs font-bold rounded bg-success hover:bg-success/90 text-white flex items-center space-x-1 shadow-sm transition-all"
+              className="p-1.5 text-xs font-bold rounded bg-success hover:bg-success/90 text-white flex items-center shadow-sm transition-all"
+              title="Approve Listing"
             >
               <CheckCircle className="h-3.5 w-3.5" />
-              <span>Approve</span>
             </button>
           )}
 
-          {/* Reject button: Visible for pending, active */}
+          {/* Moderate Reject */}
           {b.status !== 'rejected' && b.status !== 'archived' && b.status !== 'removed' && (
             <button
               onClick={(e) => {
@@ -210,12 +284,25 @@ export default function AdminListingsPage() {
                 handleRejectClick(b.id);
               }}
               disabled={moderateMutation.isPending}
-              className="px-2.5 py-1.5 text-xs font-bold rounded bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20 flex items-center space-x-1 transition-all"
+              className="p-1.5 text-xs font-bold rounded bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20 flex items-center transition-all"
+              title="Reject Listing"
             >
               <EyeOff className="h-3.5 w-3.5" />
-              <span>Reject</span>
             </button>
           )}
+
+          {/* Soft Delete Listing Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedListing(b);
+              setDeleteModalOpen(true);
+            }}
+            className="p-1.5 rounded border border-danger/20 bg-danger/10 text-danger hover:bg-danger hover:text-white transition-colors"
+            title="Soft Delete Listing"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
         </div>
       ),
     },
@@ -252,6 +339,7 @@ export default function AdminListingsPage() {
             <option value="rejected">Rejected Listings</option>
             <option value="archived">Archived Listings</option>
             <option value="draft">Drafts</option>
+            <option value="removed">Removed / Deleted</option>
           </select>
         </div>
       </div>
@@ -277,6 +365,176 @@ export default function AdminListingsPage() {
           searchPlaceholder="Search title or author..."
           isLoading={isLoading}
         />
+      )}
+
+      {/* VIEW DETAILS MODAL */}
+      {viewModalOpen && selectedListing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <button
+              onClick={() => setViewModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <BookOpen className="h-6 w-6 text-brand" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Listing Details</h3>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="bg-background-subtle p-3 rounded-lg border border-border space-y-1.5">
+                <p><span className="font-bold text-text-muted">Listing ID:</span> <span className="font-mono text-text-primary">{selectedListing.id}</span></p>
+                <p><span className="font-bold text-text-muted">Book Title:</span> <span className="font-bold text-text-primary">{selectedListing.title}</span></p>
+                <p><span className="font-bold text-text-muted">Author:</span> <span className="text-text-primary">{selectedListing.author}</span></p>
+                <p><span className="font-bold text-text-muted">Category:</span> <span className="capitalize text-text-primary">{selectedListing.category}</span></p>
+                <p><span className="font-bold text-text-muted">Price:</span> <span className="font-mono font-bold text-brand">₹{selectedListing.price}</span></p>
+                <p><span className="font-bold text-text-muted">Stock Copies:</span> <span className="font-mono font-bold">{selectedListing.stock}</span></p>
+                <p><span className="font-bold text-text-muted">Status:</span> <span className="uppercase font-bold text-accent">{selectedListing.status}</span></p>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-border mt-4">
+              <button
+                onClick={() => setViewModalOpen(false)}
+                className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT LISTING MODAL */}
+      {editModalOpen && selectedListing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <button
+              onClick={() => setEditModalOpen(false)}
+              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <Pencil className="h-6 w-6 text-accent" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Edit Listing Details</h3>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                editMutation.mutate({ id: selectedListing.id, data: editForm });
+              }}
+              className="space-y-4 text-xs"
+            >
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Book Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Price (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={editForm.price}
+                    onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                    className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Stock</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={editForm.stock}
+                    onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })}
+                    className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Listing Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="active">Active</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="archived">Archived</option>
+                  <option value="removed">Removed (Soft Deleted)</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editMutation.isPending}
+                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90 flex items-center space-x-1"
+                >
+                  {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                  <span>Save Listing</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SOFT DELETE CONFIRMATION MODAL */}
+      {deleteModalOpen && selectedListing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
+          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
+              <Trash2 className="h-6 w-6 text-danger" />
+              <h3 className="font-serif text-lg font-bold text-text-primary">Soft Delete Listing</h3>
+            </div>
+
+            <p className="text-xs text-text-secondary mb-4">
+              Are you sure you want to soft delete <span className="font-bold text-text-primary">{selectedListing.title}</span>? Its status will be updated to <span className="font-bold text-danger">removed</span>.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteMutation.mutate(selectedListing.id)}
+                disabled={deleteMutation.isPending}
+                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover flex items-center space-x-1"
+              >
+                {deleteMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                <span>Soft Delete Listing</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Rejection Modal Dialog */}

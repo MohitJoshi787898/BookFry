@@ -153,6 +153,60 @@ export class AdminController {
     res.setHeader('Content-Disposition', 'attachment; filename="bookfry-sales-report.csv"');
     res.status(200).send(csv);
   };
+
+  getUserById = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const user = await this.adminService.getUserById(id);
+    res.status(200).json(ApiResponse.success(user));
+  };
+
+  updateUser = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const user = await this.adminService.updateUser(id, req.body);
+    res.status(200).json(ApiResponse.success(user));
+  };
+
+  softDeleteUser = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const result = await this.adminService.softDeleteUser(id);
+    res.status(200).json(ApiResponse.success(result));
+  };
+
+  getListingById = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const listing = await this.adminService.getListingById(id);
+    res.status(200).json(ApiResponse.success(listing));
+  };
+
+  updateListing = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const listing = await this.adminService.updateListing(id, req.body);
+    res.status(200).json(ApiResponse.success(listing));
+  };
+
+  softDeleteListing = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const result = await this.adminService.softDeleteListing(id);
+    res.status(200).json(ApiResponse.success(result));
+  };
+
+  updateCoupon = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const coupon = await this.adminService.updateCoupon(id, req.body);
+    res.status(200).json(ApiResponse.success(coupon));
+  };
+
+  updateSupportTicket = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const ticket = await this.adminService.updateSupportTicket(id, req.body);
+    res.status(200).json(ApiResponse.success(ticket));
+  };
+
+  softDeleteSupportTicket = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const result = await this.adminService.softDeleteSupportTicket(id);
+    res.status(200).json(ApiResponse.success(result));
+  };
 }
 
 export default AdminController;

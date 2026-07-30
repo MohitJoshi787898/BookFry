@@ -30,14 +30,16 @@ export function BookCard({ book }: BookCardProps) {
   }[book.condition] || 'Good';
 
   const conditionColors = {
-    new: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
-    like_new: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
-    good: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
-    fair: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
-    acceptable: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800',
-  }[book.condition] || 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800';
+    new: 'bg-success/10 text-success border-success/20',
+    like_new: 'bg-info/10 text-info border-info/20',
+    good: 'bg-success/10 text-success border-success/20',
+    fair: 'bg-warning/10 text-warning border-warning/20',
+    acceptable: 'bg-secondary/10 text-secondary border-secondary/20',
+  }[book.condition] || 'bg-success/10 text-success border-success/20';
 
-  const imageUrl = book.images?.[0]?.url || '';
+  const imageUrl =
+    book.images?.[0]?.url ||
+    'https://placehold.co/400x600/163A63/ffffff?text=' + encodeURIComponent(book.title || 'BookFry');
 
   // Calculate discount percentage
   let discountPercentage = 0;

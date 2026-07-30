@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { BookOpen, ShoppingBag, Search, Bell, Heart, WifiOff, FileQuestion } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { BookOpen, ShoppingBag, Search, Bell, Heart, WifiOff, FileQuestion, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 
@@ -72,29 +75,38 @@ export function EmptyState({
   const displayDescription = description || configs.description;
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
       className={cn(
-        'w-full min-h-[300px] flex flex-col items-center justify-center p-6 text-center bg-card border border-border rounded-xl font-sans',
+        'w-full min-h-[300px] flex flex-col items-center justify-center p-6 text-center bg-card border border-border rounded-2xl font-sans shadow-2xs',
         className
       )}
     >
-      <div className="h-12 w-12 rounded-full bg-[#FEF8F3] border border-[#FFF0E8] flex items-center justify-center text-secondary mb-4 shrink-0">
-        <Icon className="h-5 w-5" />
+      <div className="h-14 w-14 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary mb-4 shrink-0 shadow-2xs">
+        <Icon className="h-6 w-6 stroke-[2.2]" />
       </div>
 
-      <h3 className="font-serif text-sm font-bold text-text-primary mb-1">
+      <h3 className="font-serif text-base font-bold text-text-primary mb-1.5">
         {displayTitle}
       </h3>
-      <p className="text-[10px] text-text-muted max-w-[280px] mb-5 font-medium leading-normal">
+      <p className="text-xs text-text-muted max-w-xs mb-6 font-medium leading-relaxed">
         {displayDescription}
       </p>
 
       {actionText && onActionClick && (
-        <Button variant="outline" size="sm" onClick={onActionClick}>
-          {actionText}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onActionClick}
+          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-2xs hover:scale-105 transition-transform"
+        >
+          <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+          <span>{actionText}</span>
         </Button>
       )}
-    </div>
+    </motion.div>
   );
 }
 

@@ -12,8 +12,8 @@ export class OrdersController {
 
   create = async (req: Request, res: Response): Promise<void> => {
     const buyerId = req.user!.id;
-    const { shippingAddress } = req.body;
-    const order = await this.ordersService.createOrder(buyerId, shippingAddress);
+    const { shippingAddress, couponCode } = req.body;
+    const order = await this.ordersService.createOrder(buyerId, shippingAddress, couponCode);
     res.status(201).json(ApiResponse.success(order));
   };
 

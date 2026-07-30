@@ -208,6 +208,13 @@ export class BooksService {
       images?: Array<{ url: string; publicId: string }>;
     }
   ): Promise<Book> {
+    // 0. Auto promote user to 'seller' role if needed
+    const { UserModel } = await import('../../models/user.model');
+    await UserModel.updateOne(
+      { _id: new mongoose.Types.ObjectId(sellerId), roles: { $ne: 'seller' } },
+      { $addToSet: { roles: 'seller' } }
+    );
+
     const slug = this.generateSlug(data.title, data.isbn);
 
     // 1. Find or create canonical catalog entry by ISBN (deduplication!)

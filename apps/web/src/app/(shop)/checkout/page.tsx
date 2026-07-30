@@ -63,14 +63,19 @@ export default function CheckoutPage() {
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [appliedCoupon] = useState<string | null>(null);
+  const [validatedDiscountAmount] = useState(0);
 
   const subtotal = items.reduce(
     (acc, item) => acc + item.quantity * item.priceSnapshot,
-    0,
+    0
   );
-  const shippingFee = subtotal > 35 ? 0 : 4.99;
-  const estimatedTax = subtotal * 0.08;
-  const total = subtotal + shippingFee + estimatedTax;
+
+  const discountAmount = appliedCoupon ? validatedDiscountAmount : 0;
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  const shippingFee = discountedSubtotal > 35 ? 0 : 4.99;
+  const estimatedTax = discountedSubtotal * 0.08;
+  const total = Math.max(0, discountedSubtotal + shippingFee + estimatedTax);
 
   const {
     register: registerShipping,
@@ -113,6 +118,7 @@ export default function CheckoutPage() {
         method: "POST",
         body: JSON.stringify({
           shippingAddress: shippingData,
+          couponCode: appliedCoupon || undefined,
         }),
       });
 

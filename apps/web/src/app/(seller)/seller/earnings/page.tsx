@@ -14,15 +14,19 @@ export default function SellerEarningsPage() {
   const { isAuthenticated } = useAuthStore();
 
   const {
-    data: ledger = [],
+    data: ledgerRaw,
     isLoading,
     isError,
     refetch,
-  } = useQuery<Transaction[]>({
+  } = useQuery<{ data?: Transaction[]; ledger?: Transaction[] } | Transaction[]>({
     queryKey: ['seller-earnings'],
     queryFn: () => apiClient('/seller/earnings'),
     enabled: isAuthenticated,
   });
+
+  const ledger: Transaction[] = Array.isArray(ledgerRaw)
+    ? ledgerRaw
+    : ledgerRaw?.data || ledgerRaw?.ledger || [];
 
   const { user } = useAuthStore();
   const [upiId, setUpiId] = React.useState(user?.sellerProfile?.payoutDetails?.upiId || '');
