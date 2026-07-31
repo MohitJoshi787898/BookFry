@@ -42,51 +42,55 @@ export function AuthModal() {
   return (
     <AnimatePresence mode="wait">
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center font-sans">
           {/* Backdrop Blur Overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeModal}
-            className="fixed inset-0 bg-primary-950/70 backdrop-blur-md transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity"
             aria-hidden="true"
           />
 
-          {/* Modal Card Container */}
+          {/* Desktop & Mobile Responsive Container */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-4xl bg-surface border border-border rounded-xl shadow-2xl overflow-hidden z-10 grid grid-cols-1 lg:grid-cols-12 max-h-[90vh] my-auto"
+            initial={{ opacity: 0, y: '100%', scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: '100%', scale: 0.98 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            className="relative w-full sm:max-w-4xl bg-card border-t sm:border border-border/90 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 grid grid-cols-1 lg:grid-cols-12 max-h-[92vh] my-0 sm:my-auto"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-modal-title"
           >
+            {/* Mobile Drag Indicator Handle */}
+            <div className="lg:hidden w-12 h-1.5 rounded-full bg-muted-foreground/30 mx-auto mt-3 mb-1 shrink-0" />
+
             {/* Close Button Top Right */}
             <button
               onClick={closeModal}
-              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-background-subtle hover:bg-border text-text-muted hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-brand"
+              className="absolute top-4 right-4 z-20 h-9 w-9 flex items-center justify-center rounded-2xl bg-muted/80 hover:bg-card border border-border/60 text-muted-foreground hover:text-foreground transition-all focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer"
               aria-label="Close authentication window"
             >
               <X className="h-4 w-4" />
             </button>
 
-            {/* Desktop Left Illustration Panel (5 Columns) */}
+            {/* Desktop Left Hero Illustration Panel (5 Columns) */}
             <div className="hidden lg:block lg:col-span-5">
               <AuthIllustrationPanel screen={screen} />
             </div>
 
             {/* Right Form Area (7 Columns) */}
-            <div className="lg:col-span-7 p-6 sm:p-8 overflow-y-auto max-h-[90vh] flex flex-col justify-center">
+            <div className="lg:col-span-7 p-6 sm:p-8 sm:py-10 overflow-y-auto max-h-[85vh] flex flex-col justify-center">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={screen}
-                  initial={{ opacity: 0, x: 10 }}
+                  initial={{ opacity: 0, x: 12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                   className="w-full"
                 >
                   {screen === 'login' && <LoginForm />}

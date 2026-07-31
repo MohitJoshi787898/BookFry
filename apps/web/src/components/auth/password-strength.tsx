@@ -25,20 +25,20 @@ export function PasswordStrength({ password = '' }: PasswordStrengthProps) {
 
   return (
     <div className="space-y-2 pt-1 font-sans text-xs">
-      {/* Progress Bar */}
+      {/* Progress Bar Header */}
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-text-secondary">
-          Password Strength: <span className={textColor}>{strengthLabel}</span>
+        <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+          Strength: <span className={textColor}>{strengthLabel}</span>
         </span>
-        <span className="text-[10px] font-mono text-text-muted">{score}/4</span>
+        <span className="text-[10px] font-mono text-muted-foreground font-bold">{score}/4</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-1 h-1.5 w-full bg-background-subtle rounded-full overflow-hidden">
+      <div className="grid grid-cols-4 gap-1 h-1.5 w-full bg-muted rounded-full overflow-hidden">
         {[1, 2, 3, 4].map((step) => (
           <div
             key={step}
             className={`h-full transition-all duration-300 ${
-              score >= step ? strengthColor : 'bg-border'
+              score >= step ? strengthColor : 'bg-border/60'
             }`}
           />
         ))}
@@ -51,9 +51,9 @@ export function PasswordStrength({ password = '' }: PasswordStrengthProps) {
             {item.valid ? (
               <Check className="h-3 w-3 text-success shrink-0" />
             ) : (
-              <X className="h-3 w-3 text-text-muted shrink-0" />
+              <X className="h-3 w-3 text-muted-foreground/60 shrink-0" />
             )}
-            <span className={item.valid ? 'text-text-primary font-medium' : 'text-text-muted'}>
+            <span className={item.valid ? 'text-foreground font-semibold' : 'text-muted-foreground'}>
               {item.label}
             </span>
           </div>

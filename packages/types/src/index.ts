@@ -255,6 +255,8 @@ export interface Order {
     country: string;
   };
   subtotal: number;
+  discountAmount?: number;
+  couponCode?: string;
   shippingFee: number;
   tax: number;
   total: number;

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { OrderDetailModal } from '@/components/admin/order-detail-modal';
 import { apiClient } from '@/lib/api-client';
@@ -293,25 +294,28 @@ export default function AdminOrdersPage() {
 
   return (
     <AdminLayout>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
-            <ShoppingBag className="h-7 w-7 text-brand" />
-            <span>Marketplace Order Operations</span>
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Track customer textbook fulfillments, process shipping status updates, and manage buyer return requests.
-          </p>
-        </div>
+      {/* Hero Header */}
+      <AdminHero
+        title="Marketplace Order Operations"
+        subtitle="Track customer textbook fulfillments, process shipping status updates, and manage buyer return requests."
+        badgeText="Escrow Payment Operations"
+        stats={[
+          { label: "Total Orders", value: ordersData.length, badge: "All Time", isPositive: true },
+          { label: "Pending Fulfillment", value: ordersData.filter((o) => o.status === "pending" || o.status === "confirmed").length, badge: "Action Required", isPositive: false },
+          { label: "Shipped & In-Transit", value: ordersData.filter((o) => o.status === "shipped").length, badge: "On The Way", isPositive: true },
+          { label: "Delivered Complete", value: ordersData.filter((o) => o.status === "delivered").length, badge: "Escrow Settled", isPositive: true },
+        ]}
+      />
 
-        {/* Filter Dropdown */}
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4 text-text-muted" />
+      {/* Filter Bar */}
+      <div className="flex items-center justify-between pb-4 font-sans">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-secondary" />
+          <span className="text-xs font-bold text-muted-foreground">Filter Orders:</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold border border-border rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-brand"
+            className="px-3.5 py-2 text-xs font-bold border border-border/80 rounded-2xl bg-card text-foreground focus:ring-2 focus:ring-secondary/40 shadow-sm"
           >
             <option value="">All Orders ({ordersData.length})</option>
             {ALL_STATUSES.map((s) => (

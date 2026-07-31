@@ -14,6 +14,9 @@ import { asyncHandler } from '../../utils/asyncHandler';
 const router = Router();
 const controller = new OrdersController();
 
+// Public invoice endpoint (accessible without authentication for bill download & sharing)
+router.get('/public/:id', asyncHandler(controller.getPublicInvoiceDetails));
+
 router.use(requireAuth);
 
 // Specific static sub-path routes (MUST come before /:id)

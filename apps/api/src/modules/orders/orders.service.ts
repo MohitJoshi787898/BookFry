@@ -110,7 +110,7 @@ export class OrdersService {
     }
 
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-    const shippingFee = discountedSubtotal > 35 ? 0 : 4.99;
+    const shippingFee = discountedSubtotal > 499 || discountedSubtotal === 0 ? 0 : 49;
     const tax = parseFloat((discountedSubtotal * 0.08).toFixed(2));
     const total = parseFloat((discountedSubtotal + shippingFee + tax).toFixed(2));
 
@@ -127,7 +127,7 @@ export class OrdersService {
       shippingFee,
       tax,
       total,
-      currency: 'USD',
+      currency: 'INR',
       status: 'pending',
       paymentStatus: 'pending',
       timeline: [
@@ -181,7 +181,7 @@ export class OrdersService {
   }
 
   async getOrderById(id: string, userId: string, roles: string[]): Promise<Order> {
-    const order = await this.ordersRepository.findById(id);
+    const order = await this.ordersRepository.findByIdOrOrderNumber(id);
     if (!order) {
       throw new NotFoundError('Order not found');
     }
@@ -194,6 +194,14 @@ export class OrdersService {
       throw new UnauthorizedError('Not authorized to view this order');
     }
 
+    return this.mapToDTO(order);
+  }
+
+  async getPublicInvoice(idOrOrderNumber: string): Promise<Order> {
+    const order = await this.ordersRepository.findByIdOrOrderNumber(idOrOrderNumber);
+    if (!order) {
+      throw new NotFoundError('Tax Invoice not found');
+    }
     return this.mapToDTO(order);
   }
 
@@ -455,6 +463,8 @@ export class OrdersService {
       })),
       shippingAddress: doc.shippingAddress,
       subtotal: doc.subtotal,
+      discountAmount: doc.discountAmount,
+      couponCode: doc.couponCode,
       shippingFee: doc.shippingFee,
       tax: doc.tax,
       total: doc.total,

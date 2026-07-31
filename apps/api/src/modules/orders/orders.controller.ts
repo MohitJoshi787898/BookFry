@@ -25,6 +25,12 @@ export class OrdersController {
     res.status(200).json(ApiResponse.success(order));
   };
 
+  getPublicInvoiceDetails = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const order = await this.ordersService.getPublicInvoice(id);
+    res.status(200).json(ApiResponse.success(order));
+  };
+
   listBuyerOrders = async (req: Request, res: Response): Promise<void> => {
     const buyerId = req.user!.id;
     const orders = await this.ordersService.getBuyerOrders(buyerId);

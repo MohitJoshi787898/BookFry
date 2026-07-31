@@ -3,7 +3,16 @@ import mongoose from 'mongoose';
 
 export class OrdersRepository {
   async findById(id: string): Promise<IOrderDocument | null> {
+    if (!mongoose.Types.ObjectId.isValid(id)) return null;
     return OrderModel.findById(id).exec();
+  }
+
+  async findByIdOrOrderNumber(identifier: string): Promise<IOrderDocument | null> {
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      const doc = await OrderModel.findById(identifier).exec();
+      if (doc) return doc;
+    }
+    return OrderModel.findOne({ orderNumber: identifier }).exec();
   }
 
   async findByBuyerId(buyerId: string): Promise<IOrderDocument[]> {

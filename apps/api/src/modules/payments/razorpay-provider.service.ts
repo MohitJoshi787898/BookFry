@@ -26,18 +26,20 @@ export class RazorpayProvider implements PaymentProvider {
     currency: string,
     orderId: string
   ): Promise<CreateIntentResult> {
-    logger.info(
-      `[RazorpayProvider] Creating order for amount ₹${amount} ${currency} for order ${orderId}`
-    );
+    const targetCurrency = 'INR';
+    
+    // Normalize amount to Rupees if inadvertently passed in subunits (> 100000 paise threshold for textbook orders)
+    const amountInRupees = amount > 100000 ? amount / 100 : amount;
+    const amountInSubunits = Math.round(amountInRupees * 100);
 
-    // Razorpay amounts are in paise (cents equivalent) for INR. Multiply by 100.
-    const multiplier = currency.toUpperCase() === 'INR' ? 100 : 100; // default multiplier
-    const amountInSubunits = Math.round(amount * multiplier);
+    logger.info(
+      `[RazorpayProvider] Creating Razorpay order: ₹${amountInRupees.toFixed(2)} (${amountInSubunits} paise) ${targetCurrency} for order ${orderId}`
+    );
 
     try {
       const order = await this.razorpay.orders.create({
         amount: amountInSubunits,
-        currency: currency.toUpperCase(),
+        currency: targetCurrency,
         receipt: orderId,
         notes: { orderId },
       });
@@ -47,7 +49,7 @@ export class RazorpayProvider implements PaymentProvider {
         id: order.id,
         keyId: this.keyId,
         amount: amountInSubunits,
-        currency: order.currency,
+        currency: targetCurrency,
       };
     } catch (err: any) {
       logger.error('❌ Razorpay order creation failed:', err);

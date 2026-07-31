@@ -73,7 +73,7 @@ export default function CheckoutPage() {
 
   const discountAmount = appliedCoupon ? validatedDiscountAmount : 0;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const shippingFee = discountedSubtotal > 35 ? 0 : 4.99;
+  const shippingFee = discountedSubtotal > 499 || discountedSubtotal === 0 ? 0 : 49;
   const estimatedTax = discountedSubtotal * 0.08;
   const total = Math.max(0, discountedSubtotal + shippingFee + estimatedTax);
 
@@ -88,7 +88,7 @@ export default function CheckoutPage() {
       city: "",
       state: "",
       zipCode: "",
-      country: "USA",
+      country: "India",
     },
   });
 
@@ -148,9 +148,9 @@ export default function CheckoutPage() {
         const options = {
           key: paymentIntent.keyId,
           amount: paymentIntent.amount,
-          currency: paymentIntent.currency || "INR",
-          name: "BookFry",
-          description: "Purchase Academic Textbooks",
+          currency: "INR",
+          name: "BookFry • India's Book Marketplace",
+          description: `Payment for Order #${orderRes.orderNumber}`,
           image: "/logo.jpeg",
           order_id: paymentIntent.id,
           handler: async function (response: {
@@ -186,8 +186,34 @@ export default function CheckoutPage() {
             name: user?.name || "",
             email: user?.email || "",
           },
+          notes: {
+            orderId: orderRes.id,
+            orderNumber: orderRes.orderNumber,
+          },
           theme: {
-            color: "#1A3B5C",
+            color: "#F26522",
+          },
+          config: {
+            display: {
+              blocks: {
+                upi: {
+                  name: "Pay via UPI (GPay, PhonePe, Paytm, BHIM)",
+                  instruments: [{ method: "upi" }],
+                },
+                other: {
+                  name: "Cards, Netbanking & Wallets",
+                  instruments: [
+                    { method: "card" },
+                    { method: "netbanking" },
+                    { method: "wallet" },
+                  ],
+                },
+              },
+              sequence: ["block.upi", "block.other"],
+              preferences: {
+                show_default_blocks: true,
+              },
+            },
           },
           modal: {
             ondismiss: function () {
@@ -311,7 +337,7 @@ export default function CheckoutPage() {
 
             <div className="border-t border-border pt-6 flex justify-between text-sm font-bold text-text-primary font-sans">
               <span>Total Paid</span>
-              <span>${total.toFixed(2)}</span>
+              <span>₹{total.toFixed(2)}</span>
             </div>
 
             <div className="pt-6 flex flex-col sm:flex-row gap-4 font-sans">
@@ -610,7 +636,7 @@ export default function CheckoutPage() {
                         </p>
                       </div>
                       <span className="font-bold text-text-primary shrink-0">
-                        ${(item.priceSnapshot * item.quantity).toFixed(2)}
+                        ₹{(item.priceSnapshot * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -620,7 +646,7 @@ export default function CheckoutPage() {
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Subtotal</span>
                     <span className="font-semibold text-text-primary">
-                      ${subtotal.toFixed(2)}
+                      ₹{subtotal.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -628,18 +654,18 @@ export default function CheckoutPage() {
                     <span className="font-semibold text-text-primary">
                       {shippingFee === 0
                         ? "Free"
-                        : `$${shippingFee.toFixed(2)}`}
+                        : `₹${shippingFee.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Estimated Tax</span>
                     <span className="font-semibold text-text-primary">
-                      ${estimatedTax.toFixed(2)}
+                      ₹{estimatedTax.toFixed(2)}
                     </span>
                   </div>
                   <div className="border-t border-border pt-3 flex justify-between text-sm font-bold text-text-primary">
                     <span>Order Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>₹{total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

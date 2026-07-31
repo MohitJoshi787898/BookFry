@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
@@ -310,28 +311,31 @@ export default function AdminListingsPage() {
 
   return (
     <AdminLayout>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
-            <BookOpen className="h-7 w-7 text-brand" />
-            <span>Book Catalog Moderation</span>
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Approve, reject, or flag seller submitted book titles across India.
-          </p>
-        </div>
+      {/* Hero Header */}
+      <AdminHero
+        title="Book Catalog Moderation"
+        subtitle="Approve, reject, or flag seller submitted book titles across India."
+        badgeText="Catalog Quality Control"
+        stats={[
+          { label: "Total Titles", value: listings.length, badge: "Catalog Size", isPositive: true },
+          { label: "Pending Review", value: listings.filter((l) => l.status === "pending").length, badge: "Moderation Queue", isPositive: false },
+          { label: "Approved Active", value: listings.filter((l) => l.status === "active").length, badge: "Live Storefront", isPositive: true },
+          { label: "Rejected/Flagged", value: listings.filter((l) => l.status === "rejected").length, badge: "Quality Filter", isPositive: false },
+        ]}
+      />
 
-        {/* Filter Dropdown */}
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4 text-text-muted" />
+      {/* Filter Dropdown Row */}
+      <div className="flex items-center justify-between pb-4 font-sans">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-secondary" />
+          <span className="text-xs font-bold text-muted-foreground">Filter Queue:</span>
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 text-xs font-semibold border border-border rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-brand"
+            className="px-3.5 py-2 text-xs font-bold border border-border/80 rounded-2xl bg-card text-foreground focus:ring-2 focus:ring-secondary/40 shadow-sm"
           >
             <option value="">All Catalog Statuses</option>
             <option value="pending">Pending Review</option>

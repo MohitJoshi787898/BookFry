@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
@@ -165,18 +166,18 @@ export default function AdminCategoriesPage() {
 
   return (
     <AdminLayout>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
-            <Layers className="h-7 w-7 text-brand" />
-            <span>Category Taxonomy Manager</span>
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Organize subject categories, syllabus tracks, and textbook classifications.
-          </p>
-        </div>
-      </div>
+      {/* Hero Header */}
+      <AdminHero
+        title="Category Taxonomy Manager"
+        subtitle="Organize subject categories, academic syllabus tracks, and textbook classifications."
+        badgeText="Storefront Taxonomy Engine"
+        stats={[
+          { label: "Total Categories", value: categories.length, badge: "Taxonomy Size", isPositive: true },
+          { label: "Top-Level Branches", value: categories.filter((c) => !c.parentId).length, badge: "Root Branches", isPositive: true },
+          { label: "Sub-Categories", value: categories.filter((c) => !!c.parentId).length, badge: "Child Branches", isPositive: true },
+          { label: "Taxonomy Status", value: "Active", badge: "Engine Online", isPositive: true },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 font-sans">
         {/* Create Category Form Card */}

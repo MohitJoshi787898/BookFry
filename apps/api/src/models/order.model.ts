@@ -128,7 +128,7 @@ const OrderSchema = new Schema<IOrderDocument>(
     shippingFee: { type: Number, required: true, min: 0, default: 0 },
     tax: { type: Number, required: true, min: 0, default: 0 },
     total: { type: Number, required: true, min: 0 },
-    currency: { type: String, required: true, default: 'USD' },
+    currency: { type: String, required: true, default: 'INR' },
     status: {
       type: String,
       required: true,

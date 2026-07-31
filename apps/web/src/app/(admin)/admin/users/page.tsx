@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
@@ -214,28 +215,31 @@ export default function AdminUsersPage() {
 
   return (
     <AdminLayout>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
-            <Users className="h-7 w-7 text-brand" />
-            <span>User & Seller Operations</span>
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Manage customer accounts, verify seller stores, and enforce safety policies.
-          </p>
-        </div>
+      {/* Hero Header */}
+      <AdminHero
+        title="User & Seller Operations"
+        subtitle="Manage customer accounts, verify campus seller stores, and enforce community safety policies."
+        badgeText="User Directory & Safety"
+        stats={[
+          { label: "Total Users", value: users.length, badge: "Registered Accounts", isPositive: true },
+          { label: "Campus Sellers", value: users.filter((u) => u.roles.includes("seller")).length, badge: "Verified Sellers", isPositive: true },
+          { label: "Banned / Flagged", value: users.filter((u) => u.isBanned).length, badge: "Policy Action", isPositive: false },
+          { label: "Administrators", value: users.filter((u) => u.roles.includes("admin")).length, badge: "System Admin", isPositive: true },
+        ]}
+      />
 
-        {/* Role Filter Dropdown */}
-        <div className="flex items-center space-x-2">
-          <Filter className="h-4 w-4 text-text-muted" />
+      {/* Role Filter Bar */}
+      <div className="flex items-center justify-between pb-4 font-sans">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-secondary" />
+          <span className="text-xs font-bold text-muted-foreground">Filter Account Roles:</span>
           <select
             value={roleFilter}
             onChange={(e) => {
               setRoleFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-1.5 text-xs font-semibold border border-border rounded-md bg-surface text-text-primary focus:ring-2 focus:ring-brand"
+            className="px-3.5 py-2 text-xs font-bold border border-border/80 rounded-2xl bg-card text-foreground focus:ring-2 focus:ring-secondary/40 shadow-sm"
           >
             <option value="">All Account Roles</option>
             <option value="customer">Customers</option>
