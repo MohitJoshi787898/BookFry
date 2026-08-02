@@ -5,45 +5,31 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck,
-  Truck,
-  Tag,
-  RotateCcw,
-  Headphones,
   Mail,
   ChevronDown,
-  ArrowRight,
-  Store,
   BookOpen,
   MapPin,
   Phone,
   ExternalLink,
 } from 'lucide-react';
+import { FooterTrustBar } from './footer/footer-trust-bar';
+import { FooterSellCTA } from './footer/footer-sell-cta';
+import { FooterNewsletter } from './footer/footer-newsletter';
+import { FooterMobileAppGrid } from './footer/footer-mobile-app-grid';
 
-// ──────────────────────────────────────────────────────────────────────────────
 // Data
-// ──────────────────────────────────────────────────────────────────────────────
-const TRUST_ITEMS = [
-  { icon: ShieldCheck, title: '100% Buyer Protection', desc: 'Safe & secure shopping' },
-  { icon: Truck, title: 'Free Shipping ₹499+', desc: 'Pan India delivery' },
-  { icon: Tag, title: 'Up to 80% Off', desc: 'Best prices guaranteed' },
-  { icon: RotateCcw, title: '7-Day Returns', desc: 'Hassle-free policy' },
-  { icon: Headphones, title: '24×7 Support', desc: "We're always here" },
-];
-
 const FOOTER_SECTIONS = [
   {
     key: 'categories',
     title: 'Shop by Category',
     links: [
-      { name: 'Fiction', href: '/books?category=fiction' },
-      { name: 'Non-Fiction', href: '/books?category=non-fiction' },
-      { name: 'Teens & YA', href: '/books?category=teens-ya' },
-      { name: 'Kids', href: '/books?category=kids' },
-      { name: 'Exam Prep', href: '/books?category=exam-prep' },
-      { name: 'Engineering', href: '/books?category=engineering' },
-      { name: 'Medical', href: '/books?category=medical' },
-      { name: 'Management', href: '/books?category=management' },
-      { name: 'Competitive Exams', href: '/books?category=competitive-exams' },
+      { name: 'Engineering & Tech', href: '/books?category=engineering' },
+      { name: 'Medical & Healthcare', href: '/books?category=medical' },
+      { name: 'School Textbooks (K-12)', href: '/books?category=school' },
+      { name: 'Competitive Exams & Prep', href: '/books?category=exams' },
+      { name: 'Novels & Fiction', href: '/books?category=novel' },
+      { name: 'Programming & CS', href: '/books?category=programming' },
+      { name: 'Commerce & Business', href: '/books?category=commerce' },
     ],
   },
   {
@@ -51,12 +37,10 @@ const FOOTER_SECTIONS = [
     title: 'Quick Links',
     links: [
       { name: 'About Us', href: '/about' },
-      { name: 'How It Works', href: '/how-it-works' },
       { name: 'Sell Books', href: '/sell' },
       { name: "Today's Deals", href: '/books?deals=true', badge: '🔥 Hot' },
       { name: 'New Arrivals', href: '/books?sort=newest' },
       { name: 'Best Sellers', href: '/books?sort=popular' },
-      { name: 'Bulk Orders', href: '/bulk-orders' },
       { name: 'Sitemap', href: '/sitemap' },
     ],
   },
@@ -69,9 +53,7 @@ const FOOTER_SECTIONS = [
       { name: 'Shipping & Delivery', href: '/shipping' },
       { name: 'Returns & Refunds', href: '/returns' },
       { name: 'Track Order', href: '/track-order' },
-      { name: 'Book Condition Guide', href: '/condition-guide' },
-      { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Terms & Conditions', href: '/terms' },
+      { name: 'Condition Guide', href: '/condition-guide' },
     ],
   },
   {
@@ -96,9 +78,6 @@ const LEGAL_LINKS = [
   { name: 'Return Policy', href: '/returns' },
 ];
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Social icons SVG (custom, no external dep)
-// ──────────────────────────────────────────────────────────────────────────────
 const SOCIALS = [
   {
     label: 'Instagram',
@@ -138,78 +117,47 @@ const SOCIALS = [
   },
 ];
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Main Footer Component
-// ──────────────────────────────────────────────────────────────────────────────
 export function Footer() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-  const [emailVal, setEmailVal] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
 
   const toggleSection = (key: string) =>
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!emailVal.trim()) return;
-    setSubscribed(true);
-    setEmailVal('');
-  };
-
   return (
-    <footer className="w-full bg-card border-t border-border font-sans mt-auto" aria-label="Site footer">
+    <footer className="w-full bg-card border-t border-border/80 font-sans mt-auto" aria-label="Site footer">
+      {/* 1. Trust Bar */}
+      <FooterTrustBar />
 
-      {/* ── 1. Trust Bar ─────────────────────────────────────────────── */}
-      <div className="w-full border-b border-border/60 bg-muted/30">
-        <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-5">
-          <div className="flex gap-4 overflow-x-auto no-scrollbar lg:grid lg:grid-cols-5">
-            {TRUST_ITEMS.map(({ icon: Icon, title, desc }) => (
-              <div
-                key={title}
-                className="flex items-center gap-3 shrink-0 w-52 lg:w-auto bg-background lg:bg-transparent border border-border lg:border-none rounded-2xl px-4 py-3.5 lg:p-0"
-              >
-                <div className="h-10 w-10 shrink-0 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center">
-                  <Icon className="h-5 w-5 text-secondary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-extrabold text-foreground leading-tight truncate">{title}</p>
-                  <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* 2. Main Content Container */}
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 pt-10 pb-10 space-y-10">
+        
+        {/* Mobile Native Quick Launcher Grid */}
+        <FooterMobileAppGrid />
 
-      {/* ── 2. Main Content Grid ─────────────────────────────────────── */}
-      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 pt-12 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-10 lg:gap-12">
-
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Logo */}
-            <Link href="/" className="inline-flex items-center gap-2.5 group select-none">
-              <div className="h-10 w-10 rounded-2xl bg-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <BookOpen className="h-5 w-5 text-primary-foreground" />
+            <Link href="/" className="inline-flex items-center gap-3 group select-none">
+              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#1A3B5C] to-[#F26522] flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                <BookOpen className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-black tracking-tight text-foreground">
-                Book<span className="text-secondary">Fry</span>
+              <span className="text-2xl font-black tracking-tight text-foreground font-serif">
+                Book<span className="text-[#F26522]">Fry</span>
               </span>
             </Link>
 
-            {/* Tagline */}
-            <div className="space-y-1">
-              <p className="font-serif italic text-secondary font-bold text-sm leading-snug">
+            <div className="space-y-1.5">
+              <p className="font-serif italic text-[#F26522] font-bold text-sm leading-snug">
                 &ldquo;क्योंकि.. पढ़ाई रुकनी नहीं चाहिए&rdquo;
               </p>
-              <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-xs font-medium">
                 India&apos;s trusted marketplace for new &amp; pre-owned books — buy, sell, and exchange across all categories at the best prices.
               </p>
             </div>
 
             {/* Social Links */}
             <div className="space-y-2">
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">Follow us</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Follow us</p>
               <div className="flex items-center gap-2">
                 {SOCIALS.map(({ label, href, icon }) => (
                   <a
@@ -218,38 +166,38 @@ export function Footer() {
                     aria-label={label}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-9 w-9 rounded-2xl bg-muted border border-border text-muted-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary transition-all flex items-center justify-center group"
+                    className="h-9 w-9 rounded-2xl bg-muted/60 border border-border/80 text-muted-foreground hover:bg-[#F26522] hover:text-white hover:border-[#F26522] transition-all flex items-center justify-center active:scale-95 shadow-xs"
                   >
-                    <span className="group-hover:scale-110 transition-transform">{icon}</span>
+                    {icon}
                   </a>
                 ))}
               </div>
             </div>
 
-            {/* Contact Snippet */}
-            <div className="space-y-2">
+            {/* Contact Details */}
+            <div className="space-y-2 text-xs font-medium text-muted-foreground">
               <a
                 href="mailto:support@bookfry.in"
-                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-secondary transition-colors group"
+                className="flex items-center gap-2 hover:text-[#F26522] transition-colors"
               >
-                <Mail className="h-3.5 w-3.5 text-primary group-hover:text-secondary transition-colors shrink-0" />
+                <Mail className="h-3.5 w-3.5 text-[#F26522] shrink-0" />
                 support@bookfry.in
               </a>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
+              <div className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 text-[#F26522] shrink-0" />
                 +91 98765 43210
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-[#F26522] shrink-0" />
                 Bengaluru, Karnataka, India
               </div>
             </div>
           </div>
 
-          {/* Link Sections */}
-          <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Link Sections (Accordion on mobile, Grid on desktop) */}
+          <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
             {FOOTER_SECTIONS.map((section) => (
-              <FooterSection
+              <FooterSectionAccordion
                 key={section.key}
                 section={section}
                 isOpen={!!openSections[section.key]}
@@ -259,83 +207,14 @@ export function Footer() {
           </div>
         </div>
 
-        {/* ── 3. Sell CTA Banner ─────────────────────────────────────── */}
-        <div className="mt-10 rounded-3xl overflow-hidden bg-primary border border-primary/80">
-          <div className="px-6 py-6 md:px-8 md:py-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-            <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-secondary/20 border border-secondary/30 flex items-center justify-center shrink-0">
-                <Store className="h-6 w-6 text-secondary" />
-              </div>
-              <div>
-                <p className="text-sm font-extrabold text-primary-foreground">Have books to sell?</p>
-                <p className="text-xs text-primary-foreground/70 mt-0.5 max-w-sm leading-relaxed">
-                  List your pre-owned books in minutes and earn money. Join 10,000+ sellers on BookFry.
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/sell"
-              className="flex items-center gap-2 px-6 py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-sm rounded-2xl transition-all active:scale-95 shadow-md shrink-0"
-            >
-              Start Selling
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
+        {/* 3. Sell CTA Banner */}
+        <FooterSellCTA />
 
-        {/* ── 4. Newsletter ──────────────────────────────────────────── */}
-        <div className="mt-6 rounded-3xl border border-border bg-background p-6 md:p-7 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
-          <div className="flex items-start gap-4">
-            <div className="h-11 w-11 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">
-              <Mail className="h-5 w-5 text-secondary" />
-            </div>
-            <div>
-              <p className="text-sm font-extrabold text-foreground">Stay in the loop!</p>
-              <p className="text-xs text-muted-foreground mt-0.5 max-w-xs leading-relaxed">
-                Get exclusive deals, new arrivals &amp; bookish updates to your inbox. No spam ever.
-              </p>
-            </div>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {subscribed ? (
-              <motion.div
-                key="thanks"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 px-5 py-3 bg-success/10 border border-success/20 rounded-2xl text-success text-sm font-extrabold"
-              >
-                <ShieldCheck className="h-4 w-4" /> You&apos;re subscribed! 🎉
-              </motion.div>
-            ) : (
-              <motion.form
-                key="form"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onSubmit={handleSubscribe}
-                className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto"
-              >
-                <input
-                  type="email"
-                  required
-                  value={emailVal}
-                  onChange={(e) => setEmailVal(e.target.value)}
-                  placeholder="Your email address"
-                  className="h-11 px-4 rounded-2xl border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary w-full lg:w-64 font-medium"
-                />
-                <button
-                  type="submit"
-                  className="h-11 px-6 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 shrink-0"
-                >
-                  Subscribe
-                </button>
-              </motion.form>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* 4. Newsletter */}
+        <FooterNewsletter />
       </div>
 
-      {/* ── 5. Bottom Bar ───────────────────────────────────────────── */}
+      {/* 5. Bottom Copyright Bar */}
       <div className="border-t border-border/60 bg-muted/20">
         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -344,13 +223,13 @@ export function Footer() {
               <p className="text-[11px] text-muted-foreground font-medium">
                 © {new Date().getFullYear()} BookFry Technologies Pvt. Ltd. All rights reserved.
               </p>
-              <div className="hidden sm:block h-3 w-px bg-border" aria-hidden />
+              <div className="hidden sm:block h-3 w-px bg-border/80" aria-hidden />
               <div className="flex flex-wrap justify-center sm:justify-start gap-3">
                 {LEGAL_LINKS.map(({ name, href }) => (
                   <Link
                     key={name}
                     href={href}
-                    className="text-[11px] text-muted-foreground hover:text-secondary font-medium transition-colors"
+                    className="text-[11px] text-muted-foreground hover:text-[#F26522] font-medium transition-colors"
                   >
                     {name}
                   </Link>
@@ -361,14 +240,14 @@ export function Footer() {
             {/* Payments + Secure */}
             <div className="flex items-center gap-3 shrink-0">
               <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-bold">
-                <ShieldCheck className="h-3.5 w-3.5 text-success shrink-0" />
-                Secure Payments
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                Secure Escrow Payouts
               </span>
               <div className="flex items-center gap-1">
                 {PAYMENT_BADGES.map((badge) => (
                   <span
                     key={badge}
-                    className="px-2 py-0.5 rounded-md bg-card border border-border text-[9px] font-extrabold text-muted-foreground"
+                    className="px-2 py-0.5 rounded-md bg-card border border-border/80 text-[9px] font-black text-muted-foreground font-mono"
                   >
                     {badge}
                   </span>
@@ -378,7 +257,7 @@ export function Footer() {
                 href="https://razorpay.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-secondary transition-colors"
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-[#F26522] transition-colors font-bold"
                 aria-label="Powered by Razorpay"
               >
                 Razorpay <ExternalLink className="h-2.5 w-2.5" />
@@ -391,35 +270,39 @@ export function Footer() {
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Footer Link Section — accordion on mobile, static on desktop
-// ──────────────────────────────────────────────────────────────────────────────
-interface LinkItem { name: string; href: string; badge?: string; }
+// Helper Accordion section
+interface LinkItem {
+  name: string;
+  href: string;
+  badge?: string;
+}
 
-function FooterSection({
-  section, isOpen, onToggle,
+function FooterSectionAccordion({
+  section,
+  isOpen,
+  onToggle,
 }: {
   section: { key: string; title: string; links: LinkItem[] };
   isOpen: boolean;
   onToggle: () => void;
 }) {
   return (
-    <div className="border-b border-border/40 md:border-none pb-1 md:pb-0">
+    <div className="rounded-3xl md:rounded-none border md:border-none border-border/80 bg-card md:bg-transparent p-4 md:p-0 shadow-xs md:shadow-none">
       {/* Mobile accordion trigger */}
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center justify-between w-full md:hidden text-left py-3"
+        className="flex items-center justify-between w-full md:hidden text-left py-1"
         aria-expanded={isOpen}
       >
-        <span className="text-xs font-extrabold uppercase tracking-wider text-foreground">{section.title}</span>
+        <span className="text-xs font-black uppercase tracking-wider text-foreground">{section.title}</span>
         <motion.span animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </motion.span>
       </button>
 
-      {/* Desktop static header */}
-      <h4 className="hidden md:block text-xs font-extrabold uppercase tracking-wider text-foreground mb-4">
+      {/* Desktop header */}
+      <h4 className="hidden md:block text-xs font-black uppercase tracking-wider text-foreground mb-4">
         {section.title}
       </h4>
 
@@ -431,18 +314,18 @@ function FooterSection({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className={`space-y-2 overflow-hidden md:!h-auto md:!opacity-100 ${isOpen ? 'block' : 'hidden md:block'}`}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className={`space-y-2.5 overflow-hidden pt-3 md:pt-0 md:!h-auto md:!opacity-100 ${isOpen ? 'block' : 'hidden md:block'}`}
           >
             {section.links.map((link) => (
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-secondary font-medium transition-colors group"
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#F26522] font-medium transition-colors group"
                 >
                   <span className="group-hover:underline underline-offset-2">{link.name}</span>
                   {link.badge && (
-                    <span className="text-[9px] font-extrabold bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full">
+                    <span className="text-[9px] font-extrabold bg-[#F26522]/15 text-[#F26522] px-1.5 py-0.5 rounded-full">
                       {link.badge}
                     </span>
                   )}

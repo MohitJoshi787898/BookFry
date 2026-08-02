@@ -22,20 +22,20 @@ export const conditionOptions: ConditionOption[] = [
     badge: 'PRISTINE',
     description: 'Looks unread. No marks, creases, or highlighted text.',
     icon: Sparkles,
-    iconBg: 'bg-blue-50 dark:bg-blue-950/20',
-    iconColor: 'text-blue-500 dark:text-blue-400',
-    badgeBg: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
-    badgeColor: 'text-slate-600 dark:text-slate-400',
+    iconBg: 'bg-sky-500/10 dark:bg-sky-500/20',
+    iconColor: 'text-sky-600 dark:text-sky-400',
+    badgeBg: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20',
+    badgeColor: 'text-sky-600 dark:text-sky-400',
   },
   {
     id: 'good',
     title: 'Good Condition',
-    badge: 'POPULAR CHOICE',
+    badge: 'MOST POPULAR',
     description: 'Minor cover wear, binding tight, readable clean pages.',
     icon: ThumbsUp,
-    iconBg: 'bg-orange-50 dark:bg-orange-950/20',
+    iconBg: 'bg-[#F26522]/10',
     iconColor: 'text-[#F26522]',
-    badgeBg: 'bg-[#FFF9F6] dark:bg-orange-950/10 text-[#F26522]',
+    badgeBg: 'bg-[#F26522]/15 text-[#F26522] border border-[#F26522]/20',
     badgeColor: 'text-[#F26522]',
   },
   {
@@ -44,9 +44,9 @@ export const conditionOptions: ConditionOption[] = [
     badge: 'USED',
     description: 'Visible shelf wear, moderate highlights or notes inside.',
     icon: ShieldCheck,
-    iconBg: 'bg-emerald-50 dark:bg-emerald-950/20',
-    iconColor: 'text-emerald-500 dark:text-emerald-400',
-    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/10 text-emerald-600 dark:text-emerald-400',
+    iconBg: 'bg-emerald-500/10',
+    iconColor: 'text-emerald-600 dark:text-emerald-400',
+    badgeBg: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
     badgeColor: 'text-emerald-600 dark:text-emerald-400',
   },
   {
@@ -55,10 +55,10 @@ export const conditionOptions: ConditionOption[] = [
     badge: 'BARGAIN',
     description: 'Heavily read, worn cover, complete text intact.',
     icon: AlertOctagon,
-    iconBg: 'bg-red-50 dark:bg-red-950/20',
-    iconColor: 'text-red-500 dark:text-red-400',
-    badgeBg: 'bg-red-50 dark:bg-red-950/10 text-red-600 dark:text-red-400',
-    badgeColor: 'text-red-600 dark:text-red-400',
+    iconBg: 'bg-rose-500/10',
+    iconColor: 'text-rose-600 dark:text-rose-400',
+    badgeBg: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+    badgeColor: 'text-rose-600 dark:text-rose-400',
   },
 ];
 
@@ -77,43 +77,41 @@ export function BookConditionCardGroup({ value, onChange }: BookConditionCardPro
           <div
             key={opt.id}
             onClick={() => onChange(opt.id)}
-            className={`cursor-pointer rounded-2xl border p-5 transition-all duration-200 relative flex flex-col justify-between h-48 select-none ${
+            className={`cursor-pointer rounded-3xl border p-5 transition-all duration-200 relative flex flex-col justify-between h-48 select-none shadow-xs active:scale-95 ${
               selected
-                ? 'border-[#F26522] bg-[#FFF9F6] dark:bg-orange-950/10 shadow-xs'
-                : 'border-border bg-card hover:border-[#F26522]/40 hover:bg-background-subtle'
+                ? 'border-[#F26522] bg-[#F26522]/10 text-[#F26522] shadow-md shadow-[#F26522]/10'
+                : 'border-border/80 bg-card hover:border-[#F26522]/40 hover:bg-muted/40'
             }`}
           >
             {/* Top row: Icon and Radio indicator */}
             <div className="flex justify-between items-start">
-              <div className={`p-2.5 rounded-xl ${opt.iconBg}`}>
+              <div className={`p-3 rounded-2xl ${opt.iconBg}`}>
                 <IconComp className={`h-5 w-5 ${opt.iconColor}`} />
               </div>
-              
+
               {/* Radio Indicator */}
               <div className="pt-1">
                 {selected ? (
-                  <div className="h-4 w-4 rounded-full border border-[#F26522] flex items-center justify-center bg-white dark:bg-card">
-                    <div className="h-2 w-2 rounded-full bg-[#F26522]" />
+                  <div className="h-5 w-5 rounded-full border-2 border-[#F26522] flex items-center justify-center bg-card">
+                    <div className="h-2.5 w-2.5 rounded-full bg-[#F26522]" />
                   </div>
                 ) : (
-                  <div className="h-4 w-4 rounded-full border border-border bg-white dark:bg-card" />
+                  <div className="h-5 w-5 rounded-full border border-border/80 bg-card" />
                 )}
               </div>
             </div>
 
             {/* Middle: Text details */}
-            <div className="my-3 space-y-1">
-              <span className="font-bold text-xs sm:text-sm text-text-primary block">{opt.title}</span>
-              <p className="text-[10px] sm:text-xs text-text-secondary leading-relaxed font-medium">
+            <div className="my-2 space-y-1">
+              <span className="font-extrabold text-xs sm:text-sm text-foreground block">{opt.title}</span>
+              <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed font-medium">
                 {opt.description}
               </p>
             </div>
 
             {/* Bottom: Badge */}
-            <div className="pt-2">
-              <span
-                className={`text-[9px] font-black tracking-wider px-2.5 py-1 rounded-md ${opt.badgeBg}`}
-              >
+            <div className="pt-1">
+              <span className={`text-[9px] font-black tracking-wider px-2.5 py-1 rounded-full ${opt.badgeBg}`}>
                 {opt.badge}
               </span>
             </div>

@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminHero } from '@/components/admin/admin-hero';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
-import { Settings, ShieldAlert, Save, ShieldCheck, CreditCard, Truck, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, Save, ShieldCheck, CreditCard, Truck, AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface PlatformSettings {
   commissionPercent: number;
@@ -59,9 +60,12 @@ export default function AdminSettingsPage() {
   if (!isAdmin) {
     return (
       <AdminLayout>
-        <div className="text-center py-16 border border-border bg-surface rounded-md font-sans space-y-4">
-          <ShieldAlert className="h-12 w-12 text-danger mx-auto" />
-          <h2 className="font-serif text-2xl font-bold text-text-primary">Access Restricted</h2>
+        <div className="text-center py-16 border border-border/80 bg-card rounded-3xl font-sans space-y-4 shadow-xl my-8">
+          <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
+          <h2 className="font-serif text-2xl font-bold text-foreground">Access Restricted</h2>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            You must have Administrative privileges to modify platform system parameters.
+          </p>
         </div>
       </AdminLayout>
     );
@@ -80,123 +84,143 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
-            <Settings className="h-7 w-7 text-brand" />
-            <span>Marketplace System & Store Settings</span>
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Configure platform commission fees, GST tax rates, shipping rates, and payment gateway options.
-          </p>
-        </div>
-      </div>
+      {/* Brand Hero Section Header */}
+      <AdminHero
+        title="Marketplace System & Store Settings"
+        subtitle="Configure platform commission fees, GST tax rates, shipping rates, and payment gateway options."
+        badgeText="System Control & Parameters"
+        stats={[
+          { label: "Platform Fee", value: `${commission}%`, badge: "Commission Rate", isPositive: true },
+          { label: "Shipping Rate", value: `₹${shippingFee}`, badge: "Campus Flat Rate", isPositive: true },
+          { label: "GST Tax Rate", value: `${gstRate}%`, badge: "Statutory Rate", isPositive: true },
+          { label: "System Mode", value: maintenanceMode ? "Maintenance" : "Live Storefront", badge: maintenanceMode ? "Alert" : "Online", isPositive: !maintenanceMode },
+        ]}
+      />
 
       <div className="max-w-4xl font-sans space-y-6">
         {saved && (
-          <div className="p-4 bg-success/10 border border-success/20 rounded-md text-xs font-bold text-success flex items-center space-x-2">
-            <ShieldCheck className="h-4 w-4" />
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center space-x-2 shadow-sm">
+            <ShieldCheck className="h-4 w-4 shrink-0" />
             <span>Platform settings saved and applied system-wide!</span>
           </div>
         )}
 
         <form onSubmit={handleSave} className="space-y-6">
           {/* Financial & Commission Settings */}
-          <div className="border border-border bg-surface rounded-md p-6 shadow-sm space-y-4">
-            <h2 className="font-serif text-lg font-bold text-text-primary flex items-center space-x-2 border-b border-border pb-3">
-              <CreditCard className="h-5 w-5 text-brand" />
-              <span>Platform Financial & Tax Settings</span>
-            </h2>
+          <div className="border border-border/80 bg-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+            <div className="flex items-center justify-between border-b border-border/60 pb-4">
+              <h2 className="font-serif text-lg font-bold text-foreground flex items-center space-x-2">
+                <CreditCard className="h-5 w-5 text-secondary" />
+                <span>Platform Financial &amp; Tax Settings</span>
+              </h2>
+              <span className="text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary px-2.5 py-1 rounded-full border border-secondary/20">
+                Financial Rates
+              </span>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div>
-                <label className="block font-bold text-text-secondary mb-1">
+                <label className="block font-bold text-muted-foreground mb-1.5 uppercase text-[11px]">
                   BookFry Platform Fee (%)
                 </label>
                 <input
                   type="number"
                   value={commission}
                   onChange={(e) => setCommission(Number(e.target.value))}
-                  className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary font-mono font-bold focus:ring-2 focus:ring-brand"
+                  className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono font-bold text-sm focus:ring-2 focus:ring-secondary/40 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-text-secondary mb-1">
+                <label className="block font-bold text-muted-foreground mb-1.5 uppercase text-[11px]">
                   Flat Shipping Rate (₹)
                 </label>
                 <input
                   type="number"
                   value={shippingFee}
                   onChange={(e) => setShippingFee(Number(e.target.value))}
-                  className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary font-mono font-bold focus:ring-2 focus:ring-brand"
+                  className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono font-bold text-sm focus:ring-2 focus:ring-secondary/40 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-text-secondary mb-1">
+                <label className="block font-bold text-muted-foreground mb-1.5 uppercase text-[11px]">
                   GST Tax Rate (%)
                 </label>
                 <input
                   type="number"
                   value={gstRate}
                   onChange={(e) => setGstRate(Number(e.target.value))}
-                  className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary font-mono font-bold focus:ring-2 focus:ring-brand"
+                  className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono font-bold text-sm focus:ring-2 focus:ring-secondary/40 focus:outline-none"
                 />
               </div>
             </div>
           </div>
 
           {/* Payment Gateways */}
-          <div className="border border-border bg-surface rounded-md p-6 shadow-sm space-y-4">
-            <h2 className="font-serif text-lg font-bold text-text-primary flex items-center space-x-2 border-b border-border pb-3">
-              <Truck className="h-5 w-5 text-brand" />
-              <span>Payment Gateways & Payout Methods</span>
-            </h2>
+          <div className="border border-border/80 bg-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+            <div className="flex items-center justify-between border-b border-border/60 pb-4">
+              <h2 className="font-serif text-lg font-bold text-foreground flex items-center space-x-2">
+                <Truck className="h-5 w-5 text-secondary" />
+                <span>Payment Gateways &amp; Payout Methods</span>
+              </h2>
+              <span className="text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary px-2.5 py-1 rounded-full border border-secondary/20">
+                Gateways
+              </span>
+            </div>
 
             <div className="space-y-3 text-xs">
-              <label className="flex items-center space-x-3 p-3 border border-border rounded bg-background-subtle cursor-pointer">
-                <input type="checkbox" defaultChecked className="h-4 w-4 text-brand rounded" />
-                <span className="font-bold text-text-primary">UPI Payments (Razorpay / PhonePe / GPay)</span>
+              <label className="flex items-center space-x-3 p-4 border border-border/80 rounded-2xl bg-muted/40 cursor-pointer hover:bg-muted/60 transition-all">
+                <input type="checkbox" defaultChecked className="h-4 w-4 text-secondary rounded" />
+                <span className="font-bold text-foreground">UPI Payments (Razorpay / PhonePe / GPay)</span>
               </label>
 
-              <label className="flex items-center space-x-3 p-3 border border-border rounded bg-background-subtle cursor-pointer">
-                <input type="checkbox" defaultChecked className="h-4 w-4 text-brand rounded" />
-                <span className="font-bold text-text-primary">Credit / Debit Cards & NetBanking</span>
+              <label className="flex items-center space-x-3 p-4 border border-border/80 rounded-2xl bg-muted/40 cursor-pointer hover:bg-muted/60 transition-all">
+                <input type="checkbox" defaultChecked className="h-4 w-4 text-secondary rounded" />
+                <span className="font-bold text-foreground">Credit / Debit Cards &amp; NetBanking</span>
               </label>
 
-              <label className="flex items-center space-x-3 p-3 border border-border rounded bg-background-subtle cursor-pointer">
-                <input type="checkbox" defaultChecked className="h-4 w-4 text-brand rounded" />
-                <span className="font-bold text-text-primary">Cash on Delivery (COD) for Verified Pin Codes</span>
+              <label className="flex items-center space-x-3 p-4 border border-border/80 rounded-2xl bg-muted/40 cursor-pointer hover:bg-muted/60 transition-all">
+                <input type="checkbox" defaultChecked className="h-4 w-4 text-secondary rounded" />
+                <span className="font-bold text-foreground">Cash on Delivery (COD) for Verified Pin Codes</span>
               </label>
             </div>
           </div>
 
           {/* Maintenance Mode Toggle */}
-          <div className="border border-border bg-surface rounded-md p-6 shadow-sm space-y-4">
-            <h2 className="font-serif text-lg font-bold text-text-primary flex items-center space-x-2 border-b border-border pb-3">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              <span>Platform Maintenance Mode</span>
-            </h2>
+          <div className="border border-border/80 bg-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+            <div className="flex items-center justify-between border-b border-border/60 pb-4">
+              <h2 className="font-serif text-lg font-bold text-foreground flex items-center space-x-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <span>Platform Maintenance Mode</span>
+              </h2>
+              <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-1 rounded-full border border-amber-500/20">
+                System Guard
+              </span>
+            </div>
 
-            <label className="flex items-center space-x-3 text-xs font-semibold cursor-pointer">
+            <label className="flex items-center space-x-3 text-xs font-semibold cursor-pointer p-4 border border-border/80 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-all">
               <input
                 type="checkbox"
                 checked={maintenanceMode}
                 onChange={(e) => setMaintenanceMode(e.target.checked)}
-                className="h-4 w-4 text-brand rounded"
+                className="h-4 w-4 text-secondary rounded"
               />
-              <span className="text-text-primary">Enable Maintenance Mode (Restricts buyer purchases)</span>
+              <span className="text-foreground font-bold">Enable Maintenance Mode (Restricts buyer checkout purchases)</span>
             </label>
           </div>
 
           <button
             type="submit"
-            className="px-6 py-3 bg-brand hover:bg-brand-hover text-white font-bold rounded transition-all shadow text-xs uppercase tracking-wider flex items-center space-x-2"
+            disabled={updateSettingsMutation.isPending}
+            className="px-6 py-3.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-extrabold rounded-2xl transition-all shadow-md shadow-[#F26522]/20 text-xs uppercase tracking-wider flex items-center space-x-2 active:scale-95 disabled:opacity-60"
           >
-            <Save className="h-4 w-4" />
-            <span>Save Platform Settings</span>
+            {updateSettingsMutation.isPending ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            <span>{updateSettingsMutation.isPending ? 'Saving...' : 'Save Platform Settings'}</span>
           </button>
         </form>
       </div>

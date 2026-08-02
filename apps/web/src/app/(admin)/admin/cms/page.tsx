@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminHero } from '@/components/admin/admin-hero';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
-import { FileText, ShieldAlert, Save, Megaphone, HelpCircle } from 'lucide-react';
+import { ShieldAlert, Save, Megaphone, HelpCircle, Check, Plus, RefreshCw } from 'lucide-react';
 
 interface CmsData {
   announcementText: string;
@@ -54,9 +55,12 @@ export default function AdminCMSPage() {
   if (!isAdmin) {
     return (
       <AdminLayout>
-        <div className="text-center py-16 border border-border bg-surface rounded-md font-sans space-y-4">
-          <ShieldAlert className="h-12 w-12 text-danger mx-auto" />
-          <h2 className="font-serif text-2xl font-bold text-text-primary">Access Restricted</h2>
+        <div className="text-center py-16 border border-border/80 bg-card rounded-3xl font-sans space-y-4 shadow-xl my-8">
+          <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
+          <h2 className="font-serif text-2xl font-bold text-foreground">Access Restricted</h2>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            You must have Administrative privileges to manage homepage banners and CMS content.
+          </p>
         </div>
       </AdminLayout>
     );
@@ -79,81 +83,102 @@ export default function AdminCMSPage() {
 
   return (
     <AdminLayout>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
-            <FileText className="h-7 w-7 text-brand" />
-            <span>CMS, Banners & FAQ Manager</span>
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Manage top announcement bar text, homepage student testimonials, and help desk FAQ content.
-          </p>
-        </div>
-      </div>
+      {/* Brand Hero Section Header */}
+      <AdminHero
+        title="CMS, Banners & FAQ Manager"
+        subtitle="Manage top announcement bar text, homepage promo banners, student testimonials, and helpdesk FAQ content."
+        badgeText="Storefront Content Engine"
+        stats={[
+          { label: "Announcement Bar", value: announcement ? "Active" : "Disabled", badge: "Live Banner", isPositive: true },
+          { label: "FAQ Entries", value: faqs.length, badge: "Help Center", isPositive: true },
+          { label: "CMS Engine Status", value: "Active", badge: "System Online", isPositive: true },
+          { label: "Storefront State", value: "Online", badge: "Live Sync", isPositive: true },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 font-sans">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 font-sans">
         {/* Top Announcement Bar Manager */}
-        <div className="border border-border bg-surface rounded-md p-6 shadow-sm space-y-4 h-fit">
-          <h2 className="font-serif text-lg font-bold text-text-primary flex items-center space-x-2 border-b border-border pb-3">
-            <Megaphone className="h-5 w-5 text-brand" />
-            <span>Homepage Announcement Bar</span>
-          </h2>
+        <div className="border border-border/80 bg-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-5 h-fit">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <h2 className="font-serif text-lg font-bold text-foreground flex items-center space-x-2">
+              <Megaphone className="h-5 w-5 text-secondary" />
+              <span>Homepage Announcement Bar</span>
+            </h2>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary px-2.5 py-1 rounded-full border border-secondary/20">
+              Live Banner
+            </span>
+          </div>
 
           {savedSuccess && (
-            <div className="p-3 bg-success/10 border border-success/20 rounded text-xs font-semibold text-success">
-              ✓ Announcement bar text saved successfully!
+            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0" />
+              <span>Announcement bar text saved successfully!</span>
             </div>
           )}
 
           <form onSubmit={handleSaveBanner} className="space-y-4 text-xs">
             <div>
-              <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">
-                Active Announcement Text
+              <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
+                Active Announcement Text *
               </label>
               <textarea
                 rows={3}
                 value={announcement}
                 onChange={(e) => setAnnouncement(e.target.value)}
-                className="w-full p-2.5 border border-border rounded bg-background-subtle text-text-primary focus:ring-2 focus:ring-brand focus:outline-none"
+                placeholder="e.g. Free Campus Shipping on orders over ₹299! Code: CAMPUSFREE"
+                className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs font-medium focus:ring-2 focus:ring-secondary/40 focus:outline-none leading-relaxed"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-brand hover:bg-brand-hover text-white font-bold rounded transition-all shadow text-xs uppercase tracking-wider flex items-center justify-center space-x-1"
+              disabled={updateCmsMutation.isPending}
+              className="w-full py-3 bg-[#F26522] hover:bg-[#D64E0F] text-white font-extrabold rounded-2xl transition-all shadow-md shadow-[#F26522]/20 text-xs uppercase tracking-wider flex items-center justify-center space-x-2 active:scale-95 disabled:opacity-60"
             >
-              <Save className="h-4 w-4" />
-              <span>Update Homepage Banner</span>
+              {updateCmsMutation.isPending ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              <span>{updateCmsMutation.isPending ? 'Updating...' : 'Update Homepage Banner'}</span>
             </button>
           </form>
         </div>
 
         {/* FAQ Accordion Editor */}
-        <div className="border border-border bg-surface rounded-md p-6 shadow-sm space-y-6">
-          <h2 className="font-serif text-lg font-bold text-text-primary flex items-center space-x-2 border-b border-border pb-3">
-            <HelpCircle className="h-5 w-5 text-brand" />
-            <span>Frequently Asked Questions (FAQ)</span>
-          </h2>
-
-          <div className="space-y-3">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="p-3 border border-border bg-background rounded-lg space-y-1 text-xs">
-                <p className="font-bold text-text-primary">Q: {faq.question}</p>
-                <p className="text-text-secondary font-sans">A: {faq.answer}</p>
-              </div>
-            ))}
+        <div className="border border-border/80 bg-card rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <h2 className="font-serif text-lg font-bold text-foreground flex items-center space-x-2">
+              <HelpCircle className="h-5 w-5 text-secondary" />
+              <span>Frequently Asked Questions (FAQ)</span>
+            </h2>
+            <span className="text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary px-2.5 py-1 rounded-full border border-secondary/20">
+              Help Center
+            </span>
           </div>
 
-          <form onSubmit={handleAddFaq} className="space-y-3 pt-4 border-t border-border text-xs">
-            <h4 className="font-bold text-text-primary">Add New FAQ Question</h4>
+          <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+            {faqs.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic text-center py-4">No FAQ entries added yet.</p>
+            ) : (
+              faqs.map((faq, idx) => (
+                <div key={idx} className="p-4 border border-border/60 bg-muted/30 rounded-2xl space-y-1 text-xs">
+                  <p className="font-bold text-foreground">Q: {faq.question}</p>
+                  <p className="text-muted-foreground font-sans leading-relaxed">A: {faq.answer}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          <form onSubmit={handleAddFaq} className="space-y-3 pt-4 border-t border-border/60 text-xs">
+            <h4 className="font-bold text-foreground">Add New FAQ Question</h4>
             <input
               type="text"
               required
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
               placeholder="Question (e.g. Can I list used Engineering books?)"
-              className="w-full p-2 border border-border rounded bg-background-subtle text-text-primary focus:ring-2 focus:ring-brand"
+              className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground text-xs font-medium focus:ring-2 focus:ring-secondary/40 focus:outline-none"
             />
             <textarea
               rows={2}
@@ -161,13 +186,15 @@ export default function AdminCMSPage() {
               value={newAnswer}
               onChange={(e) => setNewAnswer(e.target.value)}
               placeholder="Answer explanation..."
-              className="w-full p-2 border border-border rounded bg-background-subtle text-text-primary focus:ring-2 focus:ring-brand"
+              className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs font-medium focus:ring-2 focus:ring-secondary/40 focus:outline-none leading-relaxed"
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-brand text-white font-bold rounded text-xs uppercase tracking-wider"
+              disabled={updateCmsMutation.isPending}
+              className="px-5 py-2.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md shadow-[#F26522]/20 flex items-center gap-1.5 active:scale-95 disabled:opacity-60"
             >
-              Add FAQ Item
+              <Plus className="h-4 w-4" />
+              <span>Add FAQ Item</span>
             </button>
           </form>
         </div>

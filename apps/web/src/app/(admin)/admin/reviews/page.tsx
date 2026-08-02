@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { useAuthStore } from '@/stores/auth.store';
-import { Star, ShieldAlert, Trash2, Eye, Pencil, X } from 'lucide-react';
+import { Star, ShieldAlert, Trash2, Eye, Pencil, X, Check } from 'lucide-react';
 
 interface BookReview {
   id: string;
@@ -66,15 +67,16 @@ export default function AdminReviewsPage() {
   if (!isAdmin) {
     return (
       <AdminLayout>
-        <div className="text-center py-16 border border-border bg-surface rounded-md font-sans space-y-4">
-          <ShieldAlert className="h-12 w-12 text-danger mx-auto" />
-          <h2 className="font-serif text-2xl font-bold text-text-primary">Access Restricted</h2>
+        <div className="text-center py-16 border border-border/80 bg-card rounded-3xl font-sans space-y-4 shadow-xl my-8">
+          <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
+          <h2 className="font-serif text-2xl font-bold text-foreground">Access Restricted</h2>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+            You must have Administrative privileges to manage customer book reviews and ratings.
+          </p>
         </div>
       </AdminLayout>
     );
   }
-
-
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,24 +98,28 @@ export default function AdminReviewsPage() {
     setSelectedReview(null);
   };
 
+  const approvedCount = reviews.filter((r) => r.status === 'approved').length;
+  const flaggedCount = reviews.filter((r) => r.status === 'flagged').length;
+  const avgRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : '5.0';
+
   const columns: Column<BookReview>[] = [
     {
       header: 'Book & Reviewer',
       cell: (r) => (
         <div className="font-sans">
-          <p className="font-bold text-text-primary">{r.bookTitle}</p>
-          <p className="text-[11px] text-text-muted">by {r.reviewerName} • {r.createdAt}</p>
+          <p className="font-bold text-foreground text-xs sm:text-sm">{r.bookTitle}</p>
+          <p className="text-[11px] text-muted-foreground font-medium">by {r.reviewerName} • {r.createdAt}</p>
         </div>
       ),
     },
     {
       header: 'Rating',
       cell: (r) => (
-        <div className="flex items-center space-x-1 text-accent">
+        <div className="flex items-center space-x-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={`h-3.5 w-3.5 ${i < r.rating ? 'fill-accent text-accent' : 'text-text-muted'}`}
+              className={`h-3.5 w-3.5 ${i < r.rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`}
             />
           ))}
         </div>
@@ -121,16 +127,16 @@ export default function AdminReviewsPage() {
     },
     {
       header: 'Review Comment',
-      cell: (r) => <p className="text-xs text-text-secondary line-clamp-2 max-w-sm">{r.comment}</p>,
+      cell: (r) => <p className="text-xs text-muted-foreground line-clamp-2 max-w-sm font-medium">{r.comment}</p>,
     },
     {
       header: 'Status',
       cell: (r) => (
         <span
-          className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
             r.status === 'approved'
-              ? 'bg-success/10 text-success border border-success/20'
-              : 'bg-danger/10 text-danger border border-danger/20'
+              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
           }`}
         >
           {r.status}
@@ -141,7 +147,7 @@ export default function AdminReviewsPage() {
       header: 'Actions',
       className: 'text-right',
       cell: (r) => (
-        <div className="flex items-center justify-end space-x-1.5 font-sans">
+        <div className="flex items-center justify-end space-x-2 font-sans">
           {/* View Details */}
           <button
             onClick={(e) => {
@@ -149,10 +155,10 @@ export default function AdminReviewsPage() {
               setSelectedReview(r);
               setViewModalOpen(true);
             }}
-            className="p-1.5 rounded border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-brand transition-colors"
+            className="p-2 rounded-xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-all active:scale-95 shadow-xs"
             title="View Details"
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-4 w-4" />
           </button>
 
           {/* Edit Review */}
@@ -163,10 +169,10 @@ export default function AdminReviewsPage() {
               setEditForm({ rating: r.rating, comment: r.comment, status: r.status });
               setEditModalOpen(true);
             }}
-            className="p-1.5 rounded border border-border bg-surface hover:bg-background-subtle text-text-secondary hover:text-accent transition-colors"
+            className="p-2 rounded-xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-secondary transition-all active:scale-95 shadow-xs"
             title="Edit Review"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="h-4 w-4" />
           </button>
 
           {/* Soft Delete */}
@@ -176,10 +182,10 @@ export default function AdminReviewsPage() {
               setSelectedReview(r);
               setDeleteModalOpen(true);
             }}
-            className="p-1.5 rounded border border-danger/20 bg-danger/10 text-danger hover:bg-danger hover:text-white transition-colors"
+            className="p-2 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95 shadow-xs"
             title="Soft Delete / Remove Review"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       ),
@@ -188,64 +194,85 @@ export default function AdminReviewsPage() {
 
   return (
     <AdminLayout>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border font-sans">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center space-x-2">
-            <Star className="h-7 w-7 text-brand" />
-            <span>Book Reviews & Content Moderation</span>
-          </h1>
-          <p className="text-xs text-text-secondary mt-1">
-            Moderate student book reviews, verify customer ratings, and purge spam comments.
-          </p>
-        </div>
-      </div>
-
-      <AdminDataTable
-        title="Student Book Reviews"
-        subtitle="Verified buyer feedback stream"
-        data={reviews}
-        columns={columns}
-        searchField="bookTitle"
-        searchPlaceholder="Search title or reviewer..."
+      {/* Brand Hero Section Header */}
+      <AdminHero
+        title="Book Reviews & Content Moderation"
+        subtitle="Moderate student book reviews, verify buyer ratings, and purge spam comments across BookFry."
+        badgeText="Community Trust & Safety"
+        stats={[
+          { label: "Total Reviews", value: reviews.length, badge: "Buyer Feedback", isPositive: true },
+          { label: "Approved Reviews", value: approvedCount, badge: "Live Storefront", isPositive: true },
+          { label: "Flagged / Spam", value: flaggedCount, badge: "Moderation Queue", isPositive: false },
+          { label: "Average Score", value: `${avgRating} ★`, badge: "Platform Average", isPositive: true },
+        ]}
       />
+
+      <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-xl font-sans">
+        <AdminDataTable
+          title="Student Book Reviews"
+          subtitle="Verified customer feedback stream across India"
+          data={reviews}
+          columns={columns}
+          searchField="bookTitle"
+          searchPlaceholder="Search title or reviewer..."
+        />
+      </div>
 
       {/* VIEW DETAILS MODAL */}
       {viewModalOpen && selectedReview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 font-sans">
+          <div className="bg-card border border-border/80 rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative space-y-4">
             <button
               onClick={() => setViewModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+              className="absolute top-5 right-5 p-2 rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Star className="h-6 w-6 text-brand" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Review Details</h3>
+            <div className="flex items-center space-x-3 border-b border-border/60 pb-4">
+              <div className="h-10 w-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                <Star className="h-5 w-5 fill-amber-500" />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-bold text-foreground">Review Summary</h3>
+                <p className="text-xs text-muted-foreground">Buyer feedback details</p>
+              </div>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="bg-background-subtle p-3 rounded-lg border border-border space-y-1.5">
-                <p><span className="font-bold text-text-muted">Book:</span> <span className="font-bold text-text-primary">{selectedReview.bookTitle}</span></p>
-                <p><span className="font-bold text-text-muted">Reviewer:</span> <span className="text-text-primary">{selectedReview.reviewerName}</span></p>
-                <p><span className="font-bold text-text-muted">Date:</span> <span className="text-text-primary">{selectedReview.createdAt}</span></p>
-                <p><span className="font-bold text-text-muted">Rating:</span> <span className="font-bold text-accent">{selectedReview.rating} / 5 Stars</span></p>
+              <div className="bg-muted/40 p-4 rounded-2xl border border-border/60 space-y-2">
+                <p className="flex justify-between">
+                  <span className="font-bold text-muted-foreground">Book Title:</span>
+                  <span className="font-bold text-foreground truncate max-w-[200px]">{selectedReview.bookTitle}</span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="font-bold text-muted-foreground">Reviewer:</span>
+                  <span className="text-foreground font-semibold">{selectedReview.reviewerName}</span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="font-bold text-muted-foreground">Date:</span>
+                  <span className="text-foreground font-mono">{selectedReview.createdAt}</span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="font-bold text-muted-foreground">Rating:</span>
+                  <span className="font-bold text-amber-500">{selectedReview.rating} / 5 Stars</span>
+                </p>
               </div>
 
               <div>
-                <p className="font-bold text-text-muted uppercase text-[10px] mb-1">Comment Text</p>
-                <p className="p-3 bg-surface border border-border rounded-lg text-text-primary italic">&quot;{selectedReview.comment}&quot;</p>
+                <p className="font-bold text-muted-foreground uppercase text-[10px] tracking-wider mb-1.5">Review Comment</p>
+                <p className="p-4 bg-background border border-border/80 rounded-2xl text-foreground italic leading-relaxed text-xs">
+                  &quot;{selectedReview.comment}&quot;
+                </p>
               </div>
             </div>
 
-            <div className="flex justify-end pt-4 border-t border-border mt-4">
+            <div className="flex justify-end pt-2 border-t border-border/60">
               <button
                 onClick={() => setViewModalOpen(false)}
-                className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
+                className="px-5 py-2.5 bg-[#F26522] text-white text-xs font-bold rounded-2xl hover:bg-[#D64E0F] transition-all shadow-sm active:scale-95"
               >
-                Close
+                Close Summary
               </button>
             </div>
           </div>
@@ -254,23 +281,30 @@ export default function AdminReviewsPage() {
 
       {/* EDIT REVIEW MODAL */}
       {editModalOpen && selectedReview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 font-sans">
+          <div className="bg-card border border-border/80 rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative space-y-4">
             <button
               onClick={() => setEditModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+              className="absolute top-5 right-5 p-2 rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Pencil className="h-6 w-6 text-accent" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Edit Review</h3>
+            <div className="flex items-center space-x-3 border-b border-border/60 pb-4">
+              <div className="h-10 w-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
+                <Pencil className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-bold text-foreground">Edit Review</h3>
+                <p className="text-xs text-muted-foreground">Modify moderation status or text</p>
+              </div>
             </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Star Rating (1-5)</label>
+                <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
+                  Star Rating (1-5)
+                </label>
                 <input
                   type="number"
                   min={1}
@@ -278,46 +312,51 @@ export default function AdminReviewsPage() {
                   required
                   value={editForm.rating}
                   onChange={(e) => setEditForm({ ...editForm, rating: Number(e.target.value) })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary font-mono"
+                  className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Comment Text</label>
+                <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
+                  Comment Text
+                </label>
                 <textarea
                   rows={4}
                   required
                   value={editForm.comment}
                   onChange={(e) => setEditForm({ ...editForm, comment: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                  className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs leading-relaxed"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Status</label>
+                <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
+                  Moderation Status
+                </label>
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'approved' | 'flagged' })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
+                  className="w-full px-3.5 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-medium"
                 >
-                  <option value="approved">Approved</option>
-                  <option value="flagged">Flagged</option>
+                  <option value="approved">Approved (Published)</option>
+                  <option value="flagged">Flagged (Hidden / Moderation)</option>
                 </select>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border/60">
                 <button
                   type="button"
                   onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
+                  className="px-4 py-2.5 border border-border/80 rounded-2xl text-muted-foreground hover:bg-muted font-bold active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90"
+                  className="px-5 py-2.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-bold rounded-2xl flex items-center space-x-1.5 active:scale-95 shadow-md shadow-[#F26522]/20"
                 >
-                  Save Changes
+                  <Check className="h-4 w-4" />
+                  <span>Save Changes</span>
                 </button>
               </div>
             </form>
@@ -327,29 +366,34 @@ export default function AdminReviewsPage() {
 
       {/* SOFT DELETE CONFIRMATION MODAL */}
       {deleteModalOpen && selectedReview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Trash2 className="h-6 w-6 text-danger" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Confirm Delete Review</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 font-sans">
+          <div className="bg-card border border-border/80 rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative space-y-4">
+            <div className="flex items-center space-x-3 border-b border-border/60 pb-4">
+              <div className="h-10 w-10 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-bold text-foreground">Delete Review</h3>
+                <p className="text-xs text-muted-foreground">Remove feedback from storefront</p>
+              </div>
             </div>
 
-            <p className="text-xs text-text-secondary mb-4">
-              Are you sure you want to soft delete/remove this review for <span className="font-bold text-text-primary">{selectedReview.bookTitle}</span>?
+            <p className="text-xs text-muted-foreground">
+              Are you sure you want to delete this review for <span className="font-bold text-foreground">{selectedReview.bookTitle}</span>? This action cannot be undone.
             </p>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-3 border-t border-border/60">
               <button
                 onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
+                className="px-4 py-2.5 border border-border/80 rounded-2xl text-xs font-bold text-muted-foreground hover:bg-muted active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteReview(selectedReview.id)}
-                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover"
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider flex items-center space-x-1.5 active:scale-95 shadow-md shadow-rose-600/20"
               >
-                Delete Review
+                <span>Delete Review</span>
               </button>
             </div>
           </div>

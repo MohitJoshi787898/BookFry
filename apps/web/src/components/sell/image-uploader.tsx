@@ -94,7 +94,6 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
     handleFileSelect(e.dataTransfer.files);
   };
 
-  // Build items list matching mockup slots (e.g. 3 filled + 1 uploader)
   const renderSlots = [];
   for (let i = 0; i < images.length; i++) {
     renderSlots.push({ type: 'image', value: images[i], index: i });
@@ -108,8 +107,8 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`font-sans p-1 rounded-2xl transition-all duration-200 ${
-        isDragging ? 'bg-brand/5 border-2 border-dashed border-[#F26522]' : ''
+      className={`font-sans p-2 rounded-3xl transition-all duration-200 ${
+        isDragging ? 'bg-[#F26522]/10 border-2 border-dashed border-[#F26522]' : ''
       }`}
     >
       <input
@@ -127,14 +126,14 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
             return (
               <div
                 key={`img-${slot.index}`}
-                className="relative aspect-square sm:aspect-[4/5] md:aspect-square lg:aspect-square xl:aspect-[5/6] rounded-2xl border border-border overflow-hidden bg-background-subtle shadow-xs group"
+                className="relative aspect-square sm:aspect-[4/5] rounded-3xl border border-border/80 overflow-hidden bg-muted/40 shadow-xs group"
               >
                 <ImagePreview img={slot.value!} />
 
                 {/* Cover label at top left for first index */}
                 {slot.index === 0 && (
-                  <span className="absolute top-3 left-3 bg-[#F26522] text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-sm">
-                    COVER
+                  <span className="absolute top-3 left-3 bg-[#F26522] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                    COVER PHOTO
                   </span>
                 )}
 
@@ -142,7 +141,7 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
                 <button
                   type="button"
                   onClick={() => removeImage(slot.index!)}
-                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-white dark:bg-card border border-border/80 flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 shadow-sm transition-all hover:scale-105 active:scale-95"
+                  className="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-card/90 border border-border/80 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-md transition-all active:scale-95 backdrop-blur-md"
                   title="Remove photo"
                 >
                   <X className="h-4 w-4" />
@@ -156,14 +155,14 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
             <div
               key="uploader-slot"
               onClick={() => fileInputRef.current?.click()}
-              className="cursor-pointer aspect-square sm:aspect-[4/5] md:aspect-square lg:aspect-square xl:aspect-[5/6] rounded-2xl border-2 border-dashed border-border hover:border-[#F26522] bg-card hover:bg-[#FFF9F6] dark:hover:bg-orange-950/5 flex flex-col items-center justify-center text-center p-4 transition-all"
+              className="cursor-pointer aspect-square sm:aspect-[4/5] rounded-3xl border-2 border-dashed border-border/80 hover:border-[#F26522] bg-card hover:bg-[#F26522]/5 flex flex-col items-center justify-center text-center p-4 transition-all active:scale-95 shadow-xs"
             >
-              <div className="h-10 w-10 rounded-full bg-background-subtle border border-border/40 flex items-center justify-center text-text-muted mb-2">
-                <Plus className="h-5 w-5 text-text-muted" />
+              <div className="h-10 w-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-2">
+                <Plus className="h-5 w-5" />
               </div>
-              <span className="text-xs font-bold text-text-primary">Add Photo</span>
-              <span className="text-[9px] text-text-muted mt-1 leading-snug">
-                JPG, PNG, WebP<br />up to 5MB each
+              <span className="text-xs font-bold text-foreground">Add Photo</span>
+              <span className="text-[10px] text-muted-foreground mt-1 leading-tight font-medium">
+                JPG, PNG, WebP<br />Max 5MB each
               </span>
             </div>
           );

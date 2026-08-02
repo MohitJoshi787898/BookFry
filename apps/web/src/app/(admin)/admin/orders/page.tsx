@@ -10,7 +10,6 @@ import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Order, OrderStatus } from '@bookmarket/types';
 import {
-  ShoppingBag,
   ShieldAlert,
   Filter,
   CheckCircle2,

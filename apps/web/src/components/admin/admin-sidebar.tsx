@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   Star,
   MessageSquare,
+  Sparkles,
   ChevronRight as ArrowRightIcon,
 } from 'lucide-react';
 
@@ -77,20 +78,23 @@ function QuickActionsCard() {
     { label: 'Add New Book', href: '/admin/listings' },
     { label: 'Add Banner', href: '/admin/cms' },
     { label: 'Send Announcement', href: '/admin/cms' },
-    { label: 'Clear Cache', href: '/admin/settings' },
+    { label: 'Platform Settings', href: '/admin/settings' },
   ];
 
   return (
-    <div className="bg-background-subtle border border-border/70 rounded-2xl p-4 space-y-3.5 font-sans mx-2">
-      <h4 className="text-[10px] font-black uppercase tracking-wider text-text-primary flex items-center gap-1.5">
-        <span>⚡ Quick Actions</span>
-      </h4>
-      <div className="space-y-2 text-[11px] font-bold text-text-secondary">
+    <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 space-y-3 font-sans mx-1 shadow-xs">
+      <div className="flex items-center justify-between">
+        <h4 className="text-[10px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5 text-[#F26522]" />
+          <span>Quick Actions</span>
+        </h4>
+      </div>
+      <div className="space-y-2 text-[11px] font-semibold text-muted-foreground">
         {actions.map((act) => (
           <Link
             key={act.label}
             href={act.href}
-            className="flex items-center justify-between hover:text-[#F26522] transition-colors"
+            className="flex items-center justify-between hover:text-[#F26522] transition-colors py-0.5 active:scale-95"
           >
             <span>{act.label}</span>
             <ArrowRightIcon className="h-3 w-3 opacity-60" />
@@ -109,17 +113,17 @@ function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean })
   return (
     <Link
       href={item.href}
-      className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
+      className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-150 ${
         isActive
-          ? 'bg-[#FFF5F0] dark:bg-orange-950/15 text-[#F26522] shadow-2xs font-extrabold'
-          : 'text-text-secondary hover:bg-background-subtle hover:text-text-primary'
+          ? 'bg-[#F26522]/10 text-[#F26522] font-black border-l-4 border-[#F26522] shadow-xs'
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       } ${collapsed ? 'justify-center px-0' : ''}`}
       title={collapsed ? item.name : undefined}
     >
-      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#F26522]' : 'text-text-muted'}`} />
+      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#F26522]' : 'text-muted-foreground'}`} />
       {!collapsed && <span className="truncate flex-grow">{item.name}</span>}
       {!collapsed && item.badge && (
-        <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#FFF5F0] dark:bg-orange-950/20 text-[#F26522]">
+        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F26522]/15 text-[#F26522] border border-[#F26522]/20">
           {item.badge}
         </span>
       )}
@@ -135,22 +139,27 @@ export function AdminSidebar({ collapsed, onToggleCollapse }: AdminSidebarProps)
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-border/80">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-border/80 bg-background/50">
         {!collapsed && (
-          <Link href="/admin/dashboard" className="flex items-center space-x-2">
-            <span className="font-serif text-lg font-bold text-text-primary tracking-tight">BookFry</span>
-            <span className="text-[9px] font-black uppercase tracking-wider bg-[#F26522] text-white px-2 py-0.5 rounded-md">
-              ADMIN
-            </span>
+          <Link href="/admin/dashboard" className="flex items-center space-x-2.5">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#1A3B5C] to-[#F26522] flex items-center justify-center text-white font-serif font-black text-sm shadow-md">
+              BF
+            </div>
+            <div className="flex flex-col">
+              <span className="font-serif text-base font-extrabold text-foreground leading-tight tracking-tight">BookFry</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#F26522]">ADMIN PANEL</span>
+            </div>
           </Link>
         )}
         {collapsed && (
-          <span className="font-serif text-lg font-bold text-brand mx-auto">BF</span>
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#1A3B5C] to-[#F26522] flex items-center justify-center text-white font-serif font-black text-sm shadow-md mx-auto">
+            BF
+          </div>
         )}
 
         <button
           onClick={onToggleCollapse}
-          className="p-1.5 rounded-lg hover:bg-background-subtle text-text-muted hover:text-text-primary transition-colors hidden sm:block"
+          className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all hidden sm:block active:scale-95"
           aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -158,11 +167,11 @@ export function AdminSidebar({ collapsed, onToggleCollapse }: AdminSidebarProps)
       </div>
 
       {/* Navigation Lists */}
-      <div className="flex-grow overflow-y-auto py-4 px-3 space-y-5">
+      <div className="flex-grow overflow-y-auto py-4 px-3 space-y-6">
         {navigationGroups.map((group) => (
-          <div key={group.title} className="space-y-1">
+          <div key={group.title} className="space-y-1.5">
             {!collapsed && (
-              <h4 className="text-[9px] font-black uppercase tracking-wider text-text-muted px-3 mb-2">
+              <h4 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/70 px-3.5 mb-2">
                 {group.title}
               </h4>
             )}
@@ -178,16 +187,16 @@ export function AdminSidebar({ collapsed, onToggleCollapse }: AdminSidebarProps)
       </div>
 
       {/* Footer Storefront Toggle link */}
-      <div className="p-3 border-t border-border/80">
+      <div className="p-3 border-t border-border/80 bg-background/30">
         <Link
           href="/"
-          className={`flex items-center space-x-2 p-2.5 rounded-xl text-xs font-bold text-text-secondary hover:bg-background-subtle hover:text-[#F26522] transition-colors ${
+          className={`flex items-center space-x-2.5 p-3 rounded-2xl text-xs font-bold text-muted-foreground hover:bg-muted hover:text-[#F26522] transition-all ${
             collapsed ? 'justify-center' : ''
           }`}
           title="Back to Customer Storefront"
         >
-          <Store className="h-4 w-4 text-text-muted shrink-0" />
-          {!collapsed && <span>Storefront</span>}
+          <Store className="h-4.5 w-4.5 text-muted-foreground shrink-0" />
+          {!collapsed && <span>Back to Storefront</span>}
         </Link>
       </div>
     </aside>
