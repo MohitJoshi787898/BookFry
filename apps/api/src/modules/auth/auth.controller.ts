@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { ApiResponse } from '../../utils/ApiResponse';
 import { env } from '../../config/env';
 import { UnauthorizedError } from '../../utils/AppError';
+import { UserRole } from '@bookmarket/types';
 
 export class AuthController {
   private authService: AuthService;
@@ -16,7 +17,12 @@ export class AuthController {
 
   register = async (req: Request, res: Response): Promise<void> => {
     const { name, email, password, roles } = req.body;
-    const userDoc = await this.usersService.createUser({ name, email, password, roles });
+    const safeRoles: UserRole[] = Array.isArray(roles)
+      ? (roles.filter((r: string): r is UserRole => r === 'customer' || r === 'seller') as UserRole[])
+      : ['customer'];
+    const finalRoles: UserRole[] = safeRoles.length > 0 ? safeRoles : ['customer'];
+
+    const userDoc = await this.usersService.createUser({ name, email, password, roles: finalRoles });
 
     const accessToken = this.authService.generateAccessToken(userDoc);
     const refreshToken = this.authService.generateRefreshToken(userDoc);

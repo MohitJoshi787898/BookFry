@@ -2,179 +2,231 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { ExchangeKnowledgeIllustration } from '@/components/illustrations/book-illustrations';
-import { ArrowRight, ShieldCheck, RefreshCw, Sparkles, BookOpen, Wallet } from 'lucide-react';
+import {
+  Camera,
+  ShieldCheck,
+  Truck,
+  ArrowRight,
+  BookOpen,
+  Search,
+  Users,
+  IndianRupee,
+  Coins,
+  Globe,
+  Leaf,
+} from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
 
 export function ExchangeKnowledgeSection() {
   const { isAuthenticated } = useAuthStore();
 
-  const steps = [
-    {
-      number: '01',
-      title: 'List Your Used Book',
-      desc: 'Snap a photo and enter the ISBN. Set your price and list your book for thousands of campus buyers.',
-      icon: Sparkles,
-      badge: 'Fast 1-Min Listing',
-      gradient: 'from-secondary/10 to-amber-500/10 text-secondary border-secondary/20',
-    },
-    {
-      number: '02',
-      title: 'Secure Student Escrow',
-      desc: 'Payment is safely locked in escrow when a buyer orders. 100% money-back protection for both sides.',
-      icon: ShieldCheck,
-      badge: 'Zero Fraud Risk',
-      gradient: 'from-success/10 to-teal-500/10 text-success border-success/20',
-    },
-    {
-      number: '03',
-      title: 'Doorstep Pickup & Payout',
-      desc: 'Our courier partner picks up from your address. Receive instant UPI or Bank transfer upon delivery.',
-      icon: Wallet,
-      badge: 'Instant UPI Payout',
-      gradient: 'from-brand/10 to-primary/10 text-brand dark:text-primary border-primary/20',
-    },
-  ];
-
   return (
     <section
       aria-label="Exchange Knowledge & Give Books a Second Life"
-      className="py-12 sm:py-16 lg:py-20 relative bg-gradient-to-br from-card via-background-subtle to-card border-y border-border/80 font-sans overflow-hidden transition-colors duration-200"
+      className="py-12 sm:py-16 lg:py-20 relative bg-[#FAF8F5] dark:bg-background border-b border-border/60 font-sans transition-colors duration-200 overflow-hidden"
     >
-      {/* Ambient background glows for big screen visual depth */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/3 left-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-secondary/10 dark:bg-secondary/10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-10 right-10 w-80 h-80 rounded-full bg-primary/10 dark:bg-primary/20 blur-3xl"
-      />
-
-      {/* FULL WIDTH FLUID CONTAINER FOR BIG SCREENS & EDGE-TO-EDGE MOBILE */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 transition-all">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 transition-all space-y-8">
+        
+        {/* Main 2-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* Left Illustration & Quote Box (5 Columns on Desktop) */}
-          <div className="lg:col-span-5 order-2 lg:order-1 relative">
+          {/* ================= LEFT SIDE: Photo with Arched Top & Benefits Row ================= */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Arched Photo Frame */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.97 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="relative p-6 sm:p-8 rounded-3xl bg-card border border-border/90 shadow-xl dark:shadow-2xl overflow-hidden text-center"
+              transition={{ duration: 0.4 }}
+              className="relative rounded-t-[140px] rounded-b-3xl overflow-hidden shadow-xl border border-border/50 bg-card aspect-[4/3.4] group"
             >
-              {/* Top Accent Gradient Ribbon */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand via-secondary to-accent" />
+              <Image
+                src="/images/book-exchange-students.jpg"
+                alt="Indian university students exchanging a pre-owned textbook on campus"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 45vw, 650px"
+                className="object-cover object-center group-hover:scale-103 transition-transform duration-500 ease-out"
+              />
 
-              <ExchangeKnowledgeIllustration className="w-full h-auto max-h-64 sm:max-h-72 mx-auto drop-shadow-lg" />
-
-              <div className="mt-4 pt-4 border-t border-border/60">
-                <blockquote className="font-serif italic text-primary dark:text-foreground text-xs sm:text-sm font-bold leading-relaxed">
-                  &quot;Education becomes affordable when knowledge is shared across student generations.&quot;
-                </blockquote>
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-secondary mt-1.5">
-                  BookFry Eco-Mission • Pan-India Campus Network
-                </p>
+              {/* Floating Leaf Badge at Bottom Left */}
+              <div className="absolute bottom-4 left-4 h-12 w-12 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-lg">
+                <Leaf className="h-6 w-6 stroke-[2.2]" />
               </div>
             </motion.div>
-          </div>
 
-          {/* Right Content Column: Headline, Mobile Stepper & CTAs (7 Columns on Desktop) */}
-          <div className="lg:col-span-7 space-y-6 sm:space-y-8 order-1 lg:order-2">
-            
-            <div className="space-y-2 text-center lg:text-left">
-              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-secondary/10 dark:bg-secondary/20 text-secondary border border-secondary/20 text-xs font-extrabold uppercase tracking-wider">
-                <RefreshCw className="h-3.5 w-3.5 animate-spin" style={{ animationDuration: '6s' }} />
-                <span>Peer-to-Peer Student Marketplace</span>
+            {/* Bottom Benefits 3-Column Strip below Photo */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3.5 rounded-2xl bg-card border border-border/60 shadow-xs font-sans">
+              <div className="flex items-center space-x-2.5">
+                <div className="h-9 w-9 rounded-full bg-[#EBF7EE] text-emerald-600 flex items-center justify-center shrink-0">
+                  <IndianRupee className="h-4.5 w-4.5 stroke-[2.5]" />
+                </div>
+                <div>
+                  <span className="text-xs font-black text-foreground block leading-tight">Save up to 70%</span>
+                  <span className="text-[10px] text-muted-foreground font-medium block">on textbooks</span>
+                </div>
               </div>
 
-              <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-extrabold text-primary dark:text-foreground tracking-tight leading-tight">
-                Exchange Knowledge &amp; Give Books a Second Life
+              <div className="flex items-center space-x-2.5 border-x border-border/50 px-2 sm:px-3">
+                <div className="h-9 w-9 rounded-full bg-[#FFF5EB] text-[#F26522] flex items-center justify-center shrink-0">
+                  <Coins className="h-4.5 w-4.5 stroke-[2.2]" />
+                </div>
+                <div>
+                  <span className="text-xs font-black text-foreground block leading-tight">Earn back up to 80%</span>
+                  <span className="text-[10px] text-muted-foreground font-medium block">of book value</span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2.5">
+                <div className="h-9 w-9 rounded-full bg-[#EEF4FF] text-blue-600 flex items-center justify-center shrink-0">
+                  <Globe className="h-4.5 w-4.5 stroke-[2.2]" />
+                </div>
+                <div>
+                  <span className="text-xs font-black text-foreground block leading-tight">Sustainable &</span>
+                  <span className="text-[10px] text-muted-foreground font-medium block">eco-friendly</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ================= RIGHT SIDE: Content, 3 Cards & CTAs ================= */}
+          <div className="lg:col-span-7 space-y-7">
+            
+            {/* Header Content */}
+            <div className="space-y-3">
+              {/* Eyebrow Pill */}
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#FFEFE6] dark:bg-[#F26522]/15 text-[#F26522] border border-[#FFD9C7] dark:border-[#F26522]/30 text-xs font-black uppercase tracking-wider">
+                <Users className="h-4 w-4" />
+                <span>PEER-TO-PEER STUDENT MARKETPLACE</span>
+              </div>
+
+              {/* Main Headline */}
+              <h2 className="font-sans text-3xl sm:text-4xl lg:text-[44px] font-black text-foreground tracking-tight leading-[1.15]">
+                Exchange <span className="font-extrabold">Knowledge</span>,<br />
+                Give <span className="font-extrabold">Books</span> a <span className="text-[#F26522] font-black">Second Life</span>
+                <span className="inline-block ml-2 text-emerald-500 text-2xl">🌿</span>
               </h2>
 
-              <p className="text-xs sm:text-base text-text-secondary leading-relaxed max-w-2xl font-medium">
-                Why let expensive semester textbooks sit idle on your shelf? Help junior students save money while earning back up to 80% of your original textbook cost.
+              {/* Supporting Copy */}
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl font-medium">
+                Why let expensive semester textbooks sit idle on your shelf? Help junior students save money while earning back{' '}
+                <span className="text-[#F26522] font-extrabold">up to 80%</span> of your original textbook cost.
               </p>
             </div>
 
-            {/* 3 Step Process Cards - Mobile Horizontal Touch Stepper & Desktop 3-Column Grid */}
-            <div className="flex sm:grid sm:grid-cols-3 gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
-              {steps.map((step, idx) => {
-                const IconComp = step.icon;
-                return (
-                  <motion.div
-                    key={step.number}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: idx * 0.1 }}
-                    className="w-[260px] sm:w-auto shrink-0 snap-start p-5 rounded-2xl border border-border/80 bg-card hover:shadow-lg transition-all duration-300 flex flex-col justify-between space-y-3 group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-2xl font-extrabold text-brand dark:text-primary">
-                        {step.number}
-                      </span>
-                      <div className={`p-2.5 rounded-xl border ${step.gradient} shrink-0 group-hover:scale-110 transition-transform`}>
-                        <IconComp className="h-5 w-5 stroke-[2.2]" />
-                      </div>
+            {/* 3 STEP PROCESS CARDS (Mobile Swipe / Desktop Grid with Curved Connectors) */}
+            <div className="relative pt-2">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
+                
+                {/* STEP 01 CARD */}
+                <div className="p-5 rounded-2xl bg-card border border-border/70 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow">
+                  <div className="space-y-3">
+                    <div className="h-11 w-11 rounded-2xl bg-[#FFF2EB] dark:bg-orange-950/40 text-[#F26522] flex items-center justify-center">
+                      <Camera className="h-5 w-5 stroke-[2.2]" />
                     </div>
 
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-serif text-sm sm:text-base font-extrabold text-text-primary group-hover:text-secondary transition-colors">
-                          {step.title}
-                        </h3>
-                      </div>
-                      <p className="text-xs text-text-secondary leading-relaxed font-medium">
-                        {step.desc}
+                      <span className="font-sans text-xs font-black text-[#F26522]">01</span>
+                      <h3 className="font-sans text-sm font-black text-foreground">List Your Book</h3>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                        Snap a photo, enter the ISBN, set your price, and list your book for thousands of campus buyers.
                       </p>
                     </div>
+                  </div>
 
-                    <div className="pt-2 border-t border-border/40">
-                      <span className="inline-block px-2.5 py-0.5 rounded-md bg-background-subtle border border-border text-[10px] font-extrabold text-text-muted">
-                        {step.badge}
-                      </span>
+                  <div>
+                    <span className="inline-block px-2.5 py-1 rounded-full bg-[#FFF2EB] dark:bg-orange-950/50 text-[#F26522] border border-[#FFD9C7] text-[10px] font-black uppercase tracking-wider">
+                      Fast 1-Min Listing
+                    </span>
+                  </div>
+                </div>
+
+                {/* STEP 02 CARD */}
+                <div className="p-5 rounded-2xl bg-card border border-border/70 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow">
+                  <div className="space-y-3">
+                    <div className="h-11 w-11 rounded-2xl bg-[#EBF7EE] dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
+                      <ShieldCheck className="h-5 w-5 stroke-[2.2]" />
                     </div>
-                  </motion.div>
-                );
-              })}
+
+                    <div className="space-y-1">
+                      <span className="font-sans text-xs font-black text-emerald-600">02</span>
+                      <h3 className="font-sans text-sm font-black text-foreground">Secure Escrow</h3>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                        We hold the payment safely in escrow until the buyer confirms delivery.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="inline-block px-2.5 py-1 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] font-black uppercase tracking-wider">
+                      Zero Fraud Risk
+                    </span>
+                  </div>
+                </div>
+
+                {/* STEP 03 CARD */}
+                <div className="p-5 rounded-2xl bg-card border border-border/70 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow">
+                  <div className="space-y-3">
+                    <div className="h-11 w-11 rounded-2xl bg-[#EEF4FF] dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
+                      <Truck className="h-5 w-5 stroke-[2.2]" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="font-sans text-xs font-black text-blue-600">03</span>
+                      <h3 className="font-sans text-sm font-black text-foreground">Doorstep Pickup &amp; Payout</h3>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                        Our courier partner picks up the book. You get instant payout via UPI or Bank transfer.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="inline-block px-2.5 py-1 rounded-full bg-[#EEF4FF] dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[10px] font-black uppercase tracking-wider">
+                      Instant Payout
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
             </div>
 
-            {/* Action Buttons Stack (Touch Optimized) */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-              <motion.div whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
-                <Link
-                  href="/sell"
-                  onClick={(e) => {
-                    if (!isAuthenticated) {
-                      e.preventDefault();
-                      useAuthModalStore.getState().openModal('login', '/sell');
-                    }
-                  }}
-                  className="w-full h-12 sm:h-11 px-8 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold rounded-2xl sm:rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2 active:scale-95"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  <span>List Your Book Now</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </motion.div>
+            {/* ACTION BUTTONS */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+              <Link
+                href="/sell"
+                onClick={(e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault();
+                    useAuthModalStore.getState().openModal('login', '/sell');
+                  }
+                }}
+                className="px-8 py-3.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md shadow-[#F26522]/20 flex items-center justify-center space-x-2.5 active:scale-95 text-center"
+              >
+                <BookOpen className="h-4.5 w-4.5" />
+                <span>LIST YOUR BOOK NOW</span>
+                <ArrowRight className="h-4.5 w-4.5" />
+              </Link>
 
-              <motion.div whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
-                <Link
-                  href="/books?condition=good"
-                  className="w-full h-12 sm:h-11 px-8 bg-background-subtle hover:bg-border/60 text-text-primary border border-border font-extrabold rounded-2xl sm:rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center space-x-2 text-center active:scale-95"
-                >
-                  <span>Browse Pre-Owned Books</span>
-                </Link>
-              </motion.div>
+              <Link
+                href="/books"
+                className="px-8 py-3.5 bg-card hover:bg-muted text-foreground border border-border/80 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 text-center active:scale-95 shadow-2xs"
+              >
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <span>BROWSE PRE-OWNED BOOKS</span>
+              </Link>
             </div>
 
           </div>
 
         </div>
+
       </div>
     </section>
   );

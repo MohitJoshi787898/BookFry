@@ -14,13 +14,13 @@ import { asyncHandler } from '../../utils/asyncHandler';
 const router = Router();
 const controller = new OrdersController();
 
-// Public invoice endpoint (accessible without authentication for bill download & sharing)
-router.get('/public/:id', asyncHandler(controller.getPublicInvoiceDetails));
-
 router.use(requireAuth);
 
+// Invoice endpoint (requires auth & ownership validation)
+router.get('/public/:id', asyncHandler(controller.getPublicInvoiceDetails));
+
 // Specific static sub-path routes (MUST come before /:id)
-router.get('/seller', requireRoles(['seller', 'admin', 'customer']), asyncHandler(controller.listSellerOrders));
+router.get('/seller', requireRoles(['seller', 'admin']), asyncHandler(controller.listSellerOrders));
 router.get(
   '/admin/all',
   requireRoles(['admin']),
@@ -40,7 +40,7 @@ router.post(
 // Order status mutation & returns resolution
 router.patch(
   '/:id/status',
-  requireRoles(['seller', 'admin', 'customer']),
+  requireRoles(['seller', 'admin']),
   validate({ body: updateOrderStatusSchema }),
   asyncHandler(controller.updateStatus)
 );

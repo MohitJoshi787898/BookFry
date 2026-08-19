@@ -65,6 +65,10 @@ export class OrdersService {
 
       const catalogDoc = listing.catalogId as any;
 
+      if (listing.sellerId.toString() === buyerId) {
+        throw new ValidationError(`You cannot purchase your own listed book.`);
+      }
+
       if (listing.stock < item.quantity) {
         throw new ValidationError(
           `Insufficient stock for "${catalogDoc?.title || 'this book'}". Only ${listing.stock} left.`
@@ -197,11 +201,22 @@ export class OrdersService {
     return this.mapToDTO(order);
   }
 
-  async getPublicInvoice(idOrOrderNumber: string): Promise<Order> {
+  async getPublicInvoice(idOrOrderNumber: string, userId?: string, roles: string[] = []): Promise<Order> {
     const order = await this.ordersRepository.findByIdOrOrderNumber(idOrOrderNumber);
     if (!order) {
       throw new NotFoundError('Tax Invoice not found');
     }
+
+    if (userId) {
+      const isAdmin = roles.includes('admin');
+      const isBuyer = order.buyerId.toString() === userId;
+      const isSellerOfItem = order.items.some((item) => item.sellerId.toString() === userId);
+
+      if (!isAdmin && !isBuyer && !isSellerOfItem) {
+        throw new UnauthorizedError('Not authorized to view this tax invoice');
+      }
+    }
+
     return this.mapToDTO(order);
   }
 

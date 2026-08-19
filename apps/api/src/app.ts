@@ -11,16 +11,18 @@ const app = express();
 
 app.use(helmet());
 
-// app.use(
-//   cors({
-//     origin: env.FRONTEND_URL,
-//     credentials: true,
-//   })
-// );
+const allowedOrigins = [env.FRONTEND_URL, 'http://localhost:3000'].filter(Boolean);
 
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl) or if origin matches allowedOrigins
+      if (!origin || allowedOrigins.includes(origin) || env.NODE_ENV === 'test') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   }),
 );

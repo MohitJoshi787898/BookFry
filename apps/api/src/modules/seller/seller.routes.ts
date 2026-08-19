@@ -8,7 +8,7 @@ const router = Router();
 const controller = new SellerController();
 
 router.use(requireAuth);
-router.use(requireRoles(['seller', 'admin', 'customer']));
+router.use(requireRoles(['seller', 'admin']));
 
 router.get('/dashboard', asyncHandler(controller.getDashboard));
 router.get('/listings', asyncHandler(controller.getListings));
