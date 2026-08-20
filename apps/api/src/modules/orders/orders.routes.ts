@@ -29,6 +29,7 @@ router.get(
 
 // Buyer routes
 router.post('/', validate({ body: checkoutSchema }), asyncHandler(controller.create));
+router.post('/checkout-mixed', asyncHandler(controller.createMixedCheckout));
 router.get('/', asyncHandler(controller.listBuyerOrders));
 router.get('/:id', asyncHandler(controller.getDetails));
 router.post(

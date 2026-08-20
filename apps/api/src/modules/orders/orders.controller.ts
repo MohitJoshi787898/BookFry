@@ -17,6 +17,18 @@ export class OrdersController {
     res.status(201).json(ApiResponse.success(order));
   };
 
+  createMixedCheckout = async (req: Request, res: Response): Promise<void> => {
+    const buyerId = req.user!.id;
+    const { shippingAddress, couponCode, buyerContact } = req.body;
+    const result = await this.ordersService.createMixedCheckout(
+      buyerId,
+      shippingAddress,
+      couponCode,
+      buyerContact
+    );
+    res.status(201).json(ApiResponse.success(result));
+  };
+
   getDetails = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.id;
     const roles = req.user!.roles;

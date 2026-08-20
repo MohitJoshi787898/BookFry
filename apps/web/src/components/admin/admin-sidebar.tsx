@@ -52,6 +52,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { name: 'Book Listings', href: '/admin/listings', icon: BookOpen, badge: 'Moderation' },
       { name: 'Orders & Refunds', href: '/admin/orders', icon: ShoppingBag },
+      { name: 'Used Book Requests', href: '/admin/requests', icon: MessageSquare, badge: 'P2P' },
       { name: 'Categories', href: '/admin/categories', icon: Layers },
       { name: 'Promotions & Coupons', href: '/admin/promotions', icon: Tag },
       { name: 'Book Reviews', href: '/admin/reviews', icon: Star },

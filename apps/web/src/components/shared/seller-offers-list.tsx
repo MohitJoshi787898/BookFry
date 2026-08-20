@@ -96,6 +96,7 @@ export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListP
           const isAdding = isAddingListingId === offer.id;
           const conditionLabel = conditionLabels[offer.condition] || 'Good';
           const conditionBadge = conditionBadges[offer.condition] || conditionBadges.good;
+          const isNewBook = offer.condition === 'new';
 
           return (
             <div key={offer.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -109,10 +110,13 @@ export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListP
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${conditionBadge}`}>
                     {conditionLabel}
                   </span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-muted border border-border text-text-secondary">
+                    {isNewBook ? '⚡ Online Payment' : '🤝 Direct Contact'}
+                  </span>
                 </div>
                 <p className="text-xs text-text-muted flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  <span>Ships via BookFry Express Doorstep Pickup</span>
+                  <span>{isNewBook ? 'Ships via BookFry Express Doorstep Pickup' : 'Seller Direct Contact & Pickup Option'}</span>
                 </p>
               </div>
 
@@ -136,7 +140,9 @@ export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListP
                   className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all shadow-xs ${
                     isAdded
                       ? 'bg-success text-white'
-                      : 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'
+                      : isNewBook
+                      ? 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'
+                      : 'bg-brand hover:bg-brand/90 text-white'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {isAdded ? (
@@ -147,7 +153,7 @@ export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListP
                   ) : (
                     <>
                       <ShoppingBag className="h-3.5 w-3.5" />
-                      <span>Buy from Seller</span>
+                      <span>{isNewBook ? 'Buy New Offer' : 'Select Used Offer'}</span>
                     </>
                   )}
                 </button>

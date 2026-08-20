@@ -101,6 +101,51 @@ export interface ModerationHistoryItem {
   timestamp: string;
 }
 
+export type UsedBookRequestStatus =
+  | 'requested'
+  | 'seller_notified'
+  | 'seller_contacted_buyer'
+  | 'accepted'
+  | 'declined'
+  | 'in_discussion'
+  | 'completed'
+  | 'cancelled'
+  | 'expired';
+
+export interface UsedBookRequestTimeline {
+  status: UsedBookRequestStatus;
+  note?: string;
+  timestamp: string;
+}
+
+export interface UsedBookRequest {
+  id: string;
+  requestNumber: string;
+  buyerId: string;
+  sellerId: string;
+  listingId: string;
+  catalogId: string;
+  title: string;
+  price: number;
+  condition: BookCondition;
+  buyerContact: {
+    name: string;
+    email: string;
+    phone?: string;
+    whatsappPhone?: string;
+    note?: string;
+  };
+  sellerName?: string;
+  sellerCity?: string;
+  sellerState?: string;
+  status: UsedBookRequestStatus;
+  timeline: UsedBookRequestTimeline[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ConditionFilterType = 'all' | 'new' | 'used';
+
 export interface Book {
   id: string;
   title: string;
@@ -115,6 +160,11 @@ export interface Book {
   images: BookImage[];
   stock: number;
   sellerId: string;
+  sellerName?: string;
+  sellerCity?: string;
+  sellerState?: string;
+  sellerPincode?: string;
+  distanceKm?: number;
   status: BookStatus;
   tags: string[];
   language: string;
@@ -163,6 +213,11 @@ export interface BookListing {
   id: string;
   catalogId: string;
   sellerId: string;
+  sellerName?: string;
+  sellerCity?: string;
+  sellerState?: string;
+  sellerPincode?: string;
+  distanceKm?: number;
   /** Populated when fetching for buyer view */
   catalog?: BookCatalog;
   condition: BookCondition;

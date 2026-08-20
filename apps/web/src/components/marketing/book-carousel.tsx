@@ -17,6 +17,7 @@ interface BookCarouselProps {
   queryParam?: string;
   endpoint?: string;
   customBooks?: Book[];
+  initialBooks?: Book[];
   filterFn?: (data: Record<string, unknown> | Book[]) => Book[];
   tintBackground?: boolean;
 }
@@ -29,14 +30,17 @@ export function BookCarousel({
   queryParam = '',
   endpoint,
   customBooks,
+  initialBooks,
   filterFn,
   tintBackground = false,
 }: BookCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Independent TanStack Query server data fetch
+  const effectiveInitialData = customBooks || initialBooks;
+
+  // TanStack Query with SSR initialData support
   const {
-    data: fetchedBooks = [],
+    data: fetchedBooks = effectiveInitialData || [],
     isLoading,
     isError,
   } = useQuery<Book[]>({
@@ -48,6 +52,7 @@ export function BookCarousel({
       if (Array.isArray(res)) return res as unknown as Book[];
       return (res.books || res.popular || res.trending || res.personalized || []) as unknown as Book[];
     },
+    initialData: effectiveInitialData,
     enabled: !customBooks,
     staleTime: 5 * 60 * 1000,
   });

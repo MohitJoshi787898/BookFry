@@ -222,7 +222,10 @@ export default function SellerDashboardPage() {
             My Listings ({listings.length})
           </Link>
           <Link href="/seller/orders" className="px-3.5 py-2 text-text-secondary hover:bg-slate-50 hover:text-text-primary rounded-lg shrink-0 transition-colors">
-            Orders (12)
+            Orders
+          </Link>
+          <Link href="/seller/requests" className="px-3.5 py-2 bg-brand/10 text-brand rounded-lg shrink-0 font-bold">
+            Used Buyer Requests 🤝
           </Link>
           <Link href="/seller/earnings" className="px-3.5 py-2 text-text-secondary hover:bg-slate-50 hover:text-text-primary rounded-lg shrink-0 transition-colors">
             Earnings Ledger
@@ -251,9 +254,13 @@ export default function SellerDashboardPage() {
                 <span className="flex items-center gap-2.5"><BookOpen className="h-4 w-4" /> My Listings</span>
                 <span className="bg-slate-100 text-text-muted text-[10px] px-1.5 py-0.5 rounded font-black">{listings.length}</span>
               </Link>
+              <Link href="/seller/requests" className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 hover:text-text-primary rounded-md transition-colors text-brand bg-brand/5">
+                <span className="flex items-center gap-2.5"><ShoppingBag className="h-4 w-4" /> Used Buyer Requests</span>
+                <span className="bg-brand text-white text-[9px] px-1.5 py-0.5 rounded font-black uppercase">P2P</span>
+              </Link>
               <Link href="/seller/orders" className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 hover:text-text-primary rounded-md transition-colors">
-                <span className="flex items-center gap-2.5"><ShoppingBag className="h-4 w-4" /> Orders</span>
-                <span className="bg-brand/10 text-brand text-[10px] px-1.5 py-0.5 rounded font-black">12</span>
+                <span className="flex items-center gap-2.5"><ShoppingBag className="h-4 w-4" /> Paid Orders</span>
+                <span className="bg-slate-100 text-text-muted text-[10px] px-1.5 py-0.5 rounded font-black">Online</span>
               </Link>
               <Link href="/seller/earnings" className="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 hover:text-text-primary rounded-md transition-colors">
                 <DollarSign className="h-4 w-4" /> Earnings Ledger

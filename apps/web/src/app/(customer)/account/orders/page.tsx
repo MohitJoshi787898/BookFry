@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -72,6 +73,20 @@ export default function CustomerOrdersPage() {
       <main className="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Banner Header */}
         <OrdersHeroHeader orders={orders} />
+
+        {/* Used Book Requests Banner Link */}
+        <div className="my-4 p-4 rounded-2xl bg-brand/10 border border-brand/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-sans">
+          <div>
+            <h3 className="text-sm font-bold text-text-primary">Looking for your Used Book Requests?</h3>
+            <p className="text-xs text-text-secondary">Requests sent directly to sellers for second-hand books are managed on a dedicated page.</p>
+          </div>
+          <Link
+            href="/account/requests"
+            className="px-4 py-2 bg-brand text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-brand-hover transition-colors shrink-0 shadow-xs"
+          >
+            View Used Requests
+          </Link>
+        </div>
 
         {/* 7-Day Return Policy Banner */}
         <OrdersPolicyBanner />

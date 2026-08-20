@@ -52,9 +52,11 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
                 )}`;
               }}
             />
-            <div className="absolute top-1.5 left-1.5">
-              <span className="px-2 py-0.5 rounded-full bg-background/90 backdrop-blur-md border border-border/60 text-[9px] font-extrabold uppercase tracking-wider text-secondary shadow-2xs">
-                {condition.replace('_', ' ')}
+            <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
+              <span className={`px-2 py-0.5 rounded-full bg-background/90 backdrop-blur-md border text-[9px] font-extrabold uppercase tracking-wider shadow-2xs ${
+                condition === 'new' ? 'border-success/60 text-success' : 'border-brand/60 text-brand'
+              }`}>
+                {condition === 'new' ? 'New • Pay Online' : 'Used • Direct Contact'}
               </span>
             </div>
           </div>

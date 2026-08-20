@@ -16,6 +16,9 @@ export interface IBookListingDocument extends Document {
   discountPrice?: number;
   stock: number;
   status: BookStatus;
+  city?: string;
+  state?: string;
+  pincode?: string;
   rejectionReason?: string;
   moderationHistory: IModerationHistoryItem[];
   createdAt: Date;
@@ -44,6 +47,9 @@ const BookListingSchema = new Schema<IBookListingDocument>(
     price: { type: Number, required: true, min: 0 },
     discountPrice: { type: Number, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 1 },
+    city: { type: String, trim: true },
+    state: { type: String, trim: true },
+    pincode: { type: String, trim: true },
     status: {
       type: String,
       enum: ['draft', 'pending', 'active', 'rejected', 'archived', 'sold', 'removed'],

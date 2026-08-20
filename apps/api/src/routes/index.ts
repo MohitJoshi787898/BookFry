@@ -15,8 +15,14 @@ import usersRoutes from '../modules/users/users.routes';
 import eventsRoutes from '../modules/events/events.routes';
 import recommendationsRoutes from '../modules/recommendations/recommendations.routes';
 import couponsRoutes from '../modules/coupons/coupons.routes';
+import usedBookRequestsRoutes from '../modules/used-book-requests/used-book-requests.routes';
+
+import { publicLandingRouter, adminLandingRouter } from '../modules/landing/landing.routes';
 
 const router = Router();
+
+router.use('/', publicLandingRouter);
+router.use('/admin/landing', adminLandingRouter);
 
 router.use('/auth', authRoutes);
 router.use('/categories', categoriesRoutes);
@@ -34,5 +40,6 @@ router.use('/users', usersRoutes);
 router.use('/events', eventsRoutes);
 router.use('/recommendations', recommendationsRoutes);
 router.use('/coupons', couponsRoutes);
+router.use('/used-book-requests', usedBookRequestsRoutes);
 
 export default router;

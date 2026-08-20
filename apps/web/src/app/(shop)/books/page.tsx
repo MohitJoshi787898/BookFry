@@ -38,6 +38,8 @@ interface FilterPanelProps {
   categories: Category[];
   category: string;
   setCategory: (v: string) => void;
+  conditionType: 'all' | 'new' | 'used';
+  setConditionType: (v: 'all' | 'new' | 'used') => void;
   conditions: string[];
   toggleCondition: (v: string) => void;
   minPrice: string;
@@ -52,12 +54,12 @@ interface FilterPanelProps {
 }
 
 function FilterPanel({
-  categories, category, setCategory, conditions, toggleCondition,
+  categories, category, setCategory, conditionType, setConditionType, conditions, toggleCondition,
   minPrice, setMinPrice, maxPrice, setMaxPrice, languages, toggleLanguage,
   handleReset, onApply, setPage,
 }: FilterPanelProps) {
   const [expanded, setExpanded] = useState({
-    category: true, condition: true, price: true, language: false,
+    category: true, conditionType: true, condition: true, price: true, language: false,
   });
   const toggle = (key: keyof typeof expanded) =>
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -75,8 +77,41 @@ function FilterPanel({
 
   return (
     <div className="space-y-1 font-sans">
-      {/* Category */}
+      {/* Book Type (New vs Used) */}
       <div className="rounded-2xl overflow-hidden border border-border/80 bg-card">
+        <button
+          onClick={() => toggle('conditionType')}
+          className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-text-primary uppercase tracking-wider hover:bg-background-subtle transition-colors"
+        >
+          <span>Book Type</span>
+          {expanded.conditionType ? <ChevronUp className="h-3.5 w-3.5 text-secondary" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
+        </button>
+        {expanded.conditionType && (
+          <div className="px-3 pb-3 pt-1 border-t border-border/50 flex flex-col gap-1.5">
+            {[
+              { id: 'all', label: 'All Books (New & Used)' },
+              { id: 'new', label: 'New Books Only (Online Payment)' },
+              { id: 'used', label: 'Used Books Only (Direct Contact)' },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => { setConditionType(t.id as 'all' | 'new' | 'used'); setPage(1); }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-between ${
+                  conditionType === t.id
+                    ? 'bg-secondary text-secondary-foreground shadow-xs'
+                    : 'text-text-secondary hover:bg-background-subtle'
+                }`}
+              >
+                <span>{t.label}</span>
+                {conditionType === t.id && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Category */}
+      <div className="rounded-2xl overflow-hidden border border-border/80 bg-card mt-2">
         <button
           onClick={() => toggle('category')}
           className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-text-primary uppercase tracking-wider hover:bg-background-subtle transition-colors"
@@ -263,9 +298,11 @@ function BooksCatalog() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category');
   const searchParam = searchParams.get('search');
+  const conditionTypeParam = searchParams.get('conditionType');
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [conditionType, setConditionType] = useState<'all' | 'new' | 'used'>('all');
   const [conditions, setConditions] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState('0');
@@ -284,25 +321,29 @@ function BooksCatalog() {
 
   React.useEffect(() => {
     if (searchParam !== null) setSearch(searchParam);
+    if (conditionTypeParam === 'new' || conditionTypeParam === 'used' || conditionTypeParam === 'all') {
+      setConditionType(conditionTypeParam);
+    }
     if (categoryParam !== null && categories.length > 0) {
       const matchedCat = categories.find(
         (c) => c.slug === categoryParam || c.id === categoryParam
       );
       if (matchedCat) setCategory(matchedCat.id);
     }
-  }, [searchParam, categoryParam, categories]);
+  }, [searchParam, categoryParam, conditionTypeParam, categories]);
 
   const {
     data: booksData = { books: [], total: 0 },
     isLoading, isError, refetch,
   } = useQuery<{ books: Book[]; total: number }>({
-    queryKey: ['books', page, search, category, conditions.join(','), minPrice, maxPrice, sortBy, sortOrder],
+    queryKey: ['books', page, search, category, conditionType, conditions.join(','), minPrice, maxPrice, sortBy, sortOrder],
     queryFn: () =>
       apiClient('/books', {
         params: {
           page: String(page), limit: '18',
           ...(search && { search }),
           ...(category && { category }),
+          ...(conditionType !== 'all' && { conditionType }),
           ...(conditions.length > 0 && { condition: conditions.join(',') }),
           ...(minPrice && { minPrice }),
           ...(maxPrice && { maxPrice }),
@@ -408,6 +449,7 @@ function BooksCatalog() {
           <aside className="hidden lg:block w-64 shrink-0 self-start sticky top-20 space-y-2">
             <FilterPanel
               categories={categories} category={category} setCategory={setCategory}
+              conditionType={conditionType} setConditionType={setConditionType}
               conditions={conditions} toggleCondition={toggleCondition}
               minPrice={minPrice} setMinPrice={setMinPrice}
               maxPrice={maxPrice} setMaxPrice={setMaxPrice}
@@ -630,6 +672,7 @@ function BooksCatalog() {
               <div className="px-5 py-4">
                 <FilterPanel
                   categories={categories} category={category} setCategory={setCategory}
+                  conditionType={conditionType} setConditionType={setConditionType}
                   conditions={conditions} toggleCondition={toggleCondition}
                   minPrice={minPrice} setMinPrice={setMinPrice}
                   maxPrice={maxPrice} setMaxPrice={setMaxPrice}

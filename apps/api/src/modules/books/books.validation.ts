@@ -28,6 +28,7 @@ export const queryBookSchema = z.object({
   limit: z.coerce.number().min(1).max(100).default(20),
   search: z.string().optional(),
   category: z.string().optional(),
+  conditionType: z.enum(['all', 'new', 'used']).optional(),
   condition: z.string().optional(),
   minPrice: z.coerce.number().optional(),
   maxPrice: z.coerce.number().optional(),

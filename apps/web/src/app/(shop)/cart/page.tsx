@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
 import { useCartStore } from '@/stores/cart.store';
 import { apiClient } from '@/lib/api-client';
-import { User, Address, Book, Order } from '@bookmarket/types';
+import { User, Address, Book, Order, UsedBookRequest } from '@bookmarket/types';
 import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { Button } from '@/components/ui/button';
@@ -102,7 +102,11 @@ export default function CartPage() {
 
   const checkoutMutation = useMutation({
     mutationFn: async (address: Address) => {
-      const order = await apiClient<Order>('/orders', {
+      const res = await apiClient<{
+        usedRequests: UsedBookRequest[];
+        newOrder: Order | null;
+        requiresPayment: boolean;
+      }>('/orders/checkout-mixed', {
         method: 'POST',
         body: JSON.stringify({
           shippingAddress: {
@@ -116,84 +120,69 @@ export default function CartPage() {
         }),
       });
 
-      const paymentIntent = await apiClient<{
-        id: string;
-        clientSecret: string;
-        keyId?: string;
-        amount?: number;
-        currency?: string;
-      }>('/payments/create-intent', { method: 'POST', body: JSON.stringify({ orderId: order.id }) });
+      if (res.requiresPayment && res.newOrder) {
+        const order = res.newOrder;
+        const paymentIntent = await apiClient<{
+          id: string;
+          clientSecret: string;
+          keyId?: string;
+          amount?: number;
+          currency?: string;
+        }>('/payments/create-intent', { method: 'POST', body: JSON.stringify({ orderId: order.id }) });
 
-      if (paymentIntent?.keyId) {
-        const isLoaded = await loadRazorpayScript();
-        if (!isLoaded) throw new Error('Razorpay SDK failed to load.');
+        if (paymentIntent?.keyId) {
+          const isLoaded = await loadRazorpayScript();
+          if (!isLoaded) throw new Error('Razorpay SDK failed to load.');
 
-        return new Promise<{ order: Order }>((resolve, reject) => {
-          const options = {
-            key: paymentIntent.keyId,
-            amount: paymentIntent.amount,
-            currency: 'INR',
-            name: "BookFry • India's Book Marketplace",
-            description: `Payment for Order #${order.orderNumber}`,
-            image: '/logo.jpeg',
-            order_id: paymentIntent.id,
-            handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-              try {
-                await apiClient('/payments/verify', { method: 'POST', body: JSON.stringify({ orderId: order.id, ...response }) });
-                resolve({ order });
-              } catch (e) {
-                reject(e);
-              }
-            },
-            prefill: {
-              name: user?.name || '',
-              email: user?.email || '',
-            },
-            notes: {
-              orderId: order.id,
-              orderNumber: order.orderNumber,
-            },
-            theme: { color: '#F26522' },
-            config: {
-              display: {
-                blocks: {
-                  upi: {
-                    name: 'Pay via UPI (GPay, PhonePe, Paytm, BHIM)',
-                    instruments: [{ method: 'upi' }],
-                  },
-                  other: {
-                    name: 'Cards, Netbanking & Wallets',
-                    instruments: [
-                      { method: 'card' },
-                      { method: 'netbanking' },
-                      { method: 'wallet' },
-                    ],
-                  },
-                },
-                sequence: ['block.upi', 'block.other'],
-                preferences: {
-                  show_default_blocks: true,
-                },
+          return new Promise<{ order: Order; usedCount: number }>((resolve, reject) => {
+            const options = {
+              key: paymentIntent.keyId,
+              amount: paymentIntent.amount,
+              currency: 'INR',
+              name: "BookFry • India's Book Marketplace",
+              description: `Payment for New Book Order #${order.orderNumber}`,
+              image: '/logo.jpeg',
+              order_id: paymentIntent.id,
+              handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+                try {
+                  await apiClient('/payments/verify', { method: 'POST', body: JSON.stringify({ orderId: order.id, ...response }) });
+                  resolve({ order, usedCount: res.usedRequests.length });
+                } catch (e) {
+                  reject(e);
+                }
               },
-            },
-            modal: { ondismiss: () => reject(new Error('Payment cancelled by user.')) },
-          };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const rzp = new (window as any).Razorpay(options);
-          rzp.open();
-        });
-      } else {
-        await apiClient('/payments/verify', {
-          method: 'POST',
-          body: JSON.stringify({ orderId: order.id, razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 10)}` }),
-        });
-        return { order };
+              prefill: {
+                name: user?.name || '',
+                email: user?.email || '',
+              },
+              notes: {
+                orderId: order.id,
+                orderNumber: order.orderNumber,
+              },
+              theme: { color: '#F26522' },
+              modal: { ondismiss: () => reject(new Error('Payment cancelled by user.')) },
+            };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+          });
+        } else {
+          await apiClient('/payments/verify', {
+            method: 'POST',
+            body: JSON.stringify({ orderId: order.id, razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 10)}` }),
+          });
+          return { order, usedCount: res.usedRequests.length };
+        }
       }
+
+      return { order: null, usedCount: res.usedRequests.length };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       useCartStore.getState().fetchCart(true);
-      setPlacedOrder(data.order);
+      if (data.order) {
+        setPlacedOrder(data.order);
+      }
       setIsCheckoutModalOpen(true);
     },
     onError: (err: unknown) => {

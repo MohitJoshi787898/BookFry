@@ -20,9 +20,63 @@ import { useAuthModalStore } from '@/stores/auth-modal.store';
 import { StatItem } from '../shared/stat-item';
 import { SearchPillChip } from '../shared/search-pill-chip';
 
+export interface HeroSectionProps {
+  eyebrow?: string;
+  title?: string;
+  highlightText?: string;
+  subtitle?: string;
+  primaryCtaLabel?: string;
+  primaryCtaUrl?: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaUrl?: string;
+  image?: string;
+  escrowBadge?: string;
+  searchHeading?: string;
+  searchSubheading?: string;
+  searchPlaceholder?: string;
+  searchButtonLabel?: string;
+  discountBadge?: string;
+  popularSearchesLabel?: string;
+  quickTags?: { label: string; href: string }[];
+  stats?: { value: string; label: string }[];
+}
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-export function HeroSection() {
+const defaultQuickTags = [
+  { label: 'Engineering', href: '/books?category=engineering' },
+  { label: 'NEET Books', href: '/books?search=NEET' },
+  { label: 'JEE Main', href: '/books?search=JEE' },
+  { label: 'Class 12', href: '/books?search=Class+12' },
+  { label: 'CA Books', href: '/books?search=CA' },
+  { label: 'UPSC', href: '/books?search=UPSC' },
+  { label: 'Novels', href: '/books?category=fiction' },
+  { label: 'B.Sc. Books', href: '/books?search=B.Sc' },
+];
+
+export function HeroSection({
+  eyebrow = 'क्योंकि.. पढ़ाई रुकनी नहीं चाहिए',
+  title = 'Books you love. Deals you\'ll',
+  highlightText = 'adore.',
+  subtitle = 'Buy, sell, and discover verified new & used textbooks at unbeatable prices across India. Read more, spend less, and make every page count.',
+  primaryCtaLabel = 'Buy Books',
+  primaryCtaUrl = '/books',
+  secondaryCtaLabel = 'Sell Your Books',
+  secondaryCtaUrl = '/sell',
+  image = '/fox_reading_178491148655455.png',
+  escrowBadge = 'Direct Peer-to-Peer Campus Escrow',
+  searchHeading = 'Search Millions of Verified Textbooks & Novels',
+  searchSubheading = 'Instant Book Finder',
+  searchPlaceholder = 'Search Engineering, NEET, UPSC, Novels, or ISBN...',
+  searchButtonLabel = 'Search Catalog',
+  discountBadge = 'Up to 80% Off Retail Prices',
+  popularSearchesLabel = 'Popular Searches:',
+  quickTags = defaultQuickTags,
+  stats = [
+    { value: '50,000+', label: 'Books listed' },
+    { value: '₹1.2Cr+', label: 'Student savings' },
+    { value: '99.4%', label: 'Quality verified' },
+  ],
+}: HeroSectionProps = {}) {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [query, setQuery] = useState('');
@@ -34,17 +88,6 @@ export function HeroSection() {
       router.push(`/books?search=${encodeURIComponent(query.trim())}`);
     }
   };
-
-  const quickTags = [
-    { label: 'Engineering', href: '/books?category=engineering' },
-    { label: 'NEET Books', href: '/books?search=NEET' },
-    { label: 'JEE Main', href: '/books?search=JEE' },
-    { label: 'Class 12', href: '/books?search=Class+12' },
-    { label: 'CA Books', href: '/books?search=CA' },
-    { label: 'UPSC', href: '/books?search=UPSC' },
-    { label: 'Novels', href: '/books?category=fiction' },
-    { label: 'B.Sc. Books', href: '/books?search=B.Sc' },
-  ];
 
   const reveal = (delay = 0) =>
     prefersReducedMotion
@@ -78,17 +121,15 @@ export function HeroSection() {
               {/* Brand Motto Badge */}
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 dark:bg-secondary/20 px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider text-secondary shadow-xs">
                 <BookOpen className="h-4 w-4" aria-hidden="true" />
-                <span>क्योंकि.. पढ़ाई रुकनी नहीं चाहिए</span>
+                <span>{eyebrow}</span>
                 <Sparkles className="h-4 w-4 animate-pulse text-amber-500" />
               </div>
 
               {/* Main Headline */}
               <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] tracking-tight text-primary dark:text-foreground">
-                Books you love.
-                <br />
-                Deals you&apos;ll{' '}
+                {title}{' '}
                 <span className="relative inline-block text-secondary">
-                  adore.
+                  {highlightText}
                   <svg
                     className="absolute -bottom-1.5 left-0 w-full text-secondary/40"
                     height="10"
@@ -112,7 +153,7 @@ export function HeroSection() {
               {...reveal(0.08)}
               className="mx-auto lg:mx-0 max-w-xl text-xs sm:text-base font-medium leading-relaxed text-text-secondary"
             >
-              Buy, sell, and discover verified new &amp; used textbooks at unbeatable prices across India. Read more, spend less, and make every page count.
+              {subtitle}
             </motion.p>
 
             {/* Action Buttons Stack (Touch-First App Ergonomics) */}
@@ -122,26 +163,26 @@ export function HeroSection() {
             >
               <motion.div whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
                 <Link
-                  href="/books"
+                  href={primaryCtaUrl}
                   className="w-full h-12 sm:h-12 px-8 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold rounded-2xl sm:rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2 active:scale-95"
                 >
-                  <span>Buy Books</span>
+                  <span>{primaryCtaLabel}</span>
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </motion.div>
 
               <motion.div whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
                 <Link
-                  href="/sell"
+                  href={secondaryCtaUrl}
                   onClick={(e) => {
-                    if (!isAuthenticated) {
+                    if (!isAuthenticated && secondaryCtaUrl === '/sell') {
                       e.preventDefault();
                       useAuthModalStore.getState().openModal('login', '/sell');
                     }
                   }}
                   className="w-full h-12 sm:h-12 px-8 bg-background-subtle hover:bg-border/60 text-text-primary border border-border font-extrabold rounded-2xl sm:rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center space-x-2 text-center active:scale-95"
                 >
-                  <span>Sell Your Books</span>
+                  <span>{secondaryCtaLabel}</span>
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </motion.div>
@@ -152,15 +193,11 @@ export function HeroSection() {
               {...reveal(0.24)}
               className="grid grid-cols-3 gap-2 sm:gap-3 border-t border-border/80 pt-5 mt-5"
             >
-              <div className="hover-page-turn rounded-2xl bg-card border border-border/60 p-3 shadow-2xs">
-                <StatItem icon={BookOpen} value="50,000+" label="Books listed" />
-              </div>
-              <div className="hover-page-turn rounded-2xl bg-card border border-border/60 p-3 shadow-2xs">
-                <StatItem icon={Tag} value="₹1.2Cr+" label="Student savings" />
-              </div>
-              <div className="hover-page-turn rounded-2xl bg-card border border-border/60 p-3 shadow-2xs">
-                <StatItem icon={ShieldCheck} value="99.4%" label="Quality verified" />
-              </div>
+              {stats.map((st: { value: string; label: string }, idx: number) => (
+                <div key={idx} className="hover-page-turn rounded-2xl bg-card border border-border/60 p-3 shadow-2xs">
+                  <StatItem icon={idx === 0 ? BookOpen : idx === 1 ? Tag : ShieldCheck} value={st.value} label={st.label} />
+                </div>
+              ))}
             </motion.div>
           </div>
 
@@ -178,15 +215,15 @@ export function HeroSection() {
             {/* Prominent Large Mascot Image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/fox_reading_178491148655455.png"
-              alt="BookFry mascot — a fox reading a book"
+              src={image}
+              alt="BookFry mascot"
               className="relative w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[460px] select-none object-contain drop-shadow-2xl transition-transform hover:scale-105 duration-300"
             />
 
             {/* Floating Escrow Chip */}
             <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card/90 border border-border backdrop-blur-md shadow-md text-xs font-extrabold text-text-primary">
               <Zap className="h-4 w-4 text-secondary animate-bounce" />
-              <span>Direct Peer-to-Peer Campus Escrow</span>
+              <span>{escrowBadge}</span>
             </div>
           </motion.div>
 
@@ -201,16 +238,16 @@ export function HeroSection() {
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-secondary uppercase tracking-wider">
                 <Flame className="h-4 w-4 text-secondary fill-secondary" />
-                <span>Instant Book Finder</span>
+                <span>{searchSubheading}</span>
               </div>
               <h2 className="text-base sm:text-xl font-serif font-extrabold text-text-primary">
-                Search Millions of Verified Textbooks &amp; Novels
+                {searchHeading}
               </h2>
             </div>
 
             <div className="inline-flex items-center gap-1 bg-secondary/10 text-secondary border border-secondary/20 px-3 py-1 rounded-full text-xs font-bold shrink-0">
               <Bookmark className="h-3.5 w-3.5 fill-secondary" />
-              <span>Up to 80% Off Retail Prices</span>
+              <span>{discountBadge}</span>
             </div>
           </div>
 
@@ -221,12 +258,12 @@ export function HeroSection() {
                 aria-hidden="true"
               />
               <label htmlFor="hero-search-input" className="sr-only">
-                Search by title, author, or ISBN
+                {searchPlaceholder}
               </label>
               <input
                 id="hero-search-input"
                 type="text"
-                placeholder="Search Engineering, NEET, UPSC, Novels, or ISBN..."
+                placeholder={searchPlaceholder}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="focus-ring w-full h-12 rounded-2xl border border-border bg-background py-3 pl-11 pr-4 text-xs sm:text-sm font-bold text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-brand"
@@ -237,14 +274,14 @@ export function HeroSection() {
               className="h-12 px-8 rounded-2xl bg-secondary hover:bg-secondary/90 text-secondary-foreground text-xs font-extrabold uppercase tracking-wider shadow-md transition-all flex items-center justify-center space-x-2 active:scale-95 shrink-0"
             >
               <Search className="h-4 w-4" />
-              <span>Search Catalog</span>
+              <span>{searchButtonLabel}</span>
             </button>
           </form>
 
           {/* Quick Filter Tags (Horizontal Scrollable Mobile Bar) */}
           <div className="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-muted shrink-0 pr-1">
-              Popular Searches:
+              {popularSearchesLabel}
             </span>
             <div className="flex items-center gap-1.5 shrink-0">
               {quickTags.map((tag) => (

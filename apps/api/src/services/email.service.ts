@@ -109,6 +109,91 @@ export class EmailService {
 
     return this.sendEmail(to, `🎉 Action Required: New Order Received (${orderNumber}) | BookFry`, html);
   }
+
+  /** 3. Seller Used Book Purchase Request Notification Email */
+  async sendUsedBookRequestToSeller(
+    to: string,
+    sellerName: string,
+    requestNumber: string,
+    bookTitle: string,
+    buyerName: string,
+    buyerEmail: string,
+    buyerPhone?: string
+  ): Promise<boolean> {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"/></head>
+    <body style="font-family: Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
+        <div style="background-color: #1A3B5C; padding: 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">📖 New Used Book Purchase Request!</h1>
+          <p style="color: #F26522; font-style: italic; margin-top: 6px; font-weight: bold;">"BookFry Used Book Direct Contact"</p>
+        </div>
+        <div style="padding: 24px;">
+          <p style="font-size: 16px; color: #374151;">Hi <strong>${sellerName}</strong>,</p>
+          <p style="font-size: 14px; color: #4b5563;">A buyer is interested in purchasing your used book listing!</p>
+          
+          <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+            <p style="margin: 0; font-size: 14px; color: #111827; font-weight: bold;">Book Title: ${bookTitle}</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">Request Number: ${requestNumber}</p>
+            <hr style="margin: 12px 0; border: none; border-top: 1px solid #e5e7eb;"/>
+            <p style="margin: 0; font-size: 13px; color: #374151; font-weight: bold;">Buyer Details:</p>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #4b5563;">Name: ${buyerName}</p>
+            <p style="margin: 2px 0 0 0; font-size: 13px; color: #4b5563;">Email: ${buyerEmail}</p>
+            ${buyerPhone ? `<p style="margin: 2px 0 0 0; font-size: 13px; color: #4b5563;">Phone: ${buyerPhone}</p>` : ''}
+          </div>
+
+          <p style="font-size: 13px; color: #6b7280;">Please contact the buyer to coordinate payment and delivery, and update the request status in your seller portal.</p>
+
+          <div style="margin-top: 24px; text-align: center;">
+            <a href="https://bookfry.in/seller/requests" style="display: inline-block; background-color: #F26522; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 14px;">View Request & Contact Buyer</a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+    return this.sendEmail(to, `📖 Used Book Purchase Request Received (${requestNumber}) | BookFry`, html);
+  }
+
+  /** 4. Buyer Used Book Request Status Update Email */
+  async sendUsedBookRequestStatusUpdateToBuyer(
+    to: string,
+    buyerName: string,
+    requestNumber: string,
+    bookTitle: string,
+    status: string,
+    note?: string
+  ): Promise<boolean> {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"/></head>
+    <body style="font-family: Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
+        <div style="background-color: #1A3B5C; padding: 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Update on your Used Book Request</h1>
+        </div>
+        <div style="padding: 24px;">
+          <p style="font-size: 16px; color: #374151;">Hi <strong>${buyerName}</strong>,</p>
+          <p style="font-size: 14px; color: #4b5563;">Your purchase request for <strong>${bookTitle}</strong> (Req #${requestNumber}) has been updated.</p>
+          
+          <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
+            <p style="margin: 0; font-size: 14px; color: #111827; font-weight: bold;">New Status: <span style="color: #F26522; text-transform: uppercase;">${status.replace('_', ' ')}</span></p>
+            ${note ? `<p style="margin: 6px 0 0 0; font-size: 13px; color: #4b5563;">Seller Note: ${note}</p>` : ''}
+          </div>
+
+          <div style="margin-top: 24px; text-align: center;">
+            <a href="https://bookfry.in/account/requests" style="display: inline-block; background-color: #1A3B5C; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 14px;">View Request Details</a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+    return this.sendEmail(to, `Update on Used Book Request ${requestNumber} | BookFry`, html);
+  }
 }
 
 export default EmailService;

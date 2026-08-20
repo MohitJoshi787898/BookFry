@@ -122,9 +122,12 @@ export function BookCard({ book }: BookCardProps) {
         </div>
 
         {/* Condition Badge */}
-        <div className="pt-0.5">
+        <div className="pt-0.5 flex items-center justify-between">
           <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider ${conditionColors}`}>
             {displayCondition}
+          </span>
+          <span className="text-[9px] font-bold text-text-muted">
+            {book.condition === 'new' ? 'Pay Online' : 'Direct Contact'}
           </span>
         </div>
 
@@ -151,12 +154,16 @@ export function BookCard({ book }: BookCardProps) {
           <CheckCircle2 className="h-3 w-3 text-emerald-600 fill-emerald-50 shrink-0" />
         </div>
 
-        {/* Add to Cart button */}
+        {/* Add to Cart / Request button */}
         <div className="pt-2 mt-auto">
           <button
             onClick={handleQuickAdd}
             disabled={isAdding || book.stock === 0}
-            className="w-full py-2 border border-secondary text-secondary hover:bg-secondary/5 font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5"
+            className={`w-full py-2 border font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
+              book.condition === 'new'
+                ? 'border-secondary text-secondary hover:bg-secondary/5'
+                : 'border-brand text-brand hover:bg-brand/5'
+            }`}
           >
             {added ? (
               <>
@@ -166,7 +173,7 @@ export function BookCard({ book }: BookCardProps) {
             ) : (
               <>
                 <ShoppingBag className="h-3.5 w-3.5" />
-                <span>Add to Cart</span>
+                <span>{book.condition === 'new' ? 'Add to Cart' : 'Request Used Book'}</span>
               </>
             )}
           </button>

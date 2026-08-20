@@ -12,18 +12,25 @@ interface CmsPublicData {
   announcementLink?: string;
 }
 
-export function AnnouncementBar() {
+interface AnnouncementBarProps {
+  text?: string;
+  link?: string;
+}
+
+export function AnnouncementBar({ text: initialText, link: initialLink }: AnnouncementBarProps = {}) {
   const [dismissed, setDismissed] = useState(false);
 
   const { data: cms } = useQuery<CmsPublicData>({
     queryKey: ["public-cms"],
     queryFn: () => apiClient("/contact/cms"),
+    enabled: !initialText,
     staleTime: 5 * 60 * 1000,
   });
 
   if (dismissed || cms?.announcementEnabled === false) return null;
 
-  const text = cms?.announcementText || "";
+  const text = initialText || cms?.announcementText || "🎉 Free Shipping on Student Book Exchanges above ₹499 across India!";
+  const targetLink = initialLink || cms?.announcementLink || "/books";
 
   return (
     <div className="bg-primary text-primary-foreground text-xs font-sans py-2 px-4 sm:px-6 lg:px-8 transition-all duration-200 flex items-center justify-between z-50 shadow-sm border-b border-primary/20">
@@ -42,7 +49,7 @@ export function AnnouncementBar() {
       {/* Right side items */}
       <div className="hidden lg:flex items-center space-x-4 shrink-0">
         <Link
-          href="/books?discount=30"
+          href={targetLink}
           className="px-3 py-1 border border-primary-foreground/20 hover:border-primary-foreground hover:bg-primary-foreground/10 text-primary-foreground text-[10px] font-bold rounded-full transition-all tracking-wider"
         >
           Explore Deals

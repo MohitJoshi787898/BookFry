@@ -46,17 +46,44 @@ export class CatalogRepository {
 
   /**
    * Paginated catalog browse — joins cheapest active listing price and listing count.
+   * Supports conditionType ('new' | 'used'), specific condition, and price ranges.
    */
   async findAndPaginate(
     filter: Record<string, unknown>,
     sort: Record<string, unknown>,
     page: number,
-    limit: number
+    limit: number,
+    options?: {
+      conditionType?: 'all' | 'new' | 'used';
+      condition?: string;
+      minPrice?: number;
+      maxPrice?: number;
+    }
   ): Promise<{ docs: any[]; total: number }> {
     const skip = (page - 1) * limit;
 
     // Build match stage for text search / category
     const matchStage: Record<string, unknown> = { ...filter };
+
+    // Build listing lookup match stage
+    const listingMatch: Record<string, unknown> = {
+      status: 'active',
+    };
+
+    if (options?.conditionType === 'new') {
+      listingMatch.condition = 'new';
+    } else if (options?.conditionType === 'used') {
+      listingMatch.condition = { $ne: 'new' };
+    } else if (options?.condition) {
+      listingMatch.condition = options.condition;
+    }
+
+    if (options?.minPrice !== undefined || options?.maxPrice !== undefined) {
+      const priceFilter: Record<string, number> = {};
+      if (options.minPrice !== undefined) priceFilter.$gte = Number(options.minPrice);
+      if (options.maxPrice !== undefined) priceFilter.$lte = Number(options.maxPrice);
+      listingMatch.price = priceFilter;
+    }
 
     const pipeline: object[] = [
       { $match: matchStage },
@@ -68,7 +95,7 @@ export class CatalogRepository {
             {
               $match: {
                 $expr: { $eq: ['$catalogId', '$$cid'] },
-                status: 'active',
+                ...listingMatch,
               },
             },
             { $sort: { price: 1 } },
@@ -76,13 +103,15 @@ export class CatalogRepository {
           as: 'activeListings',
         },
       },
-      // Only show catalogs that have at least one active listing
+      // Only show catalogs that have at least one active listing matching criteria
       { $match: { 'activeListings.0': { $exists: true } } },
       {
         $addFields: {
           lowestPrice: { $min: '$activeListings.price' },
           listingCount: { $size: '$activeListings' },
           primaryListingId: { $arrayElemAt: ['$activeListings._id', 0] },
+          primaryListingCondition: { $arrayElemAt: ['$activeListings.condition', 0] },
+          primaryListingSellerId: { $arrayElemAt: ['$activeListings.sellerId', 0] },
         },
       },
       { $project: { activeListings: 0 } },

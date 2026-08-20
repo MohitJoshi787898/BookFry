@@ -112,6 +112,7 @@ export class BooksService {
     limit: number;
     search?: string;
     category?: string;
+    conditionType?: 'all' | 'new' | 'used';
     condition?: string;
     minPrice?: number;
     maxPrice?: number;
@@ -131,6 +132,12 @@ export class BooksService {
     const sort: Record<string, unknown> = {};
     if (query.search) {
       sort.score = { $meta: 'textScore' };
+    } else if (query.sortBy === 'price_asc') {
+      sort.lowestPrice = 1;
+    } else if (query.sortBy === 'price_desc') {
+      sort.lowestPrice = -1;
+    } else if (query.sortBy === 'rating') {
+      sort.ratingAvg = -1;
     } else if (query.sortBy) {
       sort[query.sortBy] = query.sortOrder === 'asc' ? 1 : -1;
     } else {
@@ -141,7 +148,13 @@ export class BooksService {
       filter,
       sort,
       query.page,
-      query.limit
+      query.limit,
+      {
+        conditionType: query.conditionType,
+        condition: query.condition,
+        minPrice: query.minPrice,
+        maxPrice: query.maxPrice,
+      }
     );
 
     const books = docs.map((doc) => {
@@ -163,12 +176,12 @@ export class BooksService {
         isbn: doc.isbn,
         description: doc.description,
         category: categoryId,
-        condition: 'good' as BookCondition,
+        condition: (doc.primaryListingCondition || 'good') as BookCondition,
         price: doc.lowestPrice || 0,
         discountPrice: undefined,
         images: doc.images || [],
         stock: doc.listingCount || 1,
-        sellerId: '',
+        sellerId: doc.primaryListingSellerId ? doc.primaryListingSellerId.toString() : '',
         status: 'active' as BookStatus,
         tags: doc.tags || [],
         language: doc.language || 'English',

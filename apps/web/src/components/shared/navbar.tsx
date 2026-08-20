@@ -37,15 +37,15 @@ import {
 // Constants
 // ──────────────────────────────────────────────────────────────────────────────
 const categorySubnav = [
+  { name: "All Books", href: "/books?conditionType=all" },
+  { name: "New Books ⚡", href: "/books?conditionType=new" },
+  { name: "Used Books 🤝", href: "/books?conditionType=used" },
   { name: "Fiction", href: "/books?category=fiction" },
   { name: "Non-Fiction", href: "/books?category=non-fiction" },
   { name: "Teens & YA", href: "/books?category=teens-ya" },
-  { name: "Kids", href: "/books?category=kids" },
   { name: "Exam Prep", href: "/books?category=exams" },
   { name: "Engineering", href: "/books?category=engineering" },
   { name: "Medical", href: "/books?category=medical" },
-  { name: "Management", href: "/books?category=management" },
-  { name: "Competitive Exams", href: "/books?category=competitive-exams" },
   { name: "Today's Deals 🔥", href: "/books?discount=40", isHighlight: true },
 ];
 

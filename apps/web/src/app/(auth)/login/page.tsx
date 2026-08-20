@@ -71,12 +71,12 @@ export default function LoginPage() {
         <Card className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 overflow-hidden shadow-md border-border bg-card">
           {/* A. Left Column */}
           <div className="bg-secondary/5 dark:bg-primary-950/15 p-8 flex flex-col items-center justify-between text-center border-b md:border-b-0 md:border-r border-border">
-            {/* Mascot Image */}
+            {/* Mascot / Welcome Back Image */}
             <div className="w-full max-w-[220px] aspect-square flex items-center justify-center bg-white/40 dark:bg-white/95 rounded-2xl p-4 shadow-xs select-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/fox_reading_17849114865545.png"
-                alt="BookFry Fox Reading Mascot"
+                src="/welcome-back1.png"
+                alt="BookFry Welcome Back"
                 className="w-full h-full object-contain select-none"
               />
             </div>

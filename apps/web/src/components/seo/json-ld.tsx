@@ -79,9 +79,6 @@ export function OrganizationJsonLd() {
     slogan: 'क्योंकि.. पढ़ाई रुकनी नहीं चाहिए',
     description: "India's premier digital marketplace for buying, selling, and exchanging new and used books.",
     sameAs: [
-      'https://twitter.com/bookfry',
-      'https://facebook.com/bookfry',
-      'https://instagram.com/bookfry',
     ],
   };
 
@@ -92,3 +89,25 @@ export function OrganizationJsonLd() {
     />
   );
 }
+
+export function WebsiteJsonLd() {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'BookFry',
+    url: 'https://bookfry.in',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://bookfry.in/books?search={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+

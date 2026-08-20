@@ -184,6 +184,194 @@ export class OrdersService {
     return this.mapToDTO(orderDoc);
   }
 
+  async createMixedCheckout(
+    buyerId: string,
+    shippingAddress: {
+      street: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      country: string;
+    },
+    couponCode?: string,
+    buyerContactOverride?: { phone?: string; whatsappPhone?: string; note?: string }
+  ): Promise<{ usedRequests: any[]; newOrder: Order | null; requiresPayment: boolean }> {
+    const cart = await this.cartRepository.findByUserId(buyerId);
+    if (!cart || cart.items.length === 0) {
+      throw new ValidationError('Your cart is empty');
+    }
+
+    const usedItems: any[] = [];
+    const newItems: any[] = [];
+
+    for (const item of cart.items) {
+      const listingIdStr = (item.listingId as any)?._id
+        ? (item.listingId as any)._id.toString()
+        : (item as any).bookId
+        ? (item as any).bookId.toString()
+        : item.listingId?.toString() ?? '';
+
+      const listing = await this.listingRepository.findById(listingIdStr);
+      if (!listing || listing.status !== 'active') {
+        throw new NotFoundError(`Listing "${listingIdStr}" is no longer available`);
+      }
+
+      if (listing.sellerId.toString() === buyerId) {
+        throw new ValidationError(`You cannot purchase your own listed book.`);
+      }
+
+      if (listing.condition === 'new') {
+        newItems.push({ item, listing });
+      } else {
+        usedItems.push({ item, listing });
+      }
+    }
+
+    const usedRequests: any[] = [];
+    if (usedItems.length > 0) {
+      const { UsedBookRequestsService } = await import('../used-book-requests/used-book-requests.service');
+      const usedRequestsService = new UsedBookRequestsService();
+
+      for (const { listing } of usedItems) {
+        const reqResult = await usedRequestsService.createRequest(buyerId, {
+          listingId: listing._id.toString(),
+          phone: buyerContactOverride?.phone,
+          whatsappPhone: buyerContactOverride?.whatsappPhone,
+          note: buyerContactOverride?.note,
+        });
+        usedRequests.push(reqResult);
+      }
+    }
+
+    let newOrder: Order | null = null;
+    if (newItems.length > 0) {
+      const orderItems: any[] = [];
+      let subtotal = 0;
+
+      for (const { item, listing } of newItems) {
+        const catalogDoc = listing.catalogId as any;
+
+        if (listing.stock < item.quantity) {
+          throw new ValidationError(
+            `Insufficient stock for "${catalogDoc?.title || 'this book'}". Only ${listing.stock} left.`
+          );
+        }
+
+        listing.stock -= item.quantity;
+        if (listing.stock === 0) {
+          listing.status = 'sold';
+        }
+        await listing.save();
+
+        const price = listing.price;
+        subtotal += price * item.quantity;
+
+        orderItems.push({
+          listingId: listing._id,
+          bookId: catalogDoc?._id || listing.catalogId,
+          sellerId: listing.sellerId,
+          title: catalogDoc?.title || 'Book',
+          price,
+          quantity: item.quantity,
+          condition: listing.condition,
+        });
+      }
+
+      let discountAmount = 0;
+      let appliedCouponCode: string | undefined = undefined;
+
+      if (couponCode) {
+        try {
+          const { CouponsService } = await import('../coupons/coupons.service');
+          const couponsService = new CouponsService();
+          const validation = await couponsService.validateCoupon(couponCode, subtotal);
+          if (validation.valid) {
+            discountAmount = validation.coupon.discountAmount;
+            appliedCouponCode = validation.coupon.code;
+            await couponsService.incrementUsage(appliedCouponCode);
+          }
+        } catch (err) {
+          console.warn(`Coupon validation warning for code "${couponCode}":`, err);
+        }
+      }
+
+      const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+      const shippingFee = discountedSubtotal > 499 || discountedSubtotal === 0 ? 0 : 49;
+      const tax = parseFloat((discountedSubtotal * 0.08).toFixed(2));
+      const total = parseFloat((discountedSubtotal + shippingFee + tax).toFixed(2));
+
+      const orderNumber = this.generateOrderNumber();
+
+      const orderDoc = await this.ordersRepository.create({
+        orderNumber,
+        buyerId: new mongoose.Types.ObjectId(buyerId),
+        items: orderItems,
+        shippingAddress,
+        subtotal,
+        discountAmount,
+        couponCode: appliedCouponCode,
+        shippingFee,
+        tax,
+        total,
+        currency: 'INR',
+        status: 'pending',
+        paymentStatus: 'pending',
+        timeline: [
+          {
+            status: 'pending',
+            note: 'New book order created, awaiting payment',
+            timestamp: new Date(),
+          },
+        ],
+      });
+
+      newOrder = this.mapToDTO(orderDoc);
+
+      // Async Email Notifications Dispatch (Non-blocking)
+      try {
+        const emailService = new EmailService();
+        const buyerUser = await UserModel.findById(buyerId);
+        if (buyerUser) {
+          await emailService.sendOrderConfirmationToBuyer(
+            buyerUser.email,
+            buyerUser.name,
+            orderNumber,
+            orderItems.map((item) => ({
+              title: item.title,
+              price: item.price,
+              quantity: item.quantity,
+            })),
+            total
+          );
+        }
+
+        for (const item of orderItems) {
+          const sellerUser = await UserModel.findById(item.sellerId);
+          if (sellerUser) {
+            const payoutAmount = item.price * 0.9;
+            await emailService.sendSaleNotificationToSeller(
+              sellerUser.email,
+              sellerUser.name,
+              orderNumber,
+              item.title,
+              payoutAmount
+            );
+          }
+        }
+      } catch (emailErr) {
+        console.error('[Order Email Notification Warning]:', emailErr);
+      }
+    }
+
+    await this.cartRepository.update(buyerId, []);
+
+    return {
+      usedRequests,
+      newOrder,
+      requiresPayment: newOrder !== null,
+    };
+  }
+
   async getOrderById(id: string, userId: string, roles: string[]): Promise<Order> {
     const order = await this.ordersRepository.findByIdOrOrderNumber(id);
     if (!order) {

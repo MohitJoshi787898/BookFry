@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { HeroBookStackIllustration, ExchangeKnowledgeIllustration } from '@/components/illustrations/book-illustrations';
 import { AuthScreen } from '@/stores/auth-modal.store';
 import { ShieldCheck, HeartHandshake, BookOpen, Sparkles } from 'lucide-react';
 
@@ -10,6 +9,10 @@ interface AuthIllustrationPanelProps {
 }
 
 export function AuthIllustrationPanel({ screen }: AuthIllustrationPanelProps) {
+  const isSignupFlow = screen === 'signup' || screen === 'verify_email';
+  const illustrationSrc = isSignupFlow ? '/create-account.png' : '/welcome-back1.png';
+  const illustrationAlt = isSignupFlow ? 'BookFry Create Account' : 'BookFry Welcome Back';
+
   return (
     <div className="hidden lg:flex flex-col justify-between w-full h-full p-8 bg-gradient-to-b from-card via-card to-muted/50 text-foreground relative overflow-hidden font-sans border-r border-border/80">
       {/* Background Soft Glow Circles */}
@@ -33,20 +36,16 @@ export function AuthIllustrationPanel({ screen }: AuthIllustrationPanelProps) {
         </div>
       </div>
 
-      {/* Center Dynamic Vector & Mascot Illustration */}
-      <div className="relative z-10 my-auto py-6 text-center space-y-4">
-        <div className="w-full max-w-xs mx-auto drop-shadow-xl relative">
+      {/* Center Conditional Single Image Illustration */}
+      <div className="relative z-10 my-auto py-4 text-center space-y-4">
+        <div className="w-full max-w-xs mx-auto relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/fox_reading_178491148655455.png"
-            alt="BookFry Mascot"
-            className="w-36 h-36 mx-auto object-contain drop-shadow-lg mb-2"
+            key={illustrationSrc}
+            src={illustrationSrc}
+            alt={illustrationAlt}
+            className="w-full h-auto max-h-56 mx-auto object-contain drop-shadow-md rounded-2xl transition-all duration-300"
           />
-          {screen === 'signup' || screen === 'verify_email' ? (
-            <ExchangeKnowledgeIllustration className="w-full h-auto max-h-44" />
-          ) : (
-            <HeroBookStackIllustration className="w-full h-auto max-h-44" />
-          )}
         </div>
 
         <div className="space-y-1 max-w-xs mx-auto">
@@ -55,12 +54,12 @@ export function AuthIllustrationPanel({ screen }: AuthIllustrationPanelProps) {
               ? 'Join 50,000+ Student Readers'
               : screen === 'verify_email'
               ? 'Almost There!'
-              : 'Empowering Student Learning'}
+              : 'Welcome Back to BookFry'}
           </h4>
           <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-            {screen === 'signup'
+            {isSignupFlow
               ? 'Save up to 80% on textbooks and help fellow students access affordable study materials.'
-              : 'Verified campus seller escrow, direct UPI payouts, and guaranteed nationwide delivery.'}
+              : 'Sign in to manage your orders, wishlist, saved listings, and seller earnings.'}
           </p>
         </div>
       </div>
