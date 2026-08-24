@@ -10,11 +10,14 @@ export const QUEUE_NAMES = {
   PUSH: 'push-queue',
 } as const;
 
-const redisConnection = getRedisClient();
+const redisClient = getRedisClient();
 
-const queueOptions = redisConnection
+// Only create queues if Redis is actually connected — avoids ENOTFOUND crashes
+const isRedisReady = redisClient !== null && redisClient.status === 'ready';
+
+const queueOptions = isRedisReady
   ? {
-      connection: redisConnection,
+      connection: redisClient!,
       defaultJobOptions: {
         attempts: 3,
         backoff: {
