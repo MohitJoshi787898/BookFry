@@ -55,4 +55,10 @@ export const allQueues = [
   pushQueue,
 ].filter(Boolean) as Queue[];
 
+allQueues.forEach((q) => {
+  q.on('error', (err) => {
+    logger.warn(`[BullMQ Queue ${q.name} warning]: ${err.message || err}`);
+  });
+});
+
 logger.info(`[BullMQ] Initialized ${allQueues.length} queue instances.`);

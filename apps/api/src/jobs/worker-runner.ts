@@ -15,6 +15,14 @@ export const startWorkerPool = async () => {
   const emailWorker = createEmailWorker();
   const pushWorker = createPushWorker();
 
+  [pageViewWorker, recommendationsWorker, orderSlaWorker, emailWorker, pushWorker].forEach((w) => {
+    if (w) {
+      w.on('error', (err) => {
+        logger.warn(`[BullMQ Worker ${w.name} warning]: ${err.message || err}`);
+      });
+    }
+  });
+
   // Schedule repeatable jobs if queue is connected
   if (recommendationsQueue) {
     try {

@@ -59,19 +59,23 @@ export class RecommendationsService {
     let trendingIds: string[] = [];
     let personalizedIds: string[] = [];
 
-    if (redis) {
-      // Fetch top 12 popular IDs from Redis ZSET
-      popularIds = await redis.zrevrange('popular:books', 0, 11);
-      // Fetch top 12 trending IDs from Redis ZSET
-      trendingIds = await redis.zrevrange('trending:books', 0, 11);
+    if (redis && redis.status === 'ready') {
+      try {
+        // Fetch top 12 popular IDs from Redis ZSET
+        popularIds = await redis.zrevrange('popular:books', 0, 11);
+        // Fetch top 12 trending IDs from Redis ZSET
+        trendingIds = await redis.zrevrange('trending:books', 0, 11);
 
-      // Personalized calculation for authenticated user
-      if (userId) {
-        const userAffinityCats = await redis.zrevrange(`user:affinity:${userId}:categories`, 0, 2);
-        for (const catId of userAffinityCats) {
-          const catBookIds = await redis.zrevrange(`popular:books:category:${catId}`, 0, 5);
-          personalizedIds.push(...catBookIds);
+        // Personalized calculation for authenticated user
+        if (userId) {
+          const userAffinityCats = await redis.zrevrange(`user:affinity:${userId}:categories`, 0, 2);
+          for (const catId of userAffinityCats) {
+            const catBookIds = await redis.zrevrange(`popular:books:category:${catId}`, 0, 5);
+            personalizedIds.push(...catBookIds);
+          }
         }
+      } catch (err) {
+        // Silent fallback to MongoDB
       }
     }
 
@@ -130,8 +134,12 @@ export class RecommendationsService {
     const redis = getRedisClient();
     let cooccurIds: string[] = [];
 
-    if (redis) {
-      cooccurIds = await redis.zrevrange(`cooccurs:${bookId}`, 0, 7);
+    if (redis && redis.status === 'ready') {
+      try {
+        cooccurIds = await redis.zrevrange(`cooccurs:${bookId}`, 0, 7);
+      } catch (err) {
+        // Fallback to MongoDB
+      }
     }
 
     // Fallback for Frequently Bought Together

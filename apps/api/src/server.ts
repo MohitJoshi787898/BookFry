@@ -6,19 +6,21 @@ import { logger } from './utils/logger';
 const startServer = async () => {
   try {
     await connectDB();
-    const { migrateBooksToCatalogAndListings } = await import('./scripts/migrate-books');
-    await migrateBooksToCatalogAndListings().catch((err) =>
-      logger.error('Auto migration failed:', err)
-    );
 
-    const { startWorkerPool } = await import('./jobs/worker-runner');
-    await startWorkerPool().catch((err) =>
-      logger.error('Worker Pool initialization warning:', err)
-    );
-
+    // 1. Start HTTP server immediately so Render detects open port without delay
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${env.PORT}`);
     });
+
+    // 2. Run background migration non-blockingly
+    import('./scripts/migrate-books')
+      .then(({ migrateBooksToCatalogAndListings }) => migrateBooksToCatalogAndListings())
+      .catch((err) => logger.error('Auto migration failed:', err));
+
+    // 3. Start BullMQ background worker pool non-blockingly
+    import('./jobs/worker-runner')
+      .then(({ startWorkerPool }) => startWorkerPool())
+      .catch((err) => logger.warn('Worker Pool initialization warning:', err));
 
     const shutdown = () => {
       logger.info('Shutting down server gracefully...');
