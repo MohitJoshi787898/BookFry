@@ -88,21 +88,21 @@ export function EmptyState({
         <Icon className="h-6 w-6 stroke-[2.2]" />
       </div>
 
-      <h3 className="font-serif text-base font-bold text-text-primary mb-1.5">
+      <h3 className="font-serif text-lg sm:text-xl font-bold text-text-primary mb-2">
         {displayTitle}
       </h3>
-      <p className="text-xs text-text-muted max-w-xs mb-6 font-medium leading-relaxed">
+      <p className="text-sm text-text-secondary max-w-sm mb-6 leading-relaxed">
         {displayDescription}
       </p>
 
       {actionText && onActionClick && (
         <Button
           variant="secondary"
-          size="sm"
+          size="md"
           onClick={onActionClick}
-          className="rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-2xs hover:scale-105 transition-transform"
+          className="rounded-xl px-6 py-2.5 text-sm font-semibold shadow-xs hover:scale-105 transition-transform"
         >
-          <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+          <Sparkles className="h-4 w-4 mr-2" />
           <span>{actionText}</span>
         </Button>
       )}

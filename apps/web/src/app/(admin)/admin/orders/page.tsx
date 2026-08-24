@@ -21,8 +21,9 @@ import {
   XCircle,
   RotateCcw,
   AlertTriangle,
-  X,
 } from 'lucide-react';
+import { AdminDialog } from '@/components/admin/admin-dialog';
+import { AdminDangerDialog } from '@/components/admin/admin-danger-dialog';
 
 const ALL_STATUSES: OrderStatus[] = [
   'pending',
@@ -376,107 +377,107 @@ export default function AdminOrdersPage() {
       )}
 
       {/* EDIT ORDER MODAL */}
-      {editModalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <button
-              onClick={() => setEditModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Pencil className="h-6 w-6 text-accent" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Edit Order #{selectedOrder.orderNumber}</h3>
+      {selectedOrder && (
+        <AdminDialog
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedOrder(null);
+          }}
+          size="md"
+          title={`Edit Order #${selectedOrder.orderNumber}`}
+          subtitle={`Adjusting fulfillment lifecycle and carrier notes`}
+          icon={<Pencil className="h-5 w-5 text-secondary" />}
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setSelectedOrder(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="edit-order-form"
+                disabled={updateOrderMutation.isPending}
+                className="px-5 py-2 bg-secondary text-secondary-foreground font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5"
+              >
+                {updateOrderMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                <span>Update Order</span>
+              </button>
+            </div>
+          }
+        >
+          <form
+            id="edit-order-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              updateOrderMutation.mutate({ orderId: selectedOrder.id, data: editForm });
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Fulfillment & Dispatch Status
+              </label>
+              <select
+                value={editForm.status}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value as OrderStatus })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
+              >
+                {ALL_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_LABELS[s]}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                updateOrderMutation.mutate({ orderId: selectedOrder.id, data: editForm });
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Order Status</label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary font-medium"
-                >
-                  {ALL_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Admin Fulfill Note</label>
-                <textarea
-                  rows={3}
-                  value={editForm.note}
-                  onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
-                  placeholder="Optional fulfillment tracking notes or shipping status update..."
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={updateOrderMutation.isPending}
-                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90 flex items-center space-x-1"
-                >
-                  {updateOrderMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                  <span>Update Order</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Admin Fulfillment / Carrier Tracking Note
+              </label>
+              <textarea
+                rows={3}
+                value={editForm.note}
+                onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
+                placeholder="e.g. Dispatched via India Post / DTDC with AWB #..."
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
+            </div>
+          </form>
+        </AdminDialog>
       )}
 
-      {/* SOFT DELETE CONFIRMATION MODAL */}
-      {deleteModalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Trash2 className="h-6 w-6 text-danger" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Confirm Soft Delete / Cancel Order</h3>
-            </div>
-
-            <p className="text-xs text-text-secondary mb-4">
-              Are you sure you want to soft delete order <span className="font-bold text-text-primary">#{selectedOrder.orderNumber}</span>? The order status will be updated to <span className="font-bold text-danger">Cancelled</span>.
-            </p>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
-              >
-                Keep Order
-              </button>
-              <button
-                onClick={() => softDeleteMutation.mutate(selectedOrder.id)}
-                disabled={softDeleteMutation.isPending}
-                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover flex items-center space-x-1"
-              >
-                {softDeleteMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                <span>Soft Delete Order</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* SOFT DELETE / CANCEL ORDER DANGER DIALOG */}
+      {selectedOrder && (
+        <AdminDangerDialog
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setSelectedOrder(null);
+          }}
+          onConfirm={() => softDeleteMutation.mutate(selectedOrder.id)}
+          isPending={softDeleteMutation.isPending}
+          title="Confirm Order Cancellation"
+          entityName={`Order #${selectedOrder.orderNumber} (₹${selectedOrder.total})`}
+          description={
+            <span>
+              Are you sure you want to cancel order <strong>#{selectedOrder.orderNumber}</strong>?
+            </span>
+          }
+          impacts={[
+            'The order lifecycle status will transition to "Cancelled".',
+            'If payment was processed online, a refund reconciliation trigger will be initiated.',
+            'Reserved item stocks will be restored to seller inventory.',
+            'The buyer and seller will receive email status notifications.',
+          ]}
+          confirmText="Cancel & Soft Delete Order"
+        />
       )}
     </AdminLayout>
   );

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Book } from '@bookmarket/types';
-import { Star, ShoppingBag, Check, CheckCircle2, Heart } from 'lucide-react';
+import { Star, ShoppingBag, Check, CheckCircle2, Heart, MapPin } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useWishlist } from '@/hooks/use-wishlist';
@@ -88,70 +88,86 @@ export function BookCard({ book }: BookCardProps) {
         />
 
         {/* Bestseller overlay tag */}
-        <span className="absolute top-2.5 left-2.5 bg-danger text-danger-foreground text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm shadow-xs select-none">
+        <span className="absolute top-2.5 left-2.5 bg-danger text-danger-foreground text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm shadow-xs select-none">
           Bestseller
         </span>
 
         {/* Wishlist Heart Overlay - Always Visible */}
         <button
           onClick={handleWishlistToggle}
-          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-card text-muted-foreground hover:text-secondary shadow-xs hover:shadow-sm transition-all z-10 focus:outline-none"
+          className="absolute top-2.5 right-2.5 p-2 rounded-full bg-card/90 backdrop-blur-xs text-muted-foreground hover:text-secondary shadow-xs hover:shadow-sm transition-all z-10 focus:outline-none min-w-[36px] min-h-[36px] flex items-center justify-center"
           title="Add to Wishlist"
         >
-          <Heart className={`h-3.5 w-3.5 transition-colors ${inWishlist ? 'fill-secondary text-secondary' : ''}`} />
+          <Heart className={`h-4 w-4 transition-colors ${inWishlist ? 'fill-secondary text-secondary' : ''}`} />
         </button>
       </Link>
 
       {/* Content */}
-      <div className="flex flex-col flex-grow p-3.5 space-y-2">
+      <div className="flex flex-col flex-grow p-3.5 sm:p-4 space-y-2">
         {/* Title */}
-        <h3 className="font-sans text-[11px] sm:text-xs font-bold text-text-primary group-hover:text-secondary transition-colors line-clamp-1">
+        <h3 className="font-sans text-xs sm:text-sm font-bold text-text-primary group-hover:text-secondary transition-colors line-clamp-2 leading-snug min-h-[2.5rem]">
           <Link href={`/books/${book.slug}`} title={book.title}>{book.title}</Link>
         </h3>
 
         {/* Author */}
-        <p className="text-[10px] text-text-secondary font-medium line-clamp-1">by {book.author}</p>
+        <p className="text-xs text-text-secondary font-medium line-clamp-1">by {book.author}</p>
 
         {/* Ratings block */}
-        <div className="flex items-center space-x-1 text-[10px] text-text-secondary font-sans font-bold">
+        <div className="flex items-center space-x-1.5 text-xs text-text-secondary font-sans font-semibold">
           <div className="flex text-amber-400">
-            <Star className="h-3 w-3 fill-current text-amber-400" />
+            <Star className="h-3.5 w-3.5 fill-current text-amber-400" />
           </div>
           <span>4.7</span>
-          <span className="text-text-muted font-normal">(12,876)</span>
+          <span className="text-text-muted font-normal text-xs">(12,876)</span>
         </div>
 
         {/* Condition Badge */}
         <div className="pt-0.5 flex items-center justify-between">
-          <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider ${conditionColors}`}>
+          <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] sm:text-xs font-semibold ${conditionColors}`}>
             {displayCondition}
           </span>
-          <span className="text-[9px] font-bold text-text-muted">
-            {book.condition === 'new' ? 'Pay Online' : 'Direct Contact'}
+          <span className="text-xs font-medium text-text-muted">
+            {book.condition === 'new' ? 'Online' : 'Contact'}
           </span>
         </div>
 
         {/* Pricing Row */}
-        <div className="flex items-baseline gap-1 pt-1 font-sans">
-          <span className="text-[10px] text-text-muted font-bold uppercase">From</span>
-          <span className="text-xs sm:text-sm font-black text-text-primary">
+        <div className="flex items-baseline gap-1.5 pt-1 font-sans">
+          <span className="text-xs text-text-muted font-semibold">From</span>
+          <span className="text-sm sm:text-base font-bold text-text-primary">
             ₹{(book.lowestPrice ?? book.price).toFixed(0)}
           </span>
-          <span className="text-[10px] text-text-muted line-through">₹{originalPrice.toFixed(0)}</span>
+          <span className="text-xs text-text-muted line-through">₹{originalPrice.toFixed(0)}</span>
           {discountPercentage > 0 && (
-            <span className="text-[10px] text-emerald-600 font-bold ml-0.5">{discountPercentage}% OFF</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold ml-0.5">{discountPercentage}% OFF</span>
           )}
         </div>
 
-        {/* Seller Info Row */}
-        <div className="flex items-center gap-1 text-[9px] text-text-muted font-sans font-medium pt-1.5 border-t border-border/50">
-          <span>Sellers:</span>
-          <span className="text-brand font-bold">
-            {book.listingCount && book.listingCount > 1
-              ? `${book.listingCount} Available`
-              : '1 Verified Seller'}
-          </span>
-          <CheckCircle2 className="h-3 w-3 text-emerald-600 fill-emerald-50 shrink-0" />
+        {/* Seller Info & Location Row */}
+        <div className="flex items-center justify-between gap-1 text-[11px] text-text-muted font-sans font-medium pt-1.5 border-t border-border/50">
+          <div className="flex items-center gap-1 min-w-0">
+            {book.campusName ? (
+              <span className="inline-flex items-center gap-1 text-secondary font-bold truncate" title={book.campusName}>
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{book.campusName}</span>
+              </span>
+            ) : book.sellerCity ? (
+              <span className="inline-flex items-center gap-1 text-foreground font-semibold truncate">
+                <MapPin className="h-3 w-3 text-secondary shrink-0" />
+                <span className="truncate">
+                  {book.sellerCity}
+                  {book.distanceKm !== undefined ? ` • ${book.distanceKm} km` : ''}
+                </span>
+              </span>
+            ) : (
+              <span className="text-primary dark:text-primary-foreground font-semibold truncate">
+                {book.listingCount && book.listingCount > 1
+                  ? `${book.listingCount} Offers`
+                  : 'Verified Seller'}
+              </span>
+            )}
+          </div>
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 ml-auto" />
         </div>
 
         {/* Add to Cart / Request button */}
@@ -159,21 +175,21 @@ export function BookCard({ book }: BookCardProps) {
           <button
             onClick={handleQuickAdd}
             disabled={isAdding || book.stock === 0}
-            className={`w-full py-2 border font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 ${
+            className={`w-full py-2.5 min-h-[38px] border font-bold rounded-lg text-xs tracking-normal transition-colors flex items-center justify-center gap-2 active:scale-98 ${
               book.condition === 'new'
-                ? 'border-secondary text-secondary hover:bg-secondary/5'
-                : 'border-brand text-brand hover:bg-brand/5'
+                ? 'border-secondary bg-secondary/5 text-secondary hover:bg-secondary hover:text-secondary-foreground'
+                : 'border-primary bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground'
             }`}
           >
             {added ? (
               <>
-                <Check className="h-3.5 w-3.5" />
-                <span>Added</span>
+                <Check className="h-4 w-4" />
+                <span>Added to Cart</span>
               </>
             ) : (
               <>
-                <ShoppingBag className="h-3.5 w-3.5" />
-                <span>{book.condition === 'new' ? 'Add to Cart' : 'Request Used Book'}</span>
+                <ShoppingBag className="h-4 w-4" />
+                <span>{book.condition === 'new' ? 'Add to Cart' : 'Request Book'}</span>
               </>
             )}
           </button>

@@ -29,23 +29,23 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = 'Card';
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex flex-col space-y-1.5 p-5', className)} {...props} />;
+  return <div className={cn('flex flex-col space-y-1.5 p-5 sm:p-6', className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('font-serif text-base font-bold leading-none tracking-tight text-text-primary', className)} {...props} />;
+  return <h3 className={cn('font-serif text-base sm:text-lg font-bold leading-snug tracking-tight text-text-primary', className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-xs text-text-muted font-medium', className)} {...props} />;
+  return <p className={cn('text-xs sm:text-sm text-text-muted font-medium', className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-5 pt-0 text-xs text-text-secondary font-medium leading-relaxed', className)} {...props} />;
+  return <div className={cn('p-5 sm:p-6 pt-0 text-sm text-text-secondary font-normal leading-relaxed', className)} {...props} />;
 }
 
 export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex items-center p-5 pt-0 border-t border-border/20 mt-4', className)} {...props} />;
+  return <div className={cn('flex items-center p-5 sm:p-6 pt-0 border-t border-border/40 mt-4', className)} {...props} />;
 }
 
 export interface StatCardProps extends CardProps {
@@ -72,23 +72,23 @@ export function StatCard({
   return (
     <Card className={cn('relative overflow-hidden', className)} borderAccent={borderAccent} {...props}>
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-bold text-text-secondary uppercase tracking-wider font-sans">
+        <CardTitle className="text-xs sm:text-sm font-bold text-text-secondary uppercase tracking-wider font-sans">
           {title}
         </CardTitle>
         {icon && <div className="text-text-muted shrink-0">{icon}</div>}
       </CardHeader>
       <CardContent className="space-y-1 pb-4">
-        <div className="font-mono text-2xl font-black text-text-primary tracking-tight">
+        <div className="font-mono text-2xl sm:text-3xl font-black text-text-primary tracking-tight">
           {value}
         </div>
         {(description || trend) && (
-          <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-medium font-sans">
+          <div className="flex items-center gap-1.5 text-xs text-text-muted font-medium font-sans">
             {trend && (
               <span
                 className={cn(
                   'font-bold',
-                  trend.type === 'up' && 'text-emerald-600',
-                  trend.type === 'down' && 'text-rose-600',
+                  trend.type === 'up' && 'text-emerald-600 dark:text-emerald-400',
+                  trend.type === 'down' && 'text-rose-600 dark:text-rose-400',
                   trend.type === 'neutral' && 'text-text-muted'
                 )}
               >

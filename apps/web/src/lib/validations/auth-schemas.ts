@@ -18,6 +18,14 @@ export const signupSchema = z
       .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
       .regex(/[0-9]/, 'Must contain at least one number'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
+    storeName: z.string().optional(),
+    phone: z.string().optional(),
+    upiId: z.string().optional(),
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zipCode: z.string().optional(),
+    bio: z.string().optional(),
     agreeTerms: z.literal(true, {
       errorMap: () => ({ message: 'You must accept the terms and privacy policy to continue' }),
     }),

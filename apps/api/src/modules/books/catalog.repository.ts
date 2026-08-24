@@ -46,7 +46,7 @@ export class CatalogRepository {
 
   /**
    * Paginated catalog browse — joins cheapest active listing price and listing count.
-   * Supports conditionType ('new' | 'used'), specific condition, and price ranges.
+   * Supports conditionType ('new' | 'used'), specific condition, price ranges, and location filtering.
    */
   async findAndPaginate(
     filter: Record<string, unknown>,
@@ -58,6 +58,13 @@ export class CatalogRepository {
       condition?: string;
       minPrice?: number;
       maxPrice?: number;
+      city?: string;
+      state?: string;
+      pincode?: string;
+      campusName?: string;
+      lat?: number;
+      lng?: number;
+      maxDistanceKm?: number;
     }
   ): Promise<{ docs: any[]; total: number }> {
     const skip = (page - 1) * limit;
@@ -83,6 +90,38 @@ export class CatalogRepository {
       if (options.minPrice !== undefined) priceFilter.$gte = Number(options.minPrice);
       if (options.maxPrice !== undefined) priceFilter.$lte = Number(options.maxPrice);
       listingMatch.price = priceFilter;
+    }
+
+    // Location Filters
+    if (options?.city && options.city.trim()) {
+      listingMatch.city = { $regex: new RegExp(`^${options.city.trim()}$`, 'i') };
+    }
+
+    if (options?.state && options.state.trim()) {
+      listingMatch.state = { $regex: new RegExp(`^${options.state.trim()}$`, 'i') };
+    }
+
+    if (options?.pincode && options.pincode.trim()) {
+      listingMatch.pincode = options.pincode.trim();
+    }
+
+    if (options?.campusName && options.campusName.trim()) {
+      listingMatch.campusName = { $regex: new RegExp(options.campusName.trim(), 'i') };
+    }
+
+    if (
+      options?.lat !== undefined &&
+      options?.lng !== undefined &&
+      options?.maxDistanceKm !== undefined &&
+      options.maxDistanceKm > 0
+    ) {
+      const earthRadiusKm = 6378.1;
+      const radiusInRadians = options.maxDistanceKm / earthRadiusKm;
+      listingMatch.location = {
+        $geoWithin: {
+          $centerSphere: [[options.lng, options.lat], radiusInRadians],
+        },
+      };
     }
 
     const pipeline: object[] = [
@@ -112,6 +151,11 @@ export class CatalogRepository {
           primaryListingId: { $arrayElemAt: ['$activeListings._id', 0] },
           primaryListingCondition: { $arrayElemAt: ['$activeListings.condition', 0] },
           primaryListingSellerId: { $arrayElemAt: ['$activeListings.sellerId', 0] },
+          primaryListingCity: { $arrayElemAt: ['$activeListings.city', 0] },
+          primaryListingState: { $arrayElemAt: ['$activeListings.state', 0] },
+          primaryListingPincode: { $arrayElemAt: ['$activeListings.pincode', 0] },
+          primaryListingCampusName: { $arrayElemAt: ['$activeListings.campusName', 0] },
+          primaryListingLocation: { $arrayElemAt: ['$activeListings.location', 0] },
         },
       },
       { $project: { activeListings: 0 } },

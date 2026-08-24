@@ -14,6 +14,7 @@ import {
   Sparkles,
   Zap,
   Flame,
+  Store,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
@@ -151,7 +152,7 @@ export function HeroSection({
             {/* Sub-description */}
             <motion.p
               {...reveal(0.08)}
-              className="mx-auto lg:mx-0 max-w-xl text-xs sm:text-base font-medium leading-relaxed text-text-secondary"
+              className="mx-auto lg:mx-0 max-w-xl text-sm sm:text-base font-normal leading-relaxed text-text-secondary"
             >
               {subtitle}
             </motion.p>
@@ -164,8 +165,9 @@ export function HeroSection({
               <motion.div whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
                 <Link
                   href={primaryCtaUrl}
-                  className="w-full h-12 sm:h-12 px-8 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold rounded-2xl sm:rounded-xl text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2 active:scale-95"
+                  className="w-full h-12 sm:h-12 px-8 bg-brand hover:bg-brand-hover text-white font-bold rounded-xl text-sm sm:text-base transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2 active:scale-95"
                 >
+                  <BookOpen className="h-4 w-4" aria-hidden="true" />
                   <span>{primaryCtaLabel}</span>
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
@@ -175,13 +177,16 @@ export function HeroSection({
                 <Link
                   href={secondaryCtaUrl}
                   onClick={(e) => {
-                    if (!isAuthenticated && secondaryCtaUrl === '/sell') {
+                    if (!isAuthenticated) {
                       e.preventDefault();
-                      useAuthModalStore.getState().openModal('login', '/sell');
+                      useAuthModalStore
+                        .getState()
+                        .openModal('seller_signup', '/seller/dashboard');
                     }
                   }}
-                  className="w-full h-12 sm:h-12 px-8 bg-background-subtle hover:bg-border/60 text-text-primary border border-border font-extrabold rounded-2xl sm:rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center space-x-2 text-center active:scale-95"
+                  className="w-full h-12 sm:h-12 px-8 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-xl text-sm sm:text-base transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2 text-center active:scale-95"
                 >
+                  <Store className="h-4 w-4" aria-hidden="true" />
                   <span>{secondaryCtaLabel}</span>
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>

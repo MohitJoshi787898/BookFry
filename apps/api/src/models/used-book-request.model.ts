@@ -1,6 +1,14 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { UsedBookRequestStatus, BookCondition } from '@bookmarket/types';
 
+export interface IUsedBookRequestItem {
+  listingId: mongoose.Types.ObjectId;
+  catalogId: mongoose.Types.ObjectId;
+  title: string;
+  price: number;
+  condition: BookCondition;
+}
+
 export interface IUsedBookRequestTimeline {
   status: UsedBookRequestStatus;
   note?: string;
@@ -16,18 +24,38 @@ export interface IUsedBookRequestDocument extends Document {
   title: string;
   price: number;
   condition: BookCondition;
+  items?: IUsedBookRequestItem[];
+  totalAskingPrice?: number;
   buyerContact: {
     name: string;
     email: string;
     phone?: string;
     whatsappPhone?: string;
     note?: string;
+    preferredContactMethod?: 'whatsapp' | 'phone' | 'email';
+    isContactUnlocked?: boolean;
   };
   status: UsedBookRequestStatus;
   timeline: IUsedBookRequestTimeline[];
+  expiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const UsedBookRequestItemSchema = new Schema<IUsedBookRequestItem>(
+  {
+    listingId: { type: Schema.Types.ObjectId, ref: 'BookListing', required: true },
+    catalogId: { type: Schema.Types.ObjectId, ref: 'BookCatalog', required: true },
+    title: { type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    condition: {
+      type: String,
+      required: true,
+      enum: ['new', 'like_new', 'good', 'fair'],
+    },
+  },
+  { _id: false }
+);
 
 const UsedBookRequestTimelineSchema = new Schema<IUsedBookRequestTimeline>(
   {
@@ -66,12 +94,20 @@ const UsedBookRequestSchema = new Schema<IUsedBookRequestDocument>(
       required: true,
       enum: ['new', 'like_new', 'good', 'fair'],
     },
+    items: { type: [UsedBookRequestItemSchema], default: [] },
+    totalAskingPrice: { type: Number },
     buyerContact: {
       name: { type: String, required: true },
       email: { type: String, required: true },
       phone: { type: String },
       whatsappPhone: { type: String },
       note: { type: String },
+      preferredContactMethod: {
+        type: String,
+        enum: ['whatsapp', 'phone', 'email'],
+        default: 'whatsapp',
+      },
+      isContactUnlocked: { type: Boolean, default: false },
     },
     status: {
       type: String,
@@ -91,6 +127,7 @@ const UsedBookRequestSchema = new Schema<IUsedBookRequestDocument>(
       index: true,
     },
     timeline: { type: [UsedBookRequestTimelineSchema], default: [] },
+    expiresAt: { type: Date },
   },
   { timestamps: true }
 );

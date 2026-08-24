@@ -80,7 +80,9 @@ export function SellYourBooksStrip() {
                   onClick={(e) => {
                     if (!isAuthenticated) {
                       e.preventDefault();
-                      useAuthModalStore.getState().openModal('login', '/sell');
+                      useAuthModalStore
+                        .getState()
+                        .openModal('seller_signup', '/seller/dashboard');
                     }
                   }}
                   className="h-12 px-8 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 active:scale-95"

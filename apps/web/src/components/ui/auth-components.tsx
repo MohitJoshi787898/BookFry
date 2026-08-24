@@ -131,13 +131,13 @@ export function PasswordStrengthIndicator({ password }: { password?: string }) {
   const colorClass = colors[Math.min(score - 1, 4)] || 'bg-border';
 
   return (
-    <div className="space-y-1 w-full font-sans text-[10px]">
-      <div className="flex justify-between font-bold text-text-secondary">
+    <div className="space-y-1.5 w-full font-sans text-xs">
+      <div className="flex justify-between font-semibold text-text-secondary">
         <span>Password Strength</span>
         <span className="capitalize">{label}</span>
       </div>
       {/* Bars */}
-      <div className="grid grid-cols-5 gap-1.5 h-1">
+      <div className="grid grid-cols-5 gap-1.5 h-1.5">
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
@@ -154,18 +154,18 @@ export function PasswordStrengthIndicator({ password }: { password?: string }) {
 
 export function SocialLogins() {
   return (
-    <div className="grid grid-cols-3 gap-3 text-xs font-bold font-sans">
-      <Button variant="outline" className="gap-1.5 py-2 hover:bg-slate-50 dark:hover:bg-primary-900/25 border-border bg-white dark:bg-primary-950/15 shadow-2xs text-text-primary text-[11px]" size="sm">
-        <Chrome className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-        Google
+    <div className="grid grid-cols-3 gap-2.5 font-sans">
+      <Button variant="outline" className="gap-2 py-2 border-border bg-card hover:bg-muted text-text-primary text-xs font-semibold min-h-[40px] shadow-2xs" size="sm">
+        <Chrome className="h-4 w-4 text-rose-500 shrink-0" />
+        <span>Google</span>
       </Button>
-      <Button variant="outline" className="gap-1.5 py-2 hover:bg-slate-50 dark:hover:bg-primary-900/25 border-border bg-white dark:bg-primary-950/15 shadow-2xs text-text-primary text-[11px]" size="sm">
-        <Facebook className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-        Facebook
+      <Button variant="outline" className="gap-2 py-2 border-border bg-card hover:bg-muted text-text-primary text-xs font-semibold min-h-[40px] shadow-2xs" size="sm">
+        <Facebook className="h-4 w-4 text-blue-600 shrink-0" />
+        <span>Facebook</span>
       </Button>
-      <Button variant="outline" className="gap-1.5 py-2 hover:bg-slate-50 dark:hover:bg-primary-900/25 border-border bg-white dark:bg-primary-950/15 shadow-2xs text-text-primary text-[11px]" size="sm">
-        <Apple className="h-3.5 w-3.5 text-slate-900 dark:text-white shrink-0" />
-        Apple
+      <Button variant="outline" className="gap-2 py-2 border-border bg-card hover:bg-muted text-text-primary text-xs font-semibold min-h-[40px] shadow-2xs" size="sm">
+        <Apple className="h-4 w-4 text-text-primary shrink-0" />
+        <span>Apple</span>
       </Button>
     </div>
   );

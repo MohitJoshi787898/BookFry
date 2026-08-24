@@ -242,6 +242,24 @@ export class PaymentsController {
     session?: mongoose.ClientSession
   ): Promise<void> => {
     try {
+      // Transition all child subOrders to confirmed status
+      if (order.subOrders && order.subOrders.length > 0) {
+        for (const sub of order.subOrders) {
+          sub.status = 'confirmed';
+          if (!sub.timeline) sub.timeline = [];
+          sub.timeline.push({
+            status: 'confirmed',
+            note: 'Payment verified, package confirmed for packing and dispatch',
+            timestamp: new Date(),
+          });
+        }
+        if (session) {
+          await order.save({ session });
+        } else {
+          await order.save();
+        }
+      }
+
       // 1. Group items by seller for creating Transaction records & notifications
       const sellerAmounts: Record<string, number> = {};
       for (const item of order.items) {

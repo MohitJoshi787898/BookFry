@@ -294,6 +294,10 @@ function SellBookPageInner() {
       formData.append('price', String(data.price));
       formData.append('stock', String(data.quantity));
       formData.append('language', 'English');
+      if (data.city) formData.append('city', data.city);
+      if (data.state) formData.append('state', data.state);
+      if (data.pincode) formData.append('pincode', data.pincode);
+      if (data.pickupAddress) formData.append('pickupAddress', data.pickupAddress);
       if (data.publisher) formData.append('publisher', data.publisher);
       if (data.edition) formData.append('edition', data.edition);
 

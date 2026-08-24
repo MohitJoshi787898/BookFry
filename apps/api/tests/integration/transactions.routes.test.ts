@@ -171,5 +171,100 @@ describe('Transactions Modules Integration Tests', () => {
       expect(response.body.data.status).toBe('shipped');
       expect(response.body.data.timeline.length).toBeGreaterThanOrEqual(2);
     });
+
+    it('GET /api/v1/orders/seller should return only seller isolated items and subOrders', async () => {
+      const response = await request(app)
+        .get('/api/v1/orders/seller')
+        .set('Authorization', `Bearer ${sellerToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      const sellerOrder = response.body.data.find((o: any) => o.id === orderId);
+      expect(sellerOrder).toBeDefined();
+      expect(sellerOrder.subOrders?.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('PATCH /api/v1/orders/:orderId/sub-orders/:subOrderId/status should update carrier tracking', async () => {
+      const order = await OrderModel.findById(orderId);
+      const subOrderId = order?.subOrders?.[0]?._id?.toString() || order?.subOrders?.[0]?.subOrderNumber;
+
+      if (subOrderId) {
+        const response = await request(app)
+          .patch(`/api/v1/orders/${orderId}/sub-orders/${subOrderId}/status`)
+          .set('Authorization', `Bearer ${sellerToken}`)
+          .send({
+            status: 'delivered',
+            carrier: 'Delhivery',
+            trackingNumber: 'DL123456789',
+            note: 'Delivered to recipient doorstep',
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.status).toBe('delivered');
+      }
+    });
+  });
+
+  describe('Used Book Requests Module - Batch and Accept Flow', () => {
+    let usedListingId: string;
+    let createdRequestId: string;
+
+    beforeAll(async () => {
+      const catalog = await BookCatalogModel.create({
+        title: 'Used Quantum Mechanics',
+        slug: 'used-quantum-mechanics',
+        author: 'D. Griffiths',
+        description: 'Comprehensive textbook on Quantum Mechanics for university students.',
+        isbn: '9780131118928',
+        category: categoryId,
+      });
+
+      const listing = await BookListingModel.create({
+        catalogId: catalog._id,
+        sellerId,
+        condition: 'good',
+        price: 299,
+        stock: 1,
+        city: 'Delhi',
+        state: 'Delhi',
+        pincode: '110007',
+        status: 'active',
+      });
+      usedListingId = listing._id.toString();
+    });
+
+    it('POST /api/v1/used-book-requests/batch should create grouped request with locked contact', async () => {
+      const response = await request(app)
+        .post('/api/v1/used-book-requests/batch')
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({
+          listingIds: [usedListingId],
+          phone: '+919999999999',
+          whatsappPhone: '+919999999999',
+          note: 'Can we meet at university gate?',
+          preferredContactMethod: 'whatsapp',
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.length).toBe(1);
+      const reqDoc = response.body.data[0];
+      createdRequestId = reqDoc.id;
+      expect(reqDoc.items.length).toBe(1);
+      expect(reqDoc.status).toBe('requested');
+    });
+
+    it('PATCH /api/v1/used-book-requests/:id/accept should transition status and unlock contact', async () => {
+      const response = await request(app)
+        .patch(`/api/v1/used-book-requests/${createdRequestId}/accept`)
+        .set('Authorization', `Bearer ${sellerToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.status).toBe('accepted');
+      expect(response.body.data.buyerContact.isContactUnlocked).toBe(true);
+    });
   });
 });

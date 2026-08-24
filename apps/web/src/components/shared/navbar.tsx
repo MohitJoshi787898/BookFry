@@ -10,10 +10,13 @@ import { useCartStore } from "@/stores/cart.store";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { apiClient } from "@/lib/api-client";
 import { AnnouncementBar } from "./announcement-bar";
+import { PushNotificationBanner } from "./push-notification-banner";
 import { MobileNav } from "./mobile-nav";
 import { BookFryLogo } from "../navbar/logo";
 import { SearchBar } from "../navbar/search-bar";
 import { CategoryScroll } from "../navbar/category-scroll";
+import { useLocationStore } from "@/stores/location.store";
+import { LocationSelectorModal } from "../navbar/location-selector-modal";
 import {
   LogOut,
   LayoutDashboard,
@@ -23,6 +26,8 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
+  MapPin,
   Moon,
   Sun,
   Store,
@@ -157,10 +162,12 @@ export function Navbar() {
 
   if (!mounted) return null;
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const { locationName } = useLocationStore.getState();
 
   return (
     <div className="w-full">
       <AnnouncementBar />
+      <PushNotificationBanner />
 
       {/* ──────────────────────── HEADER ──────────────────────────────── */}
       <header
@@ -171,12 +178,27 @@ export function Navbar() {
         }`}
       >
         {/* ── Desktop (lg+) ──────────────────────────────────────────── */}
-        <div className="hidden lg:flex items-center gap-4 px-8 xl:px-12 h-16 w-full max-w-screen-2xl mx-auto">
+        <div className="hidden lg:flex items-center gap-3.5 px-8 xl:px-12 h-16 w-full max-w-screen-2xl mx-auto">
           {/* Logo */}
           <BookFryLogo />
 
+          {/* Deliver To Location Selector */}
+          <button
+            type="button"
+            onClick={() => useLocationStore.getState().setModalOpen(true)}
+            className="focus-ring flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border border-border/80 bg-card/60 hover:bg-muted text-xs font-semibold text-foreground transition-all max-w-[170px] shrink-0"
+            aria-label="Change delivery location"
+          >
+            <MapPin className="h-4 w-4 text-secondary shrink-0" />
+            <div className="flex flex-col text-left leading-none min-w-0">
+              <span className="text-[9px] text-muted-foreground uppercase font-black tracking-wider">Deliver to</span>
+              <span className="text-[11px] font-extrabold truncate text-foreground mt-0.5">{locationName}</span>
+            </div>
+            <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0 ml-0.5" />
+          </button>
+
           {/* Search */}
-          <div className="flex-1 max-w-2xl mx-4">
+          <div className="flex-1 max-w-2xl mx-2">
             <SearchBar variant="desktop" className="w-full" />
           </div>
 
@@ -214,6 +236,15 @@ export function Navbar() {
                     <LayoutDashboard className="h-4 w-4" />
                   </Link>
                 )}
+                {user.roles.includes("seller") && (
+                  <Link
+                    href="/seller/dashboard"
+                    className="focus-ring flex items-center gap-1.5 rounded-2xl border border-secondary/40 bg-secondary/10 hover:bg-secondary/20 px-3.5 py-2 text-xs font-extrabold text-secondary transition-all"
+                  >
+                    <Store className="h-3.5 w-3.5" />
+                    <span>Seller Hub</span>
+                  </Link>
+                )}
                 <Link
                   href="/account/profile"
                   className="focus-ring flex items-center gap-2 rounded-2xl border border-border bg-card hover:bg-muted px-3.5 py-2 text-xs font-extrabold text-foreground transition-all"
@@ -234,19 +265,18 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-2.5">
-                <Link
-                  href="/sell"
-                  onClick={(e) => {
-                    if (!isAuthenticated) {
-                      e.preventDefault();
-                      useAuthModalStore.getState().openModal("login", "/sell");
-                    }
-                  }}
+                <button
+                  type="button"
+                  onClick={() =>
+                    useAuthModalStore
+                      .getState()
+                      .openModal("seller_signup", "/seller/dashboard")
+                  }
                   className="focus-ring flex items-center gap-1.5 rounded-2xl border border-secondary/40 bg-secondary/5 hover:bg-secondary/10 px-4 py-2 text-xs font-extrabold text-secondary transition-all"
                 >
                   <Store className="h-3.5 w-3.5" />
                   <span>Sell Books</span>
-                </Link>
+                </button>
                 <button
                   type="button"
                   onClick={() => useAuthModalStore.getState().openModal("login")}
@@ -339,8 +369,18 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Mobile Search Row */}
-          <div className="px-4 pb-3">
+          {/* Mobile Search & Location Row */}
+          <div className="px-4 pb-3 flex flex-col gap-1.5">
+            <button
+              type="button"
+              onClick={() => useLocationStore.getState().setModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl border border-border/70 bg-card/60 text-xs font-semibold text-foreground hover:bg-muted self-start max-w-full"
+            >
+              <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
+              <span className="text-[10px] text-muted-foreground uppercase font-black">Deliver to:</span>
+              <span className="text-xs font-bold truncate max-w-[200px]">{locationName}</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+            </button>
             <SearchBar variant="mobile" className="w-full" />
           </div>
         </div>
@@ -436,7 +476,25 @@ export function Navbar() {
                       <p className="text-[11px] text-muted-foreground truncate font-medium">{user.email}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mt-4">
+
+                  {/* Seller Dashboard banner if seller */}
+                  {user.roles.includes("seller") && (
+                    <Link
+                      href="/seller/dashboard"
+                      onClick={() => setDrawerOpen(false)}
+                      className="flex items-center justify-between p-3 rounded-2xl bg-secondary/10 border border-secondary/30 text-secondary font-extrabold text-xs mt-3 transition-all"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Store className="h-4 w-4" />
+                        <span>Seller Dashboard</span>
+                      </span>
+                      <span className="bg-secondary text-white text-[9px] px-2 py-0.5 rounded-full font-black uppercase">
+                        Portal
+                      </span>
+                    </Link>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2 mt-3">
                     {[
                       { label: "My Orders", href: "/account/orders", icon: Package },
                       { label: "Profile", href: "/account/profile", icon: UserIcon },
@@ -463,23 +521,35 @@ export function Navbar() {
                     </div>
                     <div>
                       <p className="font-extrabold text-sm text-foreground">Welcome to BookFry</p>
-                      <p className="text-[11px] text-muted-foreground font-medium">Sign in to access your account</p>
+                      <p className="text-[11px] text-muted-foreground font-medium">
+                        Buy or Sell books with student escrow
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => { setDrawerOpen(false); useAuthModalStore.getState().openModal("login"); }}
-                      className="h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold rounded-2xl text-xs uppercase tracking-wider transition-all active:scale-95"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        useAuthModalStore.getState().openModal("login");
+                      }}
+                      className="h-11 bg-primary text-primary-foreground font-extrabold rounded-2xl text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1.5"
                     >
-                      Login
+                      <UserIcon className="h-3.5 w-3.5" />
+                      <span>Sign In</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setDrawerOpen(false); useAuthModalStore.getState().openModal("signup"); }}
-                      className="h-11 border border-border bg-background hover:bg-muted text-foreground font-extrabold rounded-2xl text-xs uppercase tracking-wider transition-all active:scale-95"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                        useAuthModalStore
+                          .getState()
+                          .openModal("seller_signup", "/seller/dashboard");
+                      }}
+                      className="h-11 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold rounded-2xl text-xs uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-1.5"
                     >
-                      Sign Up
+                      <Store className="h-3.5 w-3.5" />
+                      <span>Start Selling</span>
                     </button>
                   </div>
                 </div>
@@ -578,6 +648,7 @@ export function Navbar() {
         )}
       </AnimatePresence>
 
+      <LocationSelectorModal />
       <MobileNav />
     </div>
   );

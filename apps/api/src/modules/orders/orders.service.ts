@@ -32,6 +32,56 @@ export class OrdersService {
     return `ORD-${timestamp}-${random}`;
   }
 
+  private buildSubOrders(
+    orderNumber: string,
+    orderItems: any[],
+    totalSubtotal: number,
+    totalShippingFee: number
+  ): any[] {
+    const sellerMap = new Map<string, any[]>();
+    for (const item of orderItems) {
+      const sId = item.sellerId.toString();
+      if (!sellerMap.has(sId)) {
+        sellerMap.set(sId, []);
+      }
+      sellerMap.get(sId)!.push(item);
+    }
+
+    const subOrders: any[] = [];
+    let idx = 1;
+    for (const [sellerIdStr, sItems] of sellerMap.entries()) {
+      const sSubtotal = sItems.reduce((acc, it) => acc + it.price * it.quantity, 0);
+      const sRatio = totalSubtotal > 0 ? sSubtotal / totalSubtotal : 1 / sellerMap.size;
+      const sShipping = parseFloat((totalShippingFee * sRatio).toFixed(2));
+      const sTax = parseFloat((sSubtotal * 0.08).toFixed(2));
+      const sTotal = parseFloat((sSubtotal + sShipping + sTax).toFixed(2));
+      const sPayout = parseFloat((sSubtotal * 0.9).toFixed(2));
+
+      subOrders.push({
+        _id: new mongoose.Types.ObjectId(),
+        subOrderNumber: `${orderNumber}-S${idx}`,
+        sellerId: new mongoose.Types.ObjectId(sellerIdStr),
+        items: sItems,
+        subtotal: sSubtotal,
+        shippingFee: sShipping,
+        tax: sTax,
+        total: sTotal,
+        sellerPayout: sPayout,
+        status: 'pending',
+        shippingDetails: {},
+        timeline: [
+          {
+            status: 'pending',
+            note: 'Package created, awaiting payment',
+            timestamp: new Date(),
+          },
+        ],
+      });
+      idx++;
+    }
+    return subOrders;
+  }
+
   async createOrder(
     buyerId: string,
     shippingAddress: {
@@ -49,50 +99,68 @@ export class OrdersService {
     }
 
     const orderItems: any[] = [];
+    const decrementedListings: Array<{ listing: any; quantity: number }> = [];
     let subtotal = 0;
 
-    for (const item of cart.items) {
-      const listingIdStr = (item.listingId as any)?._id
-        ? (item.listingId as any)._id.toString()
-        : (item as any).bookId
-        ? (item as any).bookId.toString()
-        : item.listingId?.toString() ?? '';
+    try {
+      for (const item of cart.items) {
+        const listingIdStr = (item.listingId as any)?._id
+          ? (item.listingId as any)._id.toString()
+          : (item as any).bookId
+          ? (item as any).bookId.toString()
+          : item.listingId?.toString() ?? '';
 
-      const listing = await this.listingRepository.findById(listingIdStr);
-      if (!listing || listing.status !== 'active') {
-        throw new NotFoundError(`Book listing is no longer available`);
+        const listing = await this.listingRepository.findById(listingIdStr);
+        if (!listing || listing.status !== 'active') {
+          throw new NotFoundError(`Book listing is no longer available`);
+        }
+
+        const catalogDoc = listing.catalogId as any;
+
+        if (listing.sellerId.toString() === buyerId) {
+          throw new ValidationError(`You cannot purchase your own listed book.`);
+        }
+
+        if (listing.stock < item.quantity) {
+          throw new ValidationError(
+            `Insufficient stock for "${catalogDoc?.title || 'this book'}". Only ${listing.stock} left.`
+          );
+        }
+
+        listing.stock -= item.quantity;
+        if (listing.stock === 0) {
+          listing.status = 'sold';
+        }
+        await listing.save();
+        decrementedListings.push({ listing, quantity: item.quantity });
+
+        const price = listing.price;
+        subtotal += price * item.quantity;
+
+        orderItems.push({
+          listingId: listing._id,
+          bookId: catalogDoc?._id || listing.catalogId,
+          sellerId: listing.sellerId,
+          title: catalogDoc?.title || 'Book',
+          price,
+          quantity: item.quantity,
+          condition: listing.condition,
+        });
       }
-
-      const catalogDoc = listing.catalogId as any;
-
-      if (listing.sellerId.toString() === buyerId) {
-        throw new ValidationError(`You cannot purchase your own listed book.`);
+    } catch (err) {
+      // Rollback any stocks decremented before failure
+      for (const { listing, quantity } of decrementedListings) {
+        try {
+          listing.stock += quantity;
+          if (listing.status === 'sold') {
+            listing.status = 'active';
+          }
+          await listing.save();
+        } catch (rollbackErr) {
+          console.error('[Stock Rollback Error]:', rollbackErr);
+        }
       }
-
-      if (listing.stock < item.quantity) {
-        throw new ValidationError(
-          `Insufficient stock for "${catalogDoc?.title || 'this book'}". Only ${listing.stock} left.`
-        );
-      }
-
-      listing.stock -= item.quantity;
-      if (listing.stock === 0) {
-        listing.status = 'sold';
-      }
-      await listing.save();
-
-      const price = listing.price;
-      subtotal += price * item.quantity;
-
-      orderItems.push({
-        listingId: listing._id,
-        bookId: catalogDoc?._id || listing.catalogId,
-        sellerId: listing.sellerId,
-        title: catalogDoc?.title || 'Book',
-        price,
-        quantity: item.quantity,
-        condition: listing.condition,
-      });
+      throw err;
     }
 
     let discountAmount = 0;
@@ -120,10 +188,13 @@ export class OrdersService {
 
     const orderNumber = this.generateOrderNumber();
 
+    const subOrders = this.buildSubOrders(orderNumber, orderItems, subtotal, shippingFee);
+
     const orderDoc = await this.ordersRepository.create({
       orderNumber,
       buyerId: new mongoose.Types.ObjectId(buyerId),
       items: orderItems,
+      subOrders,
       shippingAddress,
       subtotal,
       discountAmount,
@@ -145,41 +216,43 @@ export class OrdersService {
 
     await this.cartRepository.update(buyerId, []);
 
-    // Async Email Notifications Dispatch (Non-blocking)
-    try {
-      const emailService = new EmailService();
-      const buyerUser = await UserModel.findById(buyerId);
-      if (buyerUser) {
-        await emailService.sendOrderConfirmationToBuyer(
-          buyerUser.email,
-          buyerUser.name,
-          orderNumber,
-          orderItems.map((item) => ({
-            title: item.title,
-            price: item.price,
-            quantity: item.quantity,
-          })),
-          total
-        );
-      }
-
-      // Notify sellers of each unique item
-      for (const item of orderItems) {
-        const sellerUser = await UserModel.findById(item.sellerId);
-        if (sellerUser) {
-          const payoutAmount = item.price * 0.9; // 10% platform fee
-          await emailService.sendSaleNotificationToSeller(
-            sellerUser.email,
-            sellerUser.name,
+    // Async Email Notifications Dispatch (Non-blocking queue)
+    setImmediate(async () => {
+      try {
+        const emailService = new EmailService();
+        const buyerUser = await UserModel.findById(buyerId);
+        if (buyerUser) {
+          await emailService.queueOrderConfirmation(
+            buyerUser.email,
+            buyerUser.name,
             orderNumber,
-            item.title,
-            payoutAmount
+            orderItems.map((item) => ({
+              title: item.title,
+              price: item.price,
+              quantity: item.quantity,
+            })),
+            total
           );
         }
+
+        // Notify sellers of each unique item
+        for (const item of orderItems) {
+          const sellerUser = await UserModel.findById(item.sellerId);
+          if (sellerUser) {
+            const payoutAmount = item.price * 0.9; // 10% platform fee
+            await emailService.queueSaleNotification(
+              sellerUser.email,
+              sellerUser.name,
+              orderNumber,
+              item.title,
+              payoutAmount
+            );
+          }
+        }
+      } catch (emailErr) {
+        console.error('[Order Email Notification Warning] Non-blocking email error:', emailErr);
       }
-    } catch (emailErr) {
-      console.error('[Order Email Notification Warning] Non-blocking email error:', emailErr);
-    }
+    });
 
     return this.mapToDTO(orderDoc);
   }
@@ -232,49 +305,65 @@ export class OrdersService {
       const { UsedBookRequestsService } = await import('../used-book-requests/used-book-requests.service');
       const usedRequestsService = new UsedBookRequestsService();
 
-      for (const { listing } of usedItems) {
-        const reqResult = await usedRequestsService.createRequest(buyerId, {
-          listingId: listing._id.toString(),
-          phone: buyerContactOverride?.phone,
-          whatsappPhone: buyerContactOverride?.whatsappPhone,
-          note: buyerContactOverride?.note,
-        });
-        usedRequests.push(reqResult);
-      }
+      const usedListingIds = usedItems.map(({ listing }) => listing._id.toString());
+      const batchRes = await usedRequestsService.createBatchRequests(buyerId, {
+        listingIds: usedListingIds,
+        phone: buyerContactOverride?.phone,
+        whatsappPhone: buyerContactOverride?.whatsappPhone,
+        note: buyerContactOverride?.note,
+      });
+      usedRequests.push(...batchRes);
     }
 
     let newOrder: Order | null = null;
     if (newItems.length > 0) {
       const orderItems: any[] = [];
+      const decrementedListings: Array<{ listing: any; quantity: number }> = [];
       let subtotal = 0;
 
-      for (const { item, listing } of newItems) {
-        const catalogDoc = listing.catalogId as any;
+      try {
+        for (const { item, listing } of newItems) {
+          const catalogDoc = listing.catalogId as any;
 
-        if (listing.stock < item.quantity) {
-          throw new ValidationError(
-            `Insufficient stock for "${catalogDoc?.title || 'this book'}". Only ${listing.stock} left.`
-          );
+          if (listing.stock < item.quantity) {
+            throw new ValidationError(
+              `Insufficient stock for "${catalogDoc?.title || 'this book'}". Only ${listing.stock} left.`
+            );
+          }
+
+          listing.stock -= item.quantity;
+          if (listing.stock === 0) {
+            listing.status = 'sold';
+          }
+          await listing.save();
+          decrementedListings.push({ listing, quantity: item.quantity });
+
+          const price = listing.price;
+          subtotal += price * item.quantity;
+
+          orderItems.push({
+            listingId: listing._id,
+            bookId: catalogDoc?._id || listing.catalogId,
+            sellerId: listing.sellerId,
+            title: catalogDoc?.title || 'Book',
+            price,
+            quantity: item.quantity,
+            condition: listing.condition,
+          });
         }
-
-        listing.stock -= item.quantity;
-        if (listing.stock === 0) {
-          listing.status = 'sold';
+      } catch (err) {
+        for (const { listing, quantity } of decrementedListings) {
+          try {
+            listing.stock += quantity;
+            if (listing.status === 'sold') {
+              listing.status = 'active';
+            }
+            await listing.save();
+          } catch (rollbackErr) {
+            console.error('[Stock Rollback Error]:', rollbackErr);
+          }
         }
-        await listing.save();
-
-        const price = listing.price;
-        subtotal += price * item.quantity;
-
-        orderItems.push({
-          listingId: listing._id,
-          bookId: catalogDoc?._id || listing.catalogId,
-          sellerId: listing.sellerId,
-          title: catalogDoc?.title || 'Book',
-          price,
-          quantity: item.quantity,
-          condition: listing.condition,
-        });
+        throw err;
       }
 
       let discountAmount = 0;
@@ -301,11 +390,13 @@ export class OrdersService {
       const total = parseFloat((discountedSubtotal + shippingFee + tax).toFixed(2));
 
       const orderNumber = this.generateOrderNumber();
+      const subOrders = this.buildSubOrders(orderNumber, orderItems, subtotal, shippingFee);
 
       const orderDoc = await this.ordersRepository.create({
         orderNumber,
         buyerId: new mongoose.Types.ObjectId(buyerId),
         items: orderItems,
+        subOrders,
         shippingAddress,
         subtotal,
         discountAmount,
@@ -327,40 +418,42 @@ export class OrdersService {
 
       newOrder = this.mapToDTO(orderDoc);
 
-      // Async Email Notifications Dispatch (Non-blocking)
-      try {
-        const emailService = new EmailService();
-        const buyerUser = await UserModel.findById(buyerId);
-        if (buyerUser) {
-          await emailService.sendOrderConfirmationToBuyer(
-            buyerUser.email,
-            buyerUser.name,
-            orderNumber,
-            orderItems.map((item) => ({
-              title: item.title,
-              price: item.price,
-              quantity: item.quantity,
-            })),
-            total
-          );
-        }
-
-        for (const item of orderItems) {
-          const sellerUser = await UserModel.findById(item.sellerId);
-          if (sellerUser) {
-            const payoutAmount = item.price * 0.9;
-            await emailService.sendSaleNotificationToSeller(
-              sellerUser.email,
-              sellerUser.name,
+      // Async Email Notifications Dispatch (Non-blocking queue)
+      setImmediate(async () => {
+        try {
+          const emailService = new EmailService();
+          const buyerUser = await UserModel.findById(buyerId);
+          if (buyerUser) {
+            await emailService.queueOrderConfirmation(
+              buyerUser.email,
+              buyerUser.name,
               orderNumber,
-              item.title,
-              payoutAmount
+              orderItems.map((item) => ({
+                title: item.title,
+                price: item.price,
+                quantity: item.quantity,
+              })),
+              total
             );
           }
+
+          for (const item of orderItems) {
+            const sellerUser = await UserModel.findById(item.sellerId);
+            if (sellerUser) {
+              const payoutAmount = item.price * 0.9;
+              await emailService.queueSaleNotification(
+                sellerUser.email,
+                sellerUser.name,
+                orderNumber,
+                item.title,
+                payoutAmount
+              );
+            }
+          }
+        } catch (emailErr) {
+          console.error('[Order Email Notification Warning]:', emailErr);
         }
-      } catch (emailErr) {
-        console.error('[Order Email Notification Warning]:', emailErr);
-      }
+      });
     }
 
     await this.cartRepository.update(buyerId, []);
@@ -386,7 +479,29 @@ export class OrdersService {
       throw new UnauthorizedError('Not authorized to view this order');
     }
 
-    return this.mapToDTO(order);
+    const dto = this.mapToDTO(order);
+
+    if (!isAdmin && !isBuyer && isSellerOfItem) {
+      // Seller view isolation: filter to only this seller's items and subOrders
+      const sellerSubOrders = (order.subOrders || []).filter(
+        (s: any) => s.sellerId?.toString() === userId
+      );
+      const sellerItems = dto.items.filter((item) => item.sellerId === userId);
+      const sellerSubtotal = sellerItems.reduce((sum, it) => sum + it.price * it.quantity, 0);
+
+      return {
+        ...dto,
+        items: sellerItems,
+        subOrders: dto.subOrders?.filter((s) => s.sellerId === userId),
+        subtotal: sellerSubtotal,
+        total:
+          sellerSubOrders.length > 0
+            ? sellerSubOrders.reduce((sum: number, s: any) => sum + s.total, 0)
+            : parseFloat((sellerSubtotal * 1.08).toFixed(2)),
+      };
+    }
+
+    return dto;
   }
 
   async getPublicInvoice(idOrOrderNumber: string, userId?: string, roles: string[] = []): Promise<Order> {
@@ -415,7 +530,152 @@ export class OrdersService {
 
   async getSellerOrders(sellerId: string): Promise<Order[]> {
     const docs = await this.ordersRepository.findBySellerId(sellerId);
-    return docs.map((doc) => this.mapToDTO(doc));
+    return docs.map((doc) => {
+      const sellerSubOrders = (doc.subOrders || []).filter(
+        (s: any) => s.sellerId?.toString() === sellerId
+      );
+      const sellerItems = doc.items.filter(
+        (item: any) => item.sellerId?.toString() === sellerId
+      );
+      const sellerSubtotal = sellerItems.reduce(
+        (sum: number, it: any) => sum + it.price * it.quantity,
+        0
+      );
+
+      const dto = this.mapToDTO(doc);
+      return {
+        ...dto,
+        items: sellerItems.map((item: any) => ({
+          listingId: item.listingId ? item.listingId.toString() : undefined,
+          bookId: item.bookId ? item.bookId.toString() : '',
+          sellerId: item.sellerId ? item.sellerId.toString() : '',
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          condition: item.condition,
+        })),
+        subOrders: dto.subOrders?.filter((s) => s.sellerId === sellerId),
+        subtotal: sellerSubtotal,
+        total:
+          sellerSubOrders.length > 0
+            ? sellerSubOrders.reduce((sum: number, s: any) => sum + s.total, 0)
+            : parseFloat((sellerSubtotal * 1.08).toFixed(2)),
+      };
+    });
+  }
+
+  async updateSubOrderStatus(
+    orderId: string,
+    subOrderId: string,
+    userId: string,
+    roles: string[],
+    newStatus: OrderStatus,
+    shippingDetails?: {
+      carrier?: string;
+      trackingNumber?: string;
+      trackingUrl?: string;
+      estimatedDays?: number;
+    },
+    note?: string
+  ): Promise<Order> {
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    const isAdmin = roles.includes('admin');
+    const subOrder = (order.subOrders || []).find(
+      (s: any) => s._id?.toString() === subOrderId || s.subOrderNumber === subOrderId
+    );
+
+    if (!subOrder) {
+      return this.updateOrderStatus(orderId, userId, roles, newStatus, note);
+    }
+
+    const isSellerOfSubOrder = subOrder.sellerId.toString() === userId;
+    if (!isAdmin && !isSellerOfSubOrder) {
+      throw new UnauthorizedError('Not authorized to update this package status');
+    }
+
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      pending: ['confirmed', 'cancelled'],
+      confirmed: ['shipped', 'cancelled'],
+      shipped: ['delivered', 'cancelled'],
+      delivered: ['return_requested'],
+      return_requested: ['return_approved', 'return_rejected'],
+      return_approved: ['refunded'],
+      return_rejected: [],
+      cancelled: [],
+      refunded: [],
+    };
+
+    if (!isAdmin && !VALID_TRANSITIONS[subOrder.status]?.includes(newStatus)) {
+      throw new ValidationError(
+        `Invalid status transition from "${subOrder.status}" to "${newStatus}"`
+      );
+    }
+
+    subOrder.status = newStatus;
+    subOrder.timeline.push({
+      status: newStatus,
+      note: note || `Package status updated to ${newStatus}`,
+      timestamp: new Date(),
+    });
+
+    if (shippingDetails) {
+      if (!subOrder.shippingDetails) {
+        subOrder.shippingDetails = {};
+      }
+      if (shippingDetails.carrier) subOrder.shippingDetails.carrier = shippingDetails.carrier;
+      if (shippingDetails.trackingNumber)
+        subOrder.shippingDetails.trackingNumber = shippingDetails.trackingNumber;
+      if (shippingDetails.trackingUrl)
+        subOrder.shippingDetails.trackingUrl = shippingDetails.trackingUrl;
+      if (newStatus === 'shipped') {
+        subOrder.shippingDetails.shippedAt = new Date();
+        if (shippingDetails.estimatedDays) {
+          const est = new Date();
+          est.setDate(est.getDate() + shippingDetails.estimatedDays);
+          subOrder.shippingDetails.estimatedDelivery = est;
+        }
+      } else if (newStatus === 'delivered') {
+        subOrder.shippingDetails.deliveredAt = new Date();
+      }
+    }
+
+    const allStatuses = order.subOrders.map((s: any) => s.status);
+    if (allStatuses.every((s: string) => s === 'delivered')) {
+      order.status = 'delivered';
+    } else if (allStatuses.some((s: string) => s === 'shipped' || s === 'delivered')) {
+      order.status = 'shipped';
+    } else if (allStatuses.every((s: string) => s === 'cancelled')) {
+      order.status = 'cancelled';
+    }
+
+    order.timeline.push({
+      status: order.status,
+      note: `Package ${subOrder.subOrderNumber} updated to ${newStatus}`,
+      timestamp: new Date(),
+    });
+
+    await order.save();
+
+    try {
+      const notificationsService = new NotificationsService();
+      await notificationsService.createNotification(
+        order.buyerId.toString(),
+        `package_${newStatus}`,
+        `Package ${newStatus === 'shipped' ? 'Dispatched' : newStatus === 'delivered' ? 'Delivered' : 'Updated'}!`,
+        `Your package #${subOrder.subOrderNumber} has been marked as ${newStatus}${
+          shippingDetails?.carrier ? ` via ${shippingDetails.carrier}` : ''
+        }.`,
+        { orderId: order._id.toString(), subOrderId: subOrder._id?.toString() }
+      );
+    } catch (err) {
+      console.warn('[SubOrder Notification Warning]:', err);
+    }
+
+    return this.mapToDTO(order);
   }
 
   /** Admin: fetch all orders, optionally filtered by status */
@@ -441,6 +701,22 @@ export class OrdersService {
 
     if (!isAdmin && !isSellerOfItem) {
       throw new UnauthorizedError('Not authorized to update order status');
+    }
+
+    // If caller is a seller and order has sub-orders, route through sub-order handler
+    if (!isAdmin && isSellerOfItem && order.subOrders && order.subOrders.length > 0) {
+      const sellerSub = order.subOrders.find((s: any) => s.sellerId.toString() === userId);
+      if (sellerSub) {
+        return this.updateSubOrderStatus(
+          id,
+          sellerSub._id?.toString() || sellerSub.subOrderNumber,
+          userId,
+          roles,
+          newStatus,
+          undefined,
+          note
+        );
+      }
     }
 
     // State machine transition validation
@@ -472,6 +748,20 @@ export class OrdersService {
       timestamp: new Date(),
     });
 
+    if (order.subOrders && order.subOrders.length > 0) {
+      for (const sub of order.subOrders) {
+        if (isAdmin || sub.sellerId.toString() === userId) {
+          sub.status = newStatus;
+          if (!sub.timeline) sub.timeline = [];
+          sub.timeline.push({
+            status: newStatus,
+            note: note || `Package status updated to ${newStatus}`,
+            timestamp: new Date(),
+          });
+        }
+      }
+    }
+
     if (newStatus === 'delivered') {
       order.paymentStatus = 'paid';
       // Release payment transaction funds to sellers
@@ -488,6 +778,7 @@ export class OrdersService {
     const updated = await this.ordersRepository.update(id, {
       status: newStatus,
       paymentStatus: order.paymentStatus,
+      subOrders: order.subOrders,
       timeline: order.timeline,
     } as any);
 
@@ -663,6 +954,64 @@ export class OrdersService {
         price: item.price,
         quantity: item.quantity,
         condition: item.condition,
+      })),
+      subOrders: (doc.subOrders || []).map((sub: any) => ({
+        id: sub._id ? sub._id.toString() : sub.subOrderNumber,
+        subOrderNumber: sub.subOrderNumber,
+        sellerId: sub.sellerId ? sub.sellerId.toString() : '',
+        items: (sub.items || []).map((item: any) => ({
+          listingId: item.listingId ? item.listingId.toString() : undefined,
+          bookId: item.bookId ? item.bookId.toString() : '',
+          sellerId: item.sellerId ? item.sellerId.toString() : '',
+          title: item.title,
+          price: item.price,
+          quantity: item.quantity,
+          condition: item.condition,
+        })),
+        subtotal: sub.subtotal,
+        shippingFee: sub.shippingFee,
+        tax: sub.tax,
+        total: sub.total,
+        sellerPayout: sub.sellerPayout,
+        status: sub.status,
+        shippingDetails: sub.shippingDetails
+          ? {
+              carrier: sub.shippingDetails.carrier,
+              trackingNumber: sub.shippingDetails.trackingNumber,
+              trackingUrl: sub.shippingDetails.trackingUrl,
+              shippedAt: sub.shippingDetails.shippedAt
+                ? new Date(sub.shippingDetails.shippedAt).toISOString()
+                : undefined,
+              estimatedDelivery: sub.shippingDetails.estimatedDelivery
+                ? new Date(sub.shippingDetails.estimatedDelivery).toISOString()
+                : undefined,
+              deliveredAt: sub.shippingDetails.deliveredAt
+                ? new Date(sub.shippingDetails.deliveredAt).toISOString()
+                : undefined,
+            }
+          : undefined,
+        timeline: (sub.timeline || []).map((ev: any) => ({
+          status: ev.status,
+          note: ev.note,
+          timestamp: ev.timestamp
+            ? new Date(ev.timestamp).toISOString()
+            : new Date().toISOString(),
+        })),
+        returnRequest: sub.returnRequest
+          ? {
+              reason: sub.returnRequest.reason,
+              requestedAt: sub.returnRequest.requestedAt
+                ? new Date(sub.returnRequest.requestedAt).toISOString()
+                : new Date().toISOString(),
+              status: sub.returnRequest.status,
+              adminNote: sub.returnRequest.adminNote,
+              resolvedAt: sub.returnRequest.resolvedAt
+                ? new Date(sub.returnRequest.resolvedAt).toISOString()
+                : undefined,
+            }
+          : undefined,
+        createdAt: sub.createdAt ? new Date(sub.createdAt).toISOString() : doc.createdAt.toISOString(),
+        updatedAt: sub.updatedAt ? new Date(sub.updatedAt).toISOString() : doc.updatedAt.toISOString(),
       })),
       shippingAddress: doc.shippingAddress,
       subtotal: doc.subtotal,

@@ -3,7 +3,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Transaction } from '@bookmarket/types';
@@ -225,8 +224,6 @@ export default function SellerEarningsPage() {
           </form>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

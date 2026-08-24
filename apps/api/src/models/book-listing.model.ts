@@ -19,6 +19,11 @@ export interface IBookListingDocument extends Document {
   city?: string;
   state?: string;
   pincode?: string;
+  campusName?: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
   rejectionReason?: string;
   moderationHistory: IModerationHistoryItem[];
   createdAt: Date;
@@ -50,6 +55,18 @@ const BookListingSchema = new Schema<IBookListingDocument>(
     city: { type: String, trim: true },
     state: { type: String, trim: true },
     pincode: { type: String, trim: true },
+    campusName: { type: String, trim: true },
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number], // [lng, lat]
+        default: undefined,
+      },
+    },
     status: {
       type: String,
       enum: ['draft', 'pending', 'active', 'rejected', 'archived', 'sold', 'removed'],
@@ -75,6 +92,10 @@ const BookListingSchema = new Schema<IBookListingDocument>(
  */
 BookListingSchema.index({ catalogId: 1, sellerId: 1 }, { unique: true });
 BookListingSchema.index({ status: 1, price: 1 });
+BookListingSchema.index({ location: '2dsphere' });
+BookListingSchema.index({ city: 1, status: 1, price: 1 });
+BookListingSchema.index({ pincode: 1, status: 1 });
+BookListingSchema.index({ campusName: 1, status: 1 });
 
 export const BookListingModel = mongoose.model<IBookListingDocument>(
   'BookListing',

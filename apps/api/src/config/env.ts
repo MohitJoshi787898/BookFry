@@ -18,6 +18,19 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
   CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
   CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
+  // SMTP & Email Configuration
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_SECURE: z.coerce.boolean().default(false),
+  SMTP_USER: z.string().default('notifications@bookfry.in'),
+  SMTP_PASS: z.string().default('dummy-google-app-password'),
+  SMTP_FROM: z.string().default('"BookFry" <notifications@bookfry.in>'),
+  // Firebase Cloud Messaging & Push Notification Config
+  FIREBASE_PROJECT_ID: z.string().default('bookfry-app-dummy'),
+  FIREBASE_CLIENT_EMAIL: z.string().default('firebase-adminsdk@bookfry-app-dummy.iam.gserviceaccount.com'),
+  FIREBASE_PRIVATE_KEY: z.string().default('dummy-firebase-private-key'),
+  VAPID_PUBLIC_KEY: z.string().default('dummy-vapid-public-key'),
+  VAPID_PRIVATE_KEY: z.string().default('dummy-vapid-private-key'),
 });
 
 const parsed = envSchema.safeParse(process.env);

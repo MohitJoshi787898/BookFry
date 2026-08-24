@@ -6,6 +6,7 @@ import { useAuthModalStore } from '@/stores/auth-modal.store';
 import { AuthIllustrationPanel } from './auth-illustration-panel';
 import { LoginForm } from './login-form';
 import { SignupForm } from './signup-form';
+import { SellerOnboardingWizard } from './seller-onboarding-wizard';
 import { ForgotPasswordForm } from './forgot-password-form';
 import { VerifyEmailScreen } from './verify-email-screen';
 import { ResetPasswordForm } from './reset-password-form';
@@ -95,6 +96,7 @@ export function AuthModal() {
                 >
                   {screen === 'login' && <LoginForm />}
                   {screen === 'signup' && <SignupForm />}
+                  {screen === 'seller_signup' && <SellerOnboardingWizard />}
                   {screen === 'forgot_password' && <ForgotPasswordForm />}
                   {screen === 'verify_email' && <VerifyEmailScreen />}
                   {screen === 'reset_password' && <ResetPasswordForm />}

@@ -154,6 +154,35 @@ export function OrderDetailTracker({ order }: OrderDetailTrackerProps) {
         })}
       </div>
 
+      {/* Multi-Package Individual Tracking Breakdown */}
+      {order.subOrders && order.subOrders.length > 0 && (
+        <div className="mt-6 pt-4 border-t border-border/60 space-y-3">
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5 font-mono">
+            <Package className="h-4 w-4 text-secondary" /> Packages in this Order ({order.subOrders.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {order.subOrders.map((sub, idx) => (
+              <div key={sub.id || idx} className="p-4 rounded-2xl bg-muted/40 border border-border/70 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-foreground">Package #{sub.subOrderNumber}</span>
+                  <span className="capitalize px-2 py-0.5 rounded-full bg-card border border-border text-[10px] font-bold text-foreground">
+                    {sub.status.replace('_', ' ')}
+                  </span>
+                </div>
+                {sub.shippingDetails?.carrier ? (
+                  <div className="space-y-0.5 text-[11px] text-muted-foreground bg-card p-2 rounded-xl border border-border/60">
+                    <p className="font-bold text-foreground">🚚 {sub.shippingDetails.carrier}</p>
+                    <p className="font-mono">Tracking: <strong className="text-secondary">{sub.shippingDetails.trackingNumber || 'In Processing'}</strong></p>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground italic">Seller is preparing package for dispatch.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Latest Timeline Event Note */}
       {order.timeline && order.timeline.length > 0 && (
         <div className="mt-6 pt-4 border-t border-border/60 flex items-start gap-3 bg-muted/40 p-3.5 sm:p-4 rounded-2xl border border-border/40">

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Book } from '@bookmarket/types';
@@ -303,8 +302,6 @@ export default function SellerListingsPage() {
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

@@ -7,7 +7,6 @@ import * as z from "zod";
 import { useAuthStore } from "@/stores/auth.store";
 import { useCartStore } from "@/stores/cart.store";
 import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
 import { apiClient } from "@/lib/api-client";
 import {
   CreditCard,
@@ -19,7 +18,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import Link from "next/link";
-import { Order } from "@bookmarket/types";
+import { Order, UsedBookRequest } from "@bookmarket/types";
 import { Button } from "@/components/ui/button";
 
 const shippingSchema = z.object({
@@ -114,14 +113,27 @@ export default function CheckoutPage() {
     setCheckoutError(null);
 
     try {
-      const orderRes = await apiClient<Order>("/orders", {
-        method: "POST",
+      const mixedRes = await apiClient<{
+        usedRequests: UsedBookRequest[];
+        newOrder: Order | null;
+        requiresPayment: boolean;
+      }>('/orders/checkout-mixed', {
+        method: 'POST',
         body: JSON.stringify({
           shippingAddress: shippingData,
           couponCode: appliedCoupon || undefined,
         }),
       });
 
+      if (!mixedRes.requiresPayment || !mixedRes.newOrder) {
+        // Pure used books request flow — no payment needed
+        clearCart();
+        setStep('success');
+        setIsLoading(false);
+        return;
+      }
+
+      const orderRes = mixedRes.newOrder;
       setCreatedOrder(orderRes);
 
       const paymentIntent = await apiClient<{
@@ -130,8 +142,8 @@ export default function CheckoutPage() {
         keyId?: string;
         amount?: number;
         currency?: string;
-      }>("/payments/create-intent", {
-        method: "POST",
+      }>('/payments/create-intent', {
+        method: 'POST',
         body: JSON.stringify({
           orderId: orderRes.id,
         }),
@@ -141,17 +153,17 @@ export default function CheckoutPage() {
         const isLoaded = await loadRazorpayScript();
         if (!isLoaded) {
           throw new Error(
-            "Razorpay SDK failed to load. Please check your internet connection.",
+            'Razorpay SDK failed to load. Please check your internet connection.'
           );
         }
 
         const options = {
           key: paymentIntent.keyId,
           amount: paymentIntent.amount,
-          currency: "INR",
+          currency: 'INR',
           name: "BookFry • India's Book Marketplace",
           description: `Payment for Order #${orderRes.orderNumber}`,
-          image: "/logo.jpeg",
+          image: '/logo.jpeg',
           order_id: paymentIntent.id,
           handler: async function (response: {
             razorpay_order_id: string;
@@ -160,8 +172,8 @@ export default function CheckoutPage() {
           }) {
             try {
               setIsLoading(true);
-              await apiClient("/payments/verify", {
-                method: "POST",
+              await apiClient('/payments/verify', {
+                method: 'POST',
                 body: JSON.stringify({
                   orderId: orderRes.id,
                   razorpay_order_id: response.razorpay_order_id,
@@ -171,45 +183,45 @@ export default function CheckoutPage() {
               });
 
               clearCart();
-              setStep("success");
+              setStep('success');
             } catch (verifyErr: unknown) {
               const errMsg =
                 verifyErr instanceof Error
                   ? verifyErr.message
-                  : "Payment verification failed.";
+                  : 'Payment verification failed.';
               setCheckoutError(errMsg);
             } finally {
               setIsLoading(false);
             }
           },
           prefill: {
-            name: user?.name || "",
-            email: user?.email || "",
+            name: user?.name || '',
+            email: user?.email || '',
           },
           notes: {
             orderId: orderRes.id,
             orderNumber: orderRes.orderNumber,
           },
           theme: {
-            color: "#F26522",
+            color: '#F26522',
           },
           config: {
             display: {
               blocks: {
                 upi: {
-                  name: "Pay via UPI (GPay, PhonePe, Paytm, BHIM)",
-                  instruments: [{ method: "upi" }],
+                  name: 'Pay via UPI (GPay, PhonePe, Paytm, BHIM)',
+                  instruments: [{ method: 'upi' }],
                 },
                 other: {
-                  name: "Cards, Netbanking & Wallets",
+                  name: 'Cards, Netbanking & Wallets',
                   instruments: [
-                    { method: "card" },
-                    { method: "netbanking" },
-                    { method: "wallet" },
+                    { method: 'card' },
+                    { method: 'netbanking' },
+                    { method: 'wallet' },
                   ],
                 },
               },
-              sequence: ["block.upi", "block.other"],
+              sequence: ['block.upi', 'block.other'],
               preferences: {
                 show_default_blocks: true,
               },
@@ -227,8 +239,8 @@ export default function CheckoutPage() {
         rzp.open();
       } else {
         // Fallback simulated mock payment confirmation
-        await apiClient("/payments/verify", {
-          method: "POST",
+        await apiClient('/payments/verify', {
+          method: 'POST',
           body: JSON.stringify({
             orderId: orderRes.id,
             razorpay_payment_id: `pay_mock_${Math.random().toString(36).substring(2, 10)}`,
@@ -236,13 +248,14 @@ export default function CheckoutPage() {
         });
 
         clearCart();
-        setStep("success");
+        setStep('success');
+        setIsLoading(false);
       }
     } catch (err: unknown) {
       const errMsg =
         err instanceof Error
           ? err.message
-          : "Checkout failed. Please try again.";
+          : 'Checkout failed. Please try again.';
       setCheckoutError(errMsg);
       setIsLoading(false);
     }
@@ -266,7 +279,6 @@ export default function CheckoutPage() {
             Browse Books
           </Link>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -673,8 +685,6 @@ export default function CheckoutPage() {
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

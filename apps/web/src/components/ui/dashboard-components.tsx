@@ -16,11 +16,11 @@ export function DashboardHeader({
   return (
     <div className={cn('flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b border-border/50 mb-6 font-sans', className)}>
       <div>
-        <h1 className="font-serif text-xl font-bold tracking-tight text-text-primary">
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
           {title}
         </h1>
         {subtitle && (
-          <p className="text-[11px] text-text-muted font-medium mt-0.5">
+          <p className="text-sm text-text-muted font-medium mt-1">
             {subtitle}
           </p>
         )}
@@ -47,7 +47,7 @@ export function QuickActions({
   return (
     <Card className={cn('font-sans', className)}>
       <CardHeader className="pb-3.5 border-b border-border/20">
-        <CardTitle className="text-xs font-bold uppercase tracking-wider text-text-secondary font-sans">
+        <CardTitle className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-secondary font-sans">
           {title}
         </CardTitle>
       </CardHeader>
@@ -56,10 +56,10 @@ export function QuickActions({
           <button
             key={index}
             onClick={act.onClick}
-            className="flex flex-col items-center justify-center p-3 rounded-lg border border-border/60 hover:border-secondary/60 hover:bg-slate-50/20 active:scale-95 transition-all text-center gap-1.5 focus:outline-none"
+            className="flex flex-col items-center justify-center p-3.5 rounded-xl border border-border/60 hover:border-secondary/60 hover:bg-muted/40 active:scale-95 transition-all text-center gap-2 focus:outline-none min-h-[56px]"
           >
             <span className="text-secondary shrink-0">{act.icon}</span>
-            <span className="text-[10px] font-bold text-text-primary leading-tight">
+            <span className="text-xs font-semibold text-text-primary leading-tight">
               {act.label}
             </span>
           </button>

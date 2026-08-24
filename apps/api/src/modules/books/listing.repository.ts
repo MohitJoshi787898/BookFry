@@ -22,7 +22,7 @@ export class ListingRepository {
       status: 'active',
     })
       .sort({ price: 1 }) // cheapest first
-      .populate('sellerId', 'name email avatar')
+      .populate('sellerId', 'name email avatar addresses')
       .exec();
   }
 

@@ -60,16 +60,16 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full flex flex-col space-y-1.5 font-sans">
         {label && !floatingLabel && (
-          <label htmlFor={inputId} className="text-xs font-bold text-text-secondary select-none flex items-center">
+          <label htmlFor={inputId} className="text-xs sm:text-sm font-semibold text-text-primary/90 select-none flex items-center gap-0.5">
             {label}
-            {required && <span className="text-danger ml-0.5" aria-hidden="true">*</span>}
+            {required && <span className="text-danger" aria-hidden="true">*</span>}
           </label>
         )}
 
         <div className="relative flex items-stretch">
           {/* Prefix */}
           {prefix && (
-            <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-border bg-muted text-text-secondary text-xs font-medium">
+            <span className="inline-flex items-center px-3.5 rounded-l-lg border border-r-0 border-border bg-muted text-text-secondary text-sm font-medium">
               {prefix}
             </span>
           )}
@@ -90,10 +90,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               value={value}
               onChange={onChange}
               className={cn(
-                'w-full bg-slate-50/40 text-text-primary border border-border text-xs rounded-md py-2.5 transition-all focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium',
-                leftIcon ? 'pl-9' : 'pl-3.5',
-                hasRightContent ? 'pr-9' : 'pr-3.5',
-                error ? 'border-danger focus:ring-danger focus:border-danger' : '',
+                'w-full bg-card text-text-primary border border-border text-sm rounded-lg min-h-[42px] py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium placeholder:text-text-muted',
+                leftIcon ? 'pl-10' : 'pl-3.5',
+                hasRightContent ? 'pr-10' : 'pr-3.5',
+                error ? 'border-danger focus:ring-danger/30 focus:border-danger' : '',
                 prefix && 'rounded-l-none',
                 suffix && 'rounded-r-none',
                 floatingLabel && 'pt-5 pb-1',
@@ -107,8 +107,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               <label
                 htmlFor={inputId}
                 className={cn(
-                  'absolute left-3.5 text-[10px] text-text-muted font-bold pointer-events-none transition-all duration-150',
-                  isValEmpty ? 'top-1/2 -translate-y-1/2 text-xs' : 'top-1.5 text-[9px] text-secondary'
+                  'absolute left-3.5 text-xs text-text-muted font-semibold pointer-events-none transition-all duration-150',
+                  isValEmpty ? 'top-1/2 -translate-y-1/2 text-sm' : 'top-1.5 text-[11px] text-secondary font-bold'
                 )}
               >
                 {label}
@@ -118,12 +118,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
             {/* Right Side Icons & Actions */}
             <div className="absolute right-3.5 flex items-center gap-1.5 z-10">
-              {loading && <Loader2 className="h-3.5 w-3.5 text-text-muted animate-spin" />}
+              {loading && <Loader2 className="h-4 w-4 text-text-muted animate-spin" />}
               {!loading && onClear && !isValEmpty && (
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="p-0.5 rounded-full hover:bg-muted text-text-muted hover:text-text-primary transition-colors focus-ring"
+                  className="p-1 rounded-full hover:bg-muted text-text-muted hover:text-text-primary transition-colors focus-ring"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -132,9 +132,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="p-0.5 rounded-full hover:bg-muted text-text-muted hover:text-text-primary transition-colors focus-ring"
+                  className="p-1 rounded-full hover:bg-muted text-text-muted hover:text-text-primary transition-colors focus-ring"
                 >
-                  {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               )}
               {!loading && !isPassword && rightIcon}
@@ -143,16 +143,16 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
           {/* Suffix */}
           {suffix && (
-            <span className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-border bg-muted text-text-secondary text-xs font-medium">
+            <span className="inline-flex items-center px-3.5 rounded-r-lg border border-l-0 border-border bg-muted text-text-secondary text-sm font-medium">
               {suffix}
             </span>
           )}
         </div>
 
         {/* Bottom Messages/Counters */}
-        <div className="flex justify-between items-start gap-3 px-0.5 text-[10px]">
+        <div className="flex justify-between items-start gap-3 px-0.5 text-xs">
           {error ? (
-            <p className="text-danger font-bold" id={`${inputId}-error`}>
+            <p className="text-danger font-medium" id={`${inputId}-error`}>
               {error}
             </p>
           ) : helperText ? (

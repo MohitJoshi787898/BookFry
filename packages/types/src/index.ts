@@ -1,5 +1,10 @@
 export type UserRole = 'customer' | 'seller' | 'admin';
 
+export interface GeoPoint {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
+}
+
 export interface Address {
   _id?: string;
   street: string;
@@ -8,6 +13,7 @@ export interface Address {
   zipCode: string;
   country: string;
   isDefault: boolean;
+  location?: GeoPoint;
 }
 
 export interface CreateIntentResult {
@@ -44,6 +50,7 @@ export interface User {
   isBanned: boolean;
   addresses: Address[];
   sellerProfile: SellerProfile | null;
+  fcmTokens?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -118,6 +125,14 @@ export interface UsedBookRequestTimeline {
   timestamp: string;
 }
 
+export interface UsedBookRequestItem {
+  listingId: string;
+  catalogId: string;
+  title: string;
+  price: number;
+  condition: BookCondition;
+}
+
 export interface UsedBookRequest {
   id: string;
   requestNumber: string;
@@ -128,18 +143,23 @@ export interface UsedBookRequest {
   title: string;
   price: number;
   condition: BookCondition;
+  items?: UsedBookRequestItem[];
+  totalAskingPrice?: number;
   buyerContact: {
     name: string;
     email: string;
     phone?: string;
     whatsappPhone?: string;
     note?: string;
+    preferredContactMethod?: 'whatsapp' | 'phone' | 'email';
+    isContactUnlocked?: boolean;
   };
   sellerName?: string;
   sellerCity?: string;
   sellerState?: string;
   status: UsedBookRequestStatus;
   timeline: UsedBookRequestTimeline[];
+  expiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -164,6 +184,7 @@ export interface Book {
   sellerCity?: string;
   sellerState?: string;
   sellerPincode?: string;
+  campusName?: string;
   distanceKm?: number;
   status: BookStatus;
   tags: string[];
@@ -217,6 +238,8 @@ export interface BookListing {
   sellerCity?: string;
   sellerState?: string;
   sellerPincode?: string;
+  campusName?: string;
+  location?: GeoPoint;
   distanceKm?: number;
   /** Populated when fetching for buyer view */
   catalog?: BookCatalog;
@@ -229,6 +252,26 @@ export interface BookListing {
   moderationHistory?: ModerationHistoryItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BookQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  conditionType?: ConditionFilterType;
+  condition?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  campusName?: string;
+  lat?: number;
+  lng?: number;
+  maxDistanceKm?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface CartItem {
@@ -297,11 +340,41 @@ export interface OrderTimeline {
   timestamp: string;
 }
 
+export interface ShippingDetails {
+  carrier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  shippedAt?: string;
+  estimatedDelivery?: string;
+  deliveredAt?: string;
+}
+
+export interface SubOrder {
+  id: string;
+  subOrderNumber: string;
+  sellerId: string;
+  sellerName?: string;
+  sellerCity?: string;
+  items: OrderItem[];
+  subtotal: number;
+  shippingFee: number;
+  tax: number;
+  total: number;
+  sellerPayout: number;
+  status: OrderStatus;
+  shippingDetails?: ShippingDetails;
+  timeline: OrderTimeline[];
+  returnRequest?: ReturnRequest;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
   buyerId: string;
   items: OrderItem[];
+  subOrders?: SubOrder[];
   shippingAddress: {
     street: string;
     city: string;

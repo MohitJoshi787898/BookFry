@@ -16,13 +16,39 @@ export class AuthController {
   }
 
   register = async (req: Request, res: Response): Promise<void> => {
-    const { name, email, password, roles } = req.body;
+    const {
+      name,
+      email,
+      password,
+      roles,
+      phone,
+      storeName,
+      bio,
+      upiId,
+      street,
+      city,
+      state,
+      zipCode,
+    } = req.body;
     const safeRoles: UserRole[] = Array.isArray(roles)
-      ? (roles.filter((r: string): r is UserRole => r === 'customer' || r === 'seller') as UserRole[])
+      ? (roles.filter((r: string): r is UserRole => r === 'customer' || r === 'seller' || r === 'admin') as UserRole[])
       : ['customer'];
     const finalRoles: UserRole[] = safeRoles.length > 0 ? safeRoles : ['customer'];
 
-    const userDoc = await this.usersService.createUser({ name, email, password, roles: finalRoles });
+    const userDoc = await this.usersService.createUser({
+      name,
+      email,
+      password,
+      roles: finalRoles,
+      phone,
+      storeName,
+      bio,
+      upiId,
+      address:
+        street && city && state && zipCode
+          ? { street, city, state, zipCode, country: 'India' }
+          : undefined,
+    });
 
     const accessToken = this.authService.generateAccessToken(userDoc);
     const refreshToken = this.authService.generateRefreshToken(userDoc);

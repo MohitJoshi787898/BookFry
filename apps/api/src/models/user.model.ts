@@ -8,6 +8,10 @@ export interface IAddress {
   zipCode: string;
   country: string;
   isDefault: boolean;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
 }
 
 export interface ISellerProfile {
@@ -36,6 +40,7 @@ export interface IUserDocument extends Document {
   isBanned: boolean;
   addresses: IAddress[];
   sellerProfile: ISellerProfile | null;
+  fcmTokens?: string[];
   refreshTokenHash?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +53,17 @@ const AddressSchema = new Schema<IAddress>({
   zipCode: { type: String, required: true },
   country: { type: String, required: true },
   isDefault: { type: Boolean, default: false },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
+    },
+    coordinates: {
+      type: [Number],
+      default: undefined,
+    },
+  },
 });
 
 const SellerProfileSchema = new Schema<ISellerProfile>({
@@ -81,6 +97,7 @@ const UserSchema = new Schema<IUserDocument>(
     isBanned: { type: Boolean, default: false },
     addresses: [AddressSchema],
     sellerProfile: { type: SellerProfileSchema, default: null },
+    fcmTokens: { type: [String], default: [] },
     refreshTokenHash: { type: String, default: null },
   },
   {

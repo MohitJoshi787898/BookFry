@@ -9,9 +9,18 @@ interface AuthIllustrationPanelProps {
 }
 
 export function AuthIllustrationPanel({ screen }: AuthIllustrationPanelProps) {
+  const isSellerSignup = screen === 'seller_signup';
   const isSignupFlow = screen === 'signup' || screen === 'verify_email';
-  const illustrationSrc = isSignupFlow ? '/create-account.png' : '/welcome-back1.png';
-  const illustrationAlt = isSignupFlow ? 'BookFry Create Account' : 'BookFry Welcome Back';
+  const illustrationSrc = isSellerSignup
+    ? '/campus_exchange.png'
+    : isSignupFlow
+    ? '/create-account.png'
+    : '/welcome-back1.png';
+  const illustrationAlt = isSellerSignup
+    ? 'BookFry Seller Onboarding'
+    : isSignupFlow
+    ? 'BookFry Create Account'
+    : 'BookFry Welcome Back';
 
   return (
     <div className="hidden lg:flex flex-col justify-between w-full h-full p-8 bg-gradient-to-b from-card via-card to-muted/50 text-foreground relative overflow-hidden font-sans border-r border-border/80">
@@ -24,7 +33,7 @@ export function AuthIllustrationPanel({ screen }: AuthIllustrationPanelProps) {
         <div className="flex items-center space-x-2">
           <span className="font-serif text-2xl font-extrabold tracking-tight text-foreground">BookFry</span>
           <span className="text-[10px] font-extrabold uppercase tracking-wider bg-secondary text-secondary-foreground px-2.5 py-0.5 rounded-full shadow-2xs">
-            Student Vault
+            {isSellerSignup ? 'Seller Hub' : 'Student Vault'}
           </span>
         </div>
 
@@ -50,14 +59,18 @@ export function AuthIllustrationPanel({ screen }: AuthIllustrationPanelProps) {
 
         <div className="space-y-1 max-w-xs mx-auto">
           <h4 className="font-serif text-xl font-extrabold text-foreground">
-            {screen === 'signup'
+            {screen === 'seller_signup'
+              ? 'Start Selling in 3 Easy Steps'
+              : screen === 'signup'
               ? 'Join 50,000+ Student Readers'
               : screen === 'verify_email'
               ? 'Almost There!'
               : 'Welcome Back to BookFry'}
           </h4>
           <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-            {isSignupFlow
+            {screen === 'seller_signup'
+              ? 'Set up your bookstore, list textbooks with zero fees, and receive instant direct UPI payouts.'
+              : isSignupFlow
               ? 'Save up to 80% on textbooks and help fellow students access affordable study materials.'
               : 'Sign in to manage your orders, wishlist, saved listings, and seller earnings.'}
           </p>

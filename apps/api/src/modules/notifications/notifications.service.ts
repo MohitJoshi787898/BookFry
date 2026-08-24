@@ -1,13 +1,17 @@
 import { NotificationsRepository } from './notifications.repository';
 import { NotFoundError, UnauthorizedError } from '../../utils/AppError';
 import { Notification } from '@bookmarket/types';
+import { PushNotificationService } from '../../services/push-notification.service';
+import { UserModel } from '../../models/user.model';
 import mongoose from 'mongoose';
 
 export class NotificationsService {
   private notificationsRepository: NotificationsRepository;
+  private pushService: PushNotificationService;
 
   constructor() {
     this.notificationsRepository = new NotificationsRepository();
+    this.pushService = new PushNotificationService();
   }
 
   private mapToDTO(doc: any): Notification {
@@ -51,7 +55,8 @@ export class NotificationsService {
     type: string,
     title: string,
     body: string,
-    meta?: any
+    meta?: any,
+    options?: { sendPush?: boolean }
   ): Promise<Notification> {
     const doc = await this.notificationsRepository.create({
       userId: new mongoose.Types.ObjectId(userId),
@@ -61,7 +66,48 @@ export class NotificationsService {
       isRead: false,
       meta,
     });
+
+    // Automatically trigger Web/Mobile Push notification asynchronously
+    if (options?.sendPush !== false) {
+      this.pushService
+        .queuePush(userId, {
+          title,
+          body,
+          data: {
+            type,
+            ...(meta ? Object.fromEntries(Object.entries(meta).map(([k, v]) => [k, String(v)])) : {}),
+          },
+        })
+        .catch((err) => console.warn('[Push Notification Dispatch Warning]:', err));
+    }
+
     return this.mapToDTO(doc);
+  }
+
+  /** Register or add device FCM push token for user */
+  async registerPushToken(userId: string, token: string): Promise<{ success: boolean }> {
+    if (!token || typeof token !== 'string') {
+      return { success: false };
+    }
+
+    await UserModel.findByIdAndUpdate(userId, {
+      $addToSet: { fcmTokens: token },
+    });
+
+    return { success: true };
+  }
+
+  /** Remove device FCM push token when user logs out or revokes permission */
+  async removePushToken(userId: string, token: string): Promise<{ success: boolean }> {
+    if (!token || typeof token !== 'string') {
+      return { success: false };
+    }
+
+    await UserModel.findByIdAndUpdate(userId, {
+      $pull: { fcmTokens: token },
+    });
+
+    return { success: true };
   }
 }
 export default NotificationsService;

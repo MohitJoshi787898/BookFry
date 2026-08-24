@@ -96,9 +96,9 @@ export function Select({
   return (
     <div className="w-full flex flex-col space-y-1.5 font-sans" ref={dropdownRef}>
       {label && (
-        <label className="text-xs font-bold text-text-secondary select-none flex items-center">
+        <label className="text-xs sm:text-sm font-semibold text-text-primary/90 select-none flex items-center gap-0.5">
           {label}
-          {required && <span className="text-danger ml-0.5" aria-hidden="true">*</span>}
+          {required && <span className="text-danger" aria-hidden="true">*</span>}
         </label>
       )}
 
@@ -109,84 +109,82 @@ export function Select({
           disabled={disabled || loading}
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'w-full bg-slate-50/40 text-text-primary border border-border text-xs rounded-md px-3.5 py-2.5 transition-all focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary flex items-center justify-between text-left disabled:opacity-50 disabled:bg-muted font-medium',
-            isOpen ? 'ring-1 ring-secondary border-secondary' : '',
-            error ? 'border-danger focus:ring-danger focus:border-danger' : '',
+            'w-full bg-card text-text-primary border border-border text-sm rounded-lg min-h-[42px] px-3.5 py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary flex items-center justify-between text-left disabled:opacity-50 disabled:bg-muted font-medium',
+            isOpen ? 'ring-2 ring-secondary/30 border-secondary' : '',
+            error ? 'border-danger focus:ring-danger/30 focus:border-danger' : '',
             className
           )}
         >
-          <div className="flex flex-wrap gap-1 items-center overflow-hidden pr-2">
+          <div className="flex flex-wrap gap-1.5 items-center overflow-hidden pr-2">
             {selectedOptions.length === 0 ? (
               <span className="text-text-muted">{placeholder}</span>
             ) : isMulti ? (
               selectedOptions.map((opt) => (
                 <span
                   key={opt.value}
-                  className="inline-flex items-center gap-1 bg-[#EFF6FC] border border-[#B8D7F2] text-[#1A3B5C] rounded-sm px-1.5 py-0.5 text-[10px] font-bold"
+                  className="inline-flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary rounded-md px-2 py-0.5 text-xs font-semibold"
                 >
                   {opt.label}
                   <button
                     type="button"
                     onClick={(e) => handleRemove(e, opt.value)}
-                    className="p-0.5 rounded-full hover:bg-slate-200 text-[#1A3B5C]"
+                    className="p-0.5 rounded-full hover:bg-primary/20 text-primary"
                   >
-                    <X className="h-2.5 w-2.5" />
+                    <X className="h-3 w-3" />
                   </button>
                 </span>
               ))
             ) : (
-              <span>{selectedOptions[0].label}</span>
+              <span className="text-sm font-medium">{selectedOptions[0].label}</span>
             )}
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {loading && <Loader2 className="h-3.5 w-3.5 text-text-muted animate-spin" />}
-            <ChevronDown className={cn('h-3.5 w-3.5 text-text-muted transition-transform duration-200', isOpen && 'rotate-180')} />
+            {loading && <Loader2 className="h-4 w-4 text-text-muted animate-spin" />}
+            <ChevronDown className={cn('h-4 w-4 text-text-muted transition-transform duration-200', isOpen && 'rotate-180')} />
           </div>
         </button>
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-md border border-border bg-card shadow-lg py-1">
+          <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-card shadow-lg py-1">
             {searchable && (
-              <div className="sticky top-0 bg-card px-2.5 py-1.5 border-b border-border flex items-center gap-2">
-                <Search className="h-3.5 w-3.5 text-text-muted shrink-0" />
+              <div className="sticky top-0 bg-card px-3 py-2 border-b border-border flex items-center gap-2">
+                <Search className="h-4 w-4 text-text-muted shrink-0" />
                 <input
                   type="text"
-                  placeholder="Search..."
+                  placeholder="Search options..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full text-xs font-medium focus:outline-none bg-transparent"
+                  className="w-full text-sm font-medium focus:outline-none bg-transparent placeholder:text-text-muted"
                 />
               </div>
             )}
 
             {Object.keys(groupedOptions).length === 0 ? (
-              <div className="px-3.5 py-2 text-xs text-text-muted text-center font-medium">
-                No options found
-              </div>
+              <div className="px-3.5 py-3 text-xs text-text-muted text-center font-medium">No options available</div>
             ) : (
-              Object.entries(groupedOptions).map(([groupName, groupOpts]) => (
-                <div key={groupName}>
-                  {groupName && (
-                    <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-text-muted bg-muted/30 border-y border-border/20">
-                      {groupName}
+              Object.entries(groupedOptions).map(([group, opts]) => (
+                <div key={group || 'root'} className="py-1">
+                  {group && (
+                    <div className="px-3.5 py-1 text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                      {group}
                     </div>
                   )}
-                  {groupOpts.map((option) => {
-                    const isSelected = selectedValues.includes(option.value);
+                  {opts.map((opt) => {
+                    const isSelected = selectedValues.includes(opt.value);
                     return (
                       <button
-                        key={option.value}
+                        key={opt.value}
                         type="button"
-                        onClick={() => handleSelect(option.value)}
+                        onClick={() => handleSelect(opt.value)}
                         className={cn(
-                          'w-full text-left px-3.5 py-2 text-xs font-medium flex items-center justify-between hover:bg-muted transition-colors',
-                          isSelected ? 'bg-primary-50/50 text-primary hover:bg-primary-50' : 'text-text-primary'
+                          'w-full px-3.5 py-2 text-sm text-left flex items-center justify-between hover:bg-muted font-medium transition-colors',
+                          isSelected ? 'bg-primary/10 text-primary font-semibold' : 'text-text-primary'
                         )}
                       >
-                        <span>{option.label}</span>
-                        {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
                       </button>
                     );
                   })}
@@ -198,11 +196,8 @@ export function Select({
       </div>
 
       {/* Error/Helper text */}
-      {error ? (
-        <p className="text-danger text-[10px] font-bold px-0.5">{error}</p>
-      ) : helperText ? (
-        <p className="text-text-muted text-[10px] px-0.5">{helperText}</p>
-      ) : null}
+      {error && <p className="text-xs text-danger font-medium px-0.5">{error}</p>}
+      {helperText && !error && <p className="text-xs text-text-muted px-0.5">{helperText}</p>}
     </div>
   );
 }

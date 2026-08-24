@@ -61,9 +61,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full flex flex-col space-y-1.5 font-sans">
         {label && (
-          <label htmlFor={textareaId} className="text-xs font-bold text-text-secondary select-none flex items-center">
+          <label htmlFor={textareaId} className="text-xs sm:text-sm font-semibold text-text-primary/90 select-none flex items-center gap-0.5">
             {label}
-            {required && <span className="text-danger ml-0.5" aria-hidden="true">*</span>}
+            {required && <span className="text-danger" aria-hidden="true">*</span>}
           </label>
         )}
 
@@ -75,16 +75,16 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           onChange={onChange}
           disabled={disabled}
           className={cn(
-            'w-full bg-slate-50/40 text-text-primary border border-border text-xs rounded-md px-3.5 py-2.5 transition-all focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium resize-y',
-            error ? 'border-danger focus:ring-danger focus:border-danger' : '',
+            'w-full bg-card text-text-primary border border-border text-sm rounded-lg p-3 transition-all focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium resize-y placeholder:text-text-muted',
+            error ? 'border-danger focus:ring-danger/30 focus:border-danger' : '',
             className
           )}
           {...props}
         />
 
-        <div className="flex justify-between items-start gap-3 px-0.5 text-[10px]">
+        <div className="flex justify-between items-start gap-3 px-0.5 text-xs">
           {error ? (
-            <p className="text-danger font-bold">{error}</p>
+            <p className="text-danger font-medium">{error}</p>
           ) : helperText ? (
             <p className="text-text-muted">{helperText}</p>
           ) : (
@@ -92,7 +92,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           )}
 
           {characterLimit && value !== undefined && typeof value === 'string' && (
-            <span className={cn('text-text-muted shrink-0 font-mono', value.length > characterLimit ? 'text-danger font-bold' : '')}>
+            <span className={cn('text-text-muted shrink-0 font-mono text-xs', value.length > characterLimit ? 'text-danger font-bold' : '')}>
               {value.length}/{characterLimit}
             </span>
           )}

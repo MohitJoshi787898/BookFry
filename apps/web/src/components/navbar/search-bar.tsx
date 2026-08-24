@@ -55,12 +55,12 @@ export function SearchBar({ variant, className }: SearchBarProps) {
       <div ref={searchRef} className={cn('relative flex-grow max-w-2xl font-sans', className)}>
         <form
           onSubmit={handleSearchSubmit}
-          className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-secondary/20 focus-within:border-secondary h-11 rounded-full overflow-hidden"
+          className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-secondary/30 focus-within:border-secondary h-11 rounded-full overflow-hidden shadow-2xs"
         >
           {/* Category Dropdown */}
-          <div className="px-4 flex items-center gap-1 text-[11px] font-bold text-text-secondary border-r border-border hover:bg-background-subtle cursor-pointer select-none shrink-0 h-full">
+          <div className="px-4 flex items-center gap-1.5 text-xs font-semibold text-text-secondary border-r border-border hover:bg-muted cursor-pointer select-none shrink-0 h-full">
             <span>All Categories</span>
-            <ChevronDown className="h-3 w-3 text-text-muted" />
+            <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
           </div>
 
           {/* Search Input */}
@@ -70,15 +70,15 @@ export function SearchBar({ variant, className }: SearchBarProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}
             placeholder="Search by title, author, ISBN or keyword..."
-            className="flex-grow pl-4 pr-3 text-xs bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none h-full"
+            className="flex-grow pl-4 pr-3 text-sm bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none h-full font-medium"
           />
 
           {/* Search Button */}
           <button
             type="submit"
-            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold text-xs px-6 flex items-center gap-1.5 h-full transition-colors shrink-0"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold text-xs sm:text-sm px-6 flex items-center gap-1.5 h-full transition-colors shrink-0"
           >
-            {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+            {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             <span>Search</span>
           </button>
         </form>
@@ -100,25 +100,25 @@ export function SearchBar({ variant, className }: SearchBarProps) {
     <div ref={searchRef} className={cn('relative font-sans', className)}>
       <form
         onSubmit={handleSearchSubmit}
-        className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-secondary/20 focus-within:border-secondary h-10 rounded-full overflow-hidden"
+        className="flex items-center border border-border bg-background focus-within:ring-2 focus-within:ring-secondary/30 focus-within:border-secondary h-11 rounded-full overflow-hidden shadow-2xs"
       >
-        <div className="relative flex-grow flex items-center pl-3">
-          <Search className="h-3.5 w-3.5 text-text-muted shrink-0" />
+        <div className="relative flex-grow flex items-center pl-3.5">
+          <Search className="h-4 w-4 text-text-muted shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}
             placeholder="Search by title, author, ISBN..."
-            className="w-full pl-2 pr-3 text-xs bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none h-full py-2.5"
+            className="w-full pl-2.5 pr-3 text-sm bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none h-full py-2.5 font-medium"
           />
         </div>
 
         <button
           type="submit"
-          className="bg-secondary hover:bg-secondary/90 text-secondary-foreground p-2.5 flex items-center justify-center h-full transition-colors shrink-0"
+          className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-4 flex items-center justify-center h-full transition-colors shrink-0 font-bold text-xs"
         >
-          {isFetching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+          {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </button>
       </form>
 

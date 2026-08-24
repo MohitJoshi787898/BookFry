@@ -295,12 +295,12 @@ export default function BookDetailPage() {
         <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 py-6 space-y-10">
 
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted">
+          <nav className="flex items-center gap-2 text-xs font-medium text-text-muted">
             <Link href="/" className="hover:text-text-primary transition-colors">Home</Link>
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-3.5 w-3.5" />
             <Link href="/books" className="hover:text-text-primary transition-colors">Books</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-text-secondary capitalize truncate max-w-[200px]">{book.title}</span>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="text-text-primary font-semibold capitalize truncate max-w-[240px]">{book.title}</span>
           </nav>
 
           {/* ── 3-Column Product Layout ─────────────────────────────── */}
@@ -328,11 +328,11 @@ export default function BookDetailPage() {
               <div className="relative flex-1 aspect-[2/3] rounded-3xl overflow-hidden border border-border bg-card shadow-lg group">
                 {/* Badges */}
                 <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
-                  <span className="px-2.5 py-1 bg-danger text-white text-[10px] font-extrabold uppercase tracking-wider rounded-full shadow">
+                  <span className="px-2.5 py-1 bg-danger text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-xs">
                     Best Seller
                   </span>
                   {discountPct && (
-                    <span className="px-2.5 py-1 bg-success text-success-foreground text-[10px] font-extrabold rounded-full shadow">
+                    <span className="px-2.5 py-1 bg-success text-success-foreground text-xs font-bold rounded-full shadow-xs">
                       -{discountPct}% OFF
                     </span>
                   )}
@@ -342,7 +342,7 @@ export default function BookDetailPage() {
                 <motion.button
                   whileTap={{ scale: 0.88 }}
                   onClick={() => toggleWishlistMutation.mutate(book.id)}
-                  className={`absolute top-3 right-3 z-10 h-9 w-9 rounded-full border flex items-center justify-center shadow-md transition-all ${
+                  className={`absolute top-3 right-3 z-10 h-10 w-10 rounded-full border flex items-center justify-center shadow-md transition-all ${
                     isWishlisted
                       ? 'bg-danger/10 border-danger/30 text-danger'
                       : 'bg-card/90 border-border text-text-muted hover:text-danger hover:border-danger/30'
@@ -369,10 +369,10 @@ export default function BookDetailPage() {
               {/* Header */}
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
-                  <span className={`px-3 py-1 border rounded-full text-[11px] font-extrabold capitalize ${conditionInfo.color}`}>
+                  <span className={`px-3 py-1 border rounded-full text-xs font-semibold capitalize ${conditionInfo.color}`}>
                     {conditionInfo.label}
                   </span>
-                  <span className="px-3 py-1 bg-muted border border-border rounded-full text-[11px] font-extrabold text-text-secondary capitalize">
+                  <span className="px-3 py-1 bg-muted border border-border rounded-full text-xs font-semibold text-text-secondary capitalize">
                     {book.category}
                   </span>
                 </div>

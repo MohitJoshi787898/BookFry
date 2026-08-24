@@ -1,6 +1,8 @@
 import { createPageViewWorker } from './workers/pageView.worker';
 import { createRecommendationsWorker, recomputePopularBooks, recomputeTrendingBooks, recomputeCooccurrence } from './workers/recommendations.worker';
 import { createOrderSlaWorker, checkOrderSlaBreaches, autocompleteDeliveredOrders } from './workers/orderSla.worker';
+import { createEmailWorker } from './workers/email.worker';
+import { createPushWorker } from './workers/push.worker';
 import { recommendationsQueue, orderSlaQueue } from './queues';
 import { logger } from '../utils/logger';
 
@@ -10,6 +12,8 @@ export const startWorkerPool = async () => {
   const pageViewWorker = createPageViewWorker();
   const recommendationsWorker = createRecommendationsWorker();
   const orderSlaWorker = createOrderSlaWorker();
+  const emailWorker = createEmailWorker();
+  const pushWorker = createPushWorker();
 
   // Schedule repeatable jobs if queue is connected
   if (recommendationsQueue) {

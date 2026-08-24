@@ -82,7 +82,7 @@ export class SellerService {
       };
     });
 
-    // 5. Recent Orders (last 5 orders containing this seller's products)
+    // 5. Recent Orders (last 5 orders containing this seller's products, isolated)
     const recentOrderDocs = await OrderModel.find({
       'items.sellerId': sellerObjId,
     })
@@ -90,7 +90,17 @@ export class SellerService {
       .limit(5)
       .exec();
 
-    const recentOrders = recentOrderDocs.map((doc) => this.ordersService.mapToDTO(doc));
+    const recentOrders = recentOrderDocs.map((doc) => {
+      const dto = this.ordersService.mapToDTO(doc);
+      const sellerItems = dto.items.filter((item) => item.sellerId === sellerId);
+      const sellerSubtotal = sellerItems.reduce((sum, it) => sum + it.price * it.quantity, 0);
+      return {
+        ...dto,
+        items: sellerItems,
+        subOrders: dto.subOrders?.filter((s) => s.sellerId === sellerId),
+        subtotal: sellerSubtotal,
+      };
+    });
 
     return {
       totalSales,

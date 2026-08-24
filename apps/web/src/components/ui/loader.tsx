@@ -54,12 +54,15 @@ export function BookCardSkeleton() {
   return (
     <div className="flex flex-col h-full rounded-xl border border-border bg-card overflow-hidden animate-pulse shadow-sm">
       <div className="w-full aspect-[2/3] bg-muted" />
-      <div className="p-3.5 space-y-2">
-        <div className="h-3 w-3/4 bg-muted rounded" />
-        <div className="h-3 w-1/2 bg-muted rounded" />
-        <div className="h-3 w-1/3 bg-muted rounded" />
-        <div className="h-5 w-12 bg-muted rounded" />
-        <div className="h-6 w-full bg-muted rounded" />
+      <div className="p-3.5 space-y-2.5">
+        <div className="h-4 w-3/4 bg-muted rounded-sm" />
+        <div className="h-3.5 w-1/2 bg-muted rounded-sm" />
+        <div className="h-3.5 w-1/3 bg-muted rounded-sm" />
+        <div className="flex justify-between items-center pt-1">
+          <div className="h-5 w-16 bg-muted rounded" />
+          <div className="h-4 w-14 bg-muted rounded" />
+        </div>
+        <div className="h-8 w-full bg-muted rounded-lg mt-2" />
       </div>
     </div>
   );

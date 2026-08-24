@@ -20,6 +20,17 @@ export class UsersService {
     email: string;
     password: string;
     roles?: UserRole[];
+    phone?: string;
+    storeName?: string;
+    bio?: string;
+    upiId?: string;
+    address?: {
+      street: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      country?: string;
+    };
   }): Promise<IUserDocument> {
     const existingUser = await this.usersRepository.findByEmail(data.email);
     if (existingUser) {
@@ -29,15 +40,40 @@ export class UsersService {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(data.password, salt);
 
+    const isSeller = (data.roles || []).includes('seller') || !!data.storeName;
+    const sellerProfile = isSeller
+      ? {
+          storeName: data.storeName || `${data.name}'s Books`,
+          bio: data.bio || '',
+          rating: 5.0,
+          totalSales: 0,
+          payoutDetails: data.upiId ? { upiId: data.upiId } : undefined,
+        }
+      : null;
+
+    const addresses = data.address
+      ? [
+          {
+            street: data.address.street,
+            city: data.address.city,
+            state: data.address.state,
+            zipCode: data.address.zipCode,
+            country: data.address.country || 'India',
+            isDefault: true,
+          },
+        ]
+      : [];
+
     const userDoc = await this.usersRepository.create({
       name: data.name,
       email: data.email,
       passwordHash,
       roles: data.email.toLowerCase() === 'admin@bookfry.com' ? ['customer', 'seller', 'admin'] : (data.roles || ['customer']),
+      phone: data.phone,
       isEmailVerified: false,
       isBanned: false,
-      addresses: [],
-      sellerProfile: null,
+      addresses: addresses as any,
+      sellerProfile: sellerProfile as any,
     });
 
     return userDoc;

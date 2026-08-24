@@ -7,7 +7,13 @@ import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
-import { Tag, Plus, ShieldAlert, Trash2, Eye, Pencil, X, RefreshCw, Check } from 'lucide-react';
+import { Tag, Plus, ShieldAlert, Trash2, Eye, Pencil, RefreshCw, Check } from 'lucide-react';
+import {
+  AdminDialog,
+  AdminDetailRow,
+  AdminStatBadge,
+} from '@/components/admin/admin-dialog';
+import { AdminDangerDialog } from '@/components/admin/admin-danger-dialog';
 
 interface PromoCode {
   id: string;
@@ -323,209 +329,239 @@ export default function AdminPromotionsPage() {
         </div>
       </div>
 
-      {/* VIEW DETAILS MODAL */}
-      {viewModalOpen && selectedPromo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 font-sans">
-          <div className="bg-card border border-border/80 rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative space-y-4">
-            <button
-              onClick={() => setViewModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+      {/* VIEW PROMO DETAILS MODAL */}
+      {selectedPromo && (
+        <AdminDialog
+          isOpen={viewModalOpen}
+          onClose={() => {
+            setViewModalOpen(false);
+            setSelectedPromo(null);
+          }}
+          size="md"
+          title={`Coupon ${selectedPromo.code}`}
+          subtitle={`Coupon ID: ${selectedPromo.id}`}
+          icon={<Tag className="h-5 w-5 text-secondary" />}
+          badge={
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
+                selectedPromo.status === 'active'
+                  ? 'bg-success/10 text-success border border-success/20'
+                  : selectedPromo.status === 'expired'
+                  ? 'bg-warning/10 text-warning border border-warning/20'
+                  : 'bg-muted text-text-muted border-border'
+              }`}
             >
-              <X className="h-5 w-5" />
+              {selectedPromo.status}
+            </span>
+          }
+          headerActions={
+            <button
+              onClick={() => {
+                setViewModalOpen(false);
+                setEditForm({
+                  code: selectedPromo.code,
+                  discountType: selectedPromo.discountType,
+                  discountValue: selectedPromo.discountValue,
+                  minOrderSubtotal: selectedPromo.minOrderSubtotal || 0,
+                });
+                setEditModalOpen(true);
+              }}
+              className="p-1.5 text-text-muted hover:text-secondary hover:bg-muted rounded-xl transition-all flex items-center gap-1 text-xs font-bold mr-2"
+              title="Edit Promo Parameters"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Edit</span>
             </button>
-
-            <div className="flex items-center space-x-3 border-b border-border/60 pb-4">
-              <div className="h-10 w-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
-                <Tag className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-serif text-lg font-bold text-foreground">Coupon Token Summary</h3>
-                <p className="text-xs text-muted-foreground">Detailed checkout parameters</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="bg-muted/40 p-4 rounded-2xl border border-border/60 space-y-2">
-                <p className="flex justify-between">
-                  <span className="font-bold text-muted-foreground">Coupon ID:</span>
-                  <span className="font-mono text-foreground font-semibold">{selectedPromo.id}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-bold text-muted-foreground">Code:</span>
-                  <span className="font-mono font-black text-[#F26522]">{selectedPromo.code}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-bold text-muted-foreground">Discount Value:</span>
-                  <span className="font-bold text-foreground">
-                    {selectedPromo.discountType === 'percentage' ? `${selectedPromo.discountValue}% OFF` : `₹${selectedPromo.discountValue} OFF`}
-                  </span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-bold text-muted-foreground">Min Subtotal:</span>
-                  <span className="font-mono text-foreground font-bold">₹{selectedPromo.minOrderSubtotal || 0}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-bold text-muted-foreground">Claimed Uses:</span>
-                  <span className="font-mono font-bold text-foreground">{selectedPromo.usedCount || 0} / {selectedPromo.maxUses || 1000}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
+          }
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <p className="text-xs text-text-muted font-mono">
+                Code: <span className="font-bold font-mono text-secondary">{selectedPromo.code}</span>
+              </p>
               <button
-                onClick={() => setViewModalOpen(false)}
-                className="px-5 py-2.5 bg-[#F26522] text-white text-xs font-bold rounded-2xl hover:bg-[#D64E0F] transition-all shadow-sm active:scale-95"
+                onClick={() => {
+                  setViewModalOpen(false);
+                  setSelectedPromo(null);
+                }}
+                className="px-5 py-2 bg-secondary text-secondary-foreground text-xs font-bold rounded-xl hover:bg-secondary/90 shadow-xs"
               >
-                Close Summary
+                Close Token
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* EDIT COUPON MODAL */}
-      {editModalOpen && selectedPromo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 font-sans">
-          <div className="bg-card border border-border/80 rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative space-y-4">
-            <button
-              onClick={() => setEditModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 border-b border-border/60 pb-4">
-              <div className="h-10 w-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary">
-                <Pencil className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-serif text-lg font-bold text-foreground">Edit Promo Code</h3>
-                <p className="text-xs text-muted-foreground">Modify active coupon parameters</p>
-              </div>
+          }
+        >
+          <div className="space-y-5">
+            {/* Stat Badges */}
+            <div className="grid grid-cols-2 gap-3">
+              <AdminStatBadge
+                label="Discount Value"
+                value={
+                  selectedPromo.discountType === 'percentage'
+                    ? `${selectedPromo.discountValue}% OFF`
+                    : `₹${selectedPromo.discountValue} OFF`
+                }
+                variant="default"
+              />
+              <AdminStatBadge
+                label="Redemption Usage"
+                value={`${selectedPromo.usedCount || 0} / ${selectedPromo.maxUses || 1000}`}
+                variant={
+                  (selectedPromo.usedCount || 0) >= (selectedPromo.maxUses || 1000)
+                    ? 'danger'
+                    : 'success'
+                }
+              />
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                editCouponMutation.mutate({ id: selectedPromo.id, data: editForm });
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
-                  Coupon Code
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editForm.code}
-                  onChange={(e) => setEditForm({ ...editForm, code: e.target.value.toUpperCase() })}
-                  className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono font-bold"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
-                    Type
-                  </label>
-                  <select
-                    value={editForm.discountType}
-                    onChange={(e) => setEditForm({ ...editForm, discountType: e.target.value as 'percentage' | 'flat' })}
-                    className="w-full px-3.5 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-medium"
-                  >
-                    <option value="flat">Flat (₹)</option>
-                    <option value="percentage">Percentage (%)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
-                    Value
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={1}
-                    value={editForm.discountValue}
-                    onChange={(e) => setEditForm({ ...editForm, discountValue: Number(e.target.value) })}
-                    className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono font-bold"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
-                  Min Subtotal (₹)
-                </label>
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  value={editForm.minOrderSubtotal}
-                  onChange={(e) => setEditForm({ ...editForm, minOrderSubtotal: Number(e.target.value) })}
-                  className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono font-bold"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-border/60">
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2.5 border border-border/80 rounded-2xl text-muted-foreground hover:bg-muted font-bold active:scale-95"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={editCouponMutation.isPending}
-                  className="px-5 py-2.5 bg-secondary text-white font-bold rounded-2xl hover:bg-[#D64E0F] flex items-center space-x-1.5 active:scale-95 shadow-md shadow-secondary/20"
-                >
-                  {editCouponMutation.isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
-                  <span>Save Changes</span>
-                </button>
-              </div>
-            </form>
+            {/* Parameter Rows */}
+            <div className="p-4 bg-muted/30 border border-border rounded-2xl space-y-2">
+              <AdminDetailRow label="Coupon Code" value={selectedPromo.code} copyable />
+              <AdminDetailRow
+                label="Discount Type"
+                value={selectedPromo.discountType === 'percentage' ? 'Percentage (%)' : 'Flat (₹)'}
+              />
+              <AdminDetailRow
+                label="Minimum Order Subtotal"
+                value={`₹${selectedPromo.minOrderSubtotal || 0}`}
+              />
+              <AdminDetailRow
+                label="Lifecycle Status"
+                value={selectedPromo.status.toUpperCase()}
+              />
+              <AdminDetailRow label="Token ID" value={selectedPromo.id} copyable />
+            </div>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
-      {/* SOFT DELETE CONFIRMATION MODAL */}
-      {deleteModalOpen && selectedPromo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 font-sans">
-          <div className="bg-card border border-border/80 rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative space-y-4">
-            <div className="flex items-center space-x-3 border-b border-border/60 pb-4">
-              <div className="h-10 w-10 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
-                <Trash2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-serif text-lg font-bold text-foreground">Delete Promo Token</h3>
-                <p className="text-xs text-muted-foreground">Revoke discount code from checkout</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              Are you sure you want to delete promo code <span className="font-mono font-bold text-[#F26522]">{selectedPromo.code}</span>? This will prevent buyers from claiming this token during checkout.
-            </p>
-
-            <div className="flex justify-end gap-3 pt-3">
+      {/* EDIT PROMO FORM MODAL */}
+      {selectedPromo && (
+        <AdminDialog
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedPromo(null);
+          }}
+          size="md"
+          title="Edit Promo Token"
+          subtitle={`Adjusting checkout discount rules for ${selectedPromo.code}`}
+          icon={<Pencil className="h-5 w-5 text-secondary" />}
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
               <button
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2.5 border border-border/80 rounded-2xl text-xs font-bold text-muted-foreground hover:bg-muted active:scale-95"
+                type="button"
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setSelectedPromo(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
               >
                 Cancel
               </button>
               <button
-                onClick={() => deleteCouponMutation.mutate(selectedPromo.id)}
-                disabled={deleteCouponMutation.isPending}
-                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider flex items-center space-x-1.5 active:scale-95 shadow-md shadow-rose-600/20"
+                type="submit"
+                form="edit-coupon-form"
+                disabled={editCouponMutation.isPending}
+                className="px-5 py-2 bg-secondary text-secondary-foreground font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5"
               >
-                {deleteCouponMutation.isPending && <RefreshCw className="h-4 w-4 animate-spin" />}
-                <span>Delete Coupon</span>
+                {editCouponMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                <span>Save Changes</span>
               </button>
             </div>
-          </div>
-        </div>
+          }
+        >
+          <form
+            id="edit-coupon-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              editCouponMutation.mutate({ id: selectedPromo.id, data: editForm });
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Coupon Code <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={editForm.code}
+                onChange={(e) => setEditForm({ ...editForm, code: e.target.value.toUpperCase() })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs font-mono font-bold focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-text-primary mb-1.5">
+                  Discount Type
+                </label>
+                <select
+                  value={editForm.discountType}
+                  onChange={(e) => setEditForm({ ...editForm, discountType: e.target.value as 'percentage' | 'flat' })}
+                  className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
+                >
+                  <option value="flat">Flat (₹)</option>
+                  <option value="percentage">Percentage (%)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-primary mb-1.5">
+                  Discount Value <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  value={editForm.discountValue}
+                  onChange={(e) => setEditForm({ ...editForm, discountValue: Number(e.target.value) })}
+                  className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs font-mono focus:ring-2 focus:ring-secondary/40 outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Min Order Subtotal (₹)
+              </label>
+              <input
+                type="number"
+                required
+                min={0}
+                value={editForm.minOrderSubtotal}
+                onChange={(e) => setEditForm({ ...editForm, minOrderSubtotal: Number(e.target.value) })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs font-mono focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
+            </div>
+          </form>
+        </AdminDialog>
+      )}
+
+      {/* DELETE PROMO DANGER DIALOG */}
+      {selectedPromo && (
+        <AdminDangerDialog
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setSelectedPromo(null);
+          }}
+          onConfirm={() => deleteCouponMutation.mutate(selectedPromo.id)}
+          isPending={deleteCouponMutation.isPending}
+          title="Confirm Delete Promo Token"
+          entityName={`Code: ${selectedPromo.code}`}
+          description={
+            <span>
+              Are you sure you want to delete promo code{' '}
+              <strong className="font-mono">{selectedPromo.code}</strong>?
+            </span>
+          }
+          impacts={[
+            'The promo token will immediately be deactivated across all customer checkouts.',
+            'Customers with active uncompleted carts will no longer receive this discount on checkout.',
+          ]}
+          confirmText="Delete Promo Token"
+        />
       )}
     </AdminLayout>
   );

@@ -8,7 +8,12 @@ import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Category } from '@bookmarket/types';
-import { Layers, Plus, Trash2, ShieldAlert, Eye, Pencil, X, RefreshCw } from 'lucide-react';
+import { Layers, Plus, Trash2, ShieldAlert, Eye, Pencil, RefreshCw } from 'lucide-react';
+import {
+  AdminDialog,
+  AdminDetailRow,
+} from '@/components/admin/admin-dialog';
+import { AdminDangerDialog } from '@/components/admin/admin-danger-dialog';
 
 export default function AdminCategoriesPage() {
   const { user: currentUser } = useAuthStore();
@@ -275,140 +280,174 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
 
-      {/* VIEW DETAILS MODAL */}
-      {viewModalOpen && selectedCat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
+      {/* VIEW CATEGORY DETAILS MODAL */}
+      {selectedCat && (
+        <AdminDialog
+          isOpen={viewModalOpen}
+          onClose={() => {
+            setViewModalOpen(false);
+            setSelectedCat(null);
+          }}
+          size="md"
+          title={selectedCat.name}
+          subtitle={`Category ID: ${selectedCat.id}`}
+          icon={<Layers className="h-5 w-5 text-secondary" />}
+          badge={
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-primary/10 text-primary border border-primary/20">
+              Active Taxonomy
+            </span>
+          }
+          headerActions={
             <button
-              onClick={() => setViewModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+              onClick={() => {
+                setViewModalOpen(false);
+                setEditForm({
+                  name: selectedCat.name,
+                  description: selectedCat.description || '',
+                  parentId: selectedCat.parentId || '',
+                });
+                setEditModalOpen(true);
+              }}
+              className="p-1.5 text-text-muted hover:text-secondary hover:bg-muted rounded-xl transition-all flex items-center gap-1 text-xs font-bold mr-2"
+              title="Edit Category"
             >
-              <X className="h-5 w-5" />
+              <Pencil className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Edit</span>
             </button>
-
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Layers className="h-6 w-6 text-brand" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Category Details</h3>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="bg-background-subtle p-3 rounded-lg border border-border space-y-1.5">
-                <p><span className="font-bold text-text-muted">Category ID:</span> <span className="font-mono text-text-primary">{selectedCat.id}</span></p>
-                <p><span className="font-bold text-text-muted">Category Name:</span> <span className="font-bold text-text-primary">{selectedCat.name}</span></p>
-                <p><span className="font-bold text-text-muted">URL Slug:</span> <span className="font-mono text-brand">{selectedCat.slug}</span></p>
-                {selectedCat.description && <p><span className="font-bold text-text-muted">Description:</span> <span className="text-text-primary">{selectedCat.description}</span></p>}
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-4 border-t border-border mt-4">
+          }
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <p className="text-xs text-text-muted font-mono">
+                Slug: <span className="font-bold text-text-primary">/{selectedCat.slug}</span>
+              </p>
               <button
-                onClick={() => setViewModalOpen(false)}
-                className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
+                onClick={() => {
+                  setViewModalOpen(false);
+                  setSelectedCat(null);
+                }}
+                className="px-5 py-2 bg-secondary text-secondary-foreground text-xs font-bold rounded-xl hover:bg-secondary/90 shadow-xs"
               >
                 Close
               </button>
             </div>
+          }
+        >
+          <div className="space-y-4">
+            <div className="p-4 bg-muted/30 border border-border rounded-2xl space-y-2">
+              <AdminDetailRow label="Category Name" value={selectedCat.name} />
+              <AdminDetailRow label="URL Slug" value={`/books?category=${selectedCat.slug}`} copyable />
+              <AdminDetailRow label="Taxonomy ID" value={selectedCat.id} copyable />
+              {selectedCat.description && (
+                <div className="pt-2 border-t border-border/60">
+                  <span className="text-[11px] font-bold uppercase text-text-muted block mb-1">
+                    Editorial Description:
+                  </span>
+                  <p className="text-xs text-text-secondary leading-relaxed bg-background p-3 rounded-xl border border-border">
+                    {selectedCat.description}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
-      {/* EDIT CATEGORY MODAL */}
-      {editModalOpen && selectedCat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <button
-              onClick={() => setEditModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Pencil className="h-6 w-6 text-accent" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Edit Category</h3>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                editMutation.mutate({ id: selectedCat.id, data: editForm });
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Category Name</label>
-                <input
-                  type="text"
-                  required
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Description</label>
-                <textarea
-                  rows={3}
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={editMutation.isPending}
-                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90 flex items-center space-x-1"
-                >
-                  {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                  <span>Save Changes</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* SOFT DELETE CONFIRMATION MODAL */}
-      {deleteModalOpen && selectedCat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Trash2 className="h-6 w-6 text-danger" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Confirm Delete Category</h3>
-            </div>
-
-            <p className="text-xs text-text-secondary mb-4">
-              Are you sure you want to delete category <span className="font-bold text-text-primary">{selectedCat.name}</span>?
-            </p>
-
-            <div className="flex justify-end gap-3 pt-2">
+      {/* EDIT CATEGORY FORM MODAL */}
+      {selectedCat && (
+        <AdminDialog
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedCat(null);
+          }}
+          size="md"
+          title="Edit Category"
+          subtitle={`Modifying taxonomy for ${selectedCat.name}`}
+          icon={<Pencil className="h-5 w-5 text-secondary" />}
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
               <button
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
+                type="button"
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setSelectedCat(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
               >
                 Cancel
               </button>
               <button
-                onClick={() => deleteMutation.mutate(selectedCat.id)}
-                disabled={deleteMutation.isPending}
-                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover flex items-center space-x-1"
+                type="submit"
+                form="edit-category-form"
+                disabled={editMutation.isPending}
+                className="px-5 py-2 bg-secondary text-secondary-foreground font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5"
               >
-                {deleteMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                <span>Delete Category</span>
+                {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                <span>Save Category</span>
               </button>
             </div>
-          </div>
-        </div>
+          }
+        >
+          <form
+            id="edit-category-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              editMutation.mutate({ id: selectedCat.id, data: editForm });
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Category Name <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Description
+              </label>
+              <textarea
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                placeholder="Category marketing description..."
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
+            </div>
+          </form>
+        </AdminDialog>
+      )}
+
+      {/* DELETE CATEGORY DANGER DIALOG */}
+      {selectedCat && (
+        <AdminDangerDialog
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setSelectedCat(null);
+          }}
+          onConfirm={() => deleteMutation.mutate(selectedCat.id)}
+          isPending={deleteMutation.isPending}
+          title="Confirm Delete Category"
+          entityName={selectedCat.name}
+          description={
+            <span>
+              Are you sure you want to remove category <strong>{selectedCat.name}</strong>?
+            </span>
+          }
+          impacts={[
+            'The category will be removed from navigation and filter sidebars.',
+            'Books assigned to this category will become unassigned until categorized again.',
+          ]}
+          confirmText="Delete Category"
+        />
       )}
     </AdminLayout>
   );

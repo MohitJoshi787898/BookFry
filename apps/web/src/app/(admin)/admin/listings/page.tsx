@@ -15,12 +15,19 @@ import {
   ExternalLink,
   Filter,
   AlertOctagon,
-  X,
   RefreshCw,
   Eye,
   Pencil,
   Trash2,
+  Tag,
 } from 'lucide-react';
+import {
+  AdminDialog,
+  AdminDetailSection,
+  AdminDetailRow,
+  AdminStatBadge,
+} from '@/components/admin/admin-dialog';
+import { AdminDangerDialog } from '@/components/admin/admin-danger-dialog';
 import Link from 'next/link';
 
 interface AdminListing {
@@ -59,7 +66,6 @@ export default function AdminListingsPage() {
 
   // Rejection modal state
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [rejectBookId, setRejectBookId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectError, setRejectError] = useState<string | null>(null);
 
@@ -92,7 +98,6 @@ export default function AdminListingsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-listings'] });
       setRejectModalOpen(false);
-      setRejectBookId(null);
       setRejectionReason('');
       setRejectError(null);
     },
@@ -127,26 +132,11 @@ export default function AdminListingsPage() {
     moderateMutation.mutate({ id, status: 'active' });
   };
 
-  const handleRejectClick = (id: string) => {
-    setRejectBookId(id);
+  const handleRejectClick = (listing: AdminListing) => {
+    setSelectedListing(listing);
     setRejectionReason('');
     setRejectError(null);
     setRejectModalOpen(true);
-  };
-
-  const handleConfirmRejection = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rejectionReason.trim()) {
-      setRejectError('Please provide a reason for rejecting this listing');
-      return;
-    }
-    if (rejectBookId) {
-      moderateMutation.mutate({
-        id: rejectBookId,
-        status: 'rejected',
-        rejectionReason: rejectionReason.trim(),
-      });
-    }
   };
 
   const listings = responseData || [];
@@ -282,7 +272,7 @@ export default function AdminListingsPage() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleRejectClick(b.id);
+                handleRejectClick(b);
               }}
               disabled={moderateMutation.isPending}
               className="p-1.5 text-xs font-bold rounded bg-danger/10 hover:bg-danger text-danger hover:text-white border border-danger/20 flex items-center transition-all"
@@ -371,239 +361,356 @@ export default function AdminListingsPage() {
         />
       )}
 
-      {/* VIEW DETAILS MODAL */}
-      {viewModalOpen && selectedListing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <button
-              onClick={() => setViewModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
+      {/* VIEW LISTING DETAILS MODAL */}
+      {selectedListing && (
+        <AdminDialog
+          isOpen={viewModalOpen}
+          onClose={() => {
+            setViewModalOpen(false);
+            setSelectedListing(null);
+          }}
+          size="xl"
+          title={selectedListing.title}
+          subtitle={`Listing ID: ${selectedListing.id}`}
+          icon={<BookOpen className="h-5 w-5 text-secondary" />}
+          badge={
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
+                selectedListing.status === 'active'
+                  ? 'bg-success/10 text-success border border-success/25'
+                  : selectedListing.status === 'rejected'
+                  ? 'bg-danger/10 text-danger border border-danger/25'
+                  : 'bg-warning/10 text-warning border border-warning/25'
+              }`}
             >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <BookOpen className="h-6 w-6 text-brand" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Listing Details</h3>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="bg-background-subtle p-3 rounded-lg border border-border space-y-1.5">
-                <p><span className="font-bold text-text-muted">Listing ID:</span> <span className="font-mono text-text-primary">{selectedListing.id}</span></p>
-                <p><span className="font-bold text-text-muted">Book Title:</span> <span className="font-bold text-text-primary">{selectedListing.title}</span></p>
-                <p><span className="font-bold text-text-muted">Author:</span> <span className="text-text-primary">{selectedListing.author}</span></p>
-                <p><span className="font-bold text-text-muted">Category:</span> <span className="capitalize text-text-primary">{selectedListing.category}</span></p>
-                <p><span className="font-bold text-text-muted">Price:</span> <span className="font-mono font-bold text-brand">₹{selectedListing.price}</span></p>
-                <p><span className="font-bold text-text-muted">Stock Copies:</span> <span className="font-mono font-bold">{selectedListing.stock}</span></p>
-                <p><span className="font-bold text-text-muted">Status:</span> <span className="uppercase font-bold text-accent">{selectedListing.status}</span></p>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-4 border-t border-border mt-4">
-              <button
-                onClick={() => setViewModalOpen(false)}
-                className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
+              {selectedListing.status}
+            </span>
+          }
+          headerActions={
+            <div className="flex items-center gap-1.5 mr-2">
+              {selectedListing.status === 'pending' && (
+                <>
+                  <button
+                    onClick={() => {
+                      moderateMutation.mutate({
+                        id: selectedListing.id,
+                        status: 'active',
+                      });
+                      setViewModalOpen(false);
+                      setSelectedListing(null);
+                    }}
+                    className="p-1.5 bg-success/10 hover:bg-success/20 text-success rounded-xl transition-all flex items-center gap-1 text-xs font-bold"
+                    title="Approve Listing"
+                  >
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    <span>Approve</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      setRejectModalOpen(true);
+                    }}
+                    className="p-1.5 bg-danger/10 hover:bg-danger/20 text-danger rounded-xl transition-all flex items-center gap-1 text-xs font-bold"
+                    title="Reject Listing"
+                  >
+                    <EyeOff className="h-3.5 w-3.5" />
+                    <span>Reject</span>
+                  </button>
+                </>
+              )}
+              <Link
+                href={`/books/${selectedListing.slug || selectedListing.id}`}
+                target="_blank"
+                className="p-1.5 text-text-muted hover:text-secondary hover:bg-muted rounded-xl transition-all flex items-center gap-1 text-xs font-bold"
+                title="View on Public Marketplace"
               >
-                Close
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Storefront</span>
+              </Link>
+            </div>
+          }
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <p className="text-xs text-text-muted font-mono">
+                Category: <span className="capitalize font-bold text-text-primary">{selectedListing.category}</span>
+              </p>
+              <button
+                onClick={() => {
+                  setViewModalOpen(false);
+                  setSelectedListing(null);
+                }}
+                className="px-5 py-2 bg-secondary text-secondary-foreground text-xs font-bold rounded-xl hover:bg-secondary/90 shadow-xs"
+              >
+                Close Details
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* EDIT LISTING MODAL */}
-      {editModalOpen && selectedListing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <button
-              onClick={() => setEditModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Pencil className="h-6 w-6 text-accent" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Edit Listing Details</h3>
+          }
+        >
+          <div className="space-y-5">
+            {/* Stat Badges */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <AdminStatBadge
+                label="Offer Price"
+                value={`₹${selectedListing.price}`}
+                variant="default"
+              />
+              <AdminStatBadge
+                label="Available Stock"
+                value={`${selectedListing.stock} Copies`}
+                variant={selectedListing.stock > 0 ? 'success' : 'danger'}
+              />
+              <AdminStatBadge
+                label="Book Condition"
+                value={(selectedListing.condition || 'good').replace('_', ' ').toUpperCase()}
+                variant="info"
+              />
+              <AdminStatBadge
+                label="Status"
+                value={selectedListing.status.toUpperCase()}
+                variant={
+                  selectedListing.status === 'active'
+                    ? 'success'
+                    : selectedListing.status === 'rejected'
+                    ? 'danger'
+                    : 'warning'
+                }
+              />
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                editMutation.mutate({ id: selectedListing.id, data: editForm });
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Book Title</label>
-                <input
-                  type="text"
-                  required
-                  value={editForm.title}
-                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            {/* Rejection Alert Banner if rejected */}
+            {selectedListing.status === 'rejected' && selectedListing.rejectionReason && (
+              <div className="p-3.5 bg-danger/10 border border-danger/25 rounded-2xl flex items-start gap-3">
+                <AlertOctagon className="h-5 w-5 text-danger shrink-0 mt-0.5" />
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Price (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={editForm.price}
-                    onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
-                    className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Stock</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={editForm.stock}
-                    onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })}
-                    className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                  />
+                  <p className="text-xs font-bold text-danger uppercase tracking-wider">
+                    Moderator Rejection Reason:
+                  </p>
+                  <p className="text-xs text-danger font-medium mt-0.5">
+                    &quot;{selectedListing.rejectionReason}&quot;
+                  </p>
                 </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Listing Status</label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="active">Active</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="archived">Archived</option>
-                  <option value="removed">Removed (Soft Deleted)</option>
-                </select>
-              </div>
+            {/* Catalog & Listing Metadata */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AdminDetailSection
+                title="Catalog Information"
+                icon={<BookOpen className="h-4 w-4" />}
+                className="bg-muted/30 p-4 rounded-2xl border border-border"
+              >
+                <div className="space-y-2">
+                  <AdminDetailRow label="Book Title" value={selectedListing.title} />
+                  <AdminDetailRow label="Author" value={selectedListing.author} />
+                  <AdminDetailRow label="Category" value={selectedListing.category} />
+                  <AdminDetailRow label="Slug" value={selectedListing.slug || 'N/A'} copyable />
+                </div>
+              </AdminDetailSection>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={editMutation.isPending}
-                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90 flex items-center space-x-1"
-                >
-                  {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                  <span>Save Listing</span>
-                </button>
-              </div>
-            </form>
+              <AdminDetailSection
+                title="Seller Listing Parameters"
+                icon={<Tag className="h-4 w-4" />}
+                className="bg-muted/30 p-4 rounded-2xl border border-border"
+              >
+                <div className="space-y-2">
+                  <AdminDetailRow
+                    label="Condition"
+                    value={(selectedListing.condition || 'good').replace('_', ' ').toUpperCase()}
+                  />
+                  <AdminDetailRow label="Stock Count" value={`${selectedListing.stock} in stock`} />
+                  <AdminDetailRow label="Unit Price" value={`₹${selectedListing.price}`} />
+                  <AdminDetailRow label="Listing ID" value={selectedListing.id} copyable />
+                </div>
+              </AdminDetailSection>
+            </div>
           </div>
-        </div>
+        </AdminDialog>
       )}
 
-      {/* SOFT DELETE CONFIRMATION MODAL */}
-      {deleteModalOpen && selectedListing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Trash2 className="h-6 w-6 text-danger" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Soft Delete Listing</h3>
-            </div>
-
-            <p className="text-xs text-text-secondary mb-4">
-              Are you sure you want to soft delete <span className="font-bold text-text-primary">{selectedListing.title}</span>? Its status will be updated to <span className="font-bold text-danger">removed</span>.
-            </p>
-
-            <div className="flex justify-end gap-3 pt-2">
+      {/* EDIT LISTING FORM MODAL */}
+      {selectedListing && (
+        <AdminDialog
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedListing(null);
+          }}
+          size="md"
+          title="Edit Listing Details"
+          subtitle={`Adjusting listing parameters for ${selectedListing.title}`}
+          icon={<Pencil className="h-5 w-5 text-secondary" />}
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
               <button
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
+                type="button"
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setSelectedListing(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
               >
                 Cancel
               </button>
               <button
-                onClick={() => deleteMutation.mutate(selectedListing.id)}
-                disabled={deleteMutation.isPending}
-                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover flex items-center space-x-1"
+                type="submit"
+                form="edit-listing-form"
+                disabled={editMutation.isPending}
+                className="px-5 py-2 bg-secondary text-secondary-foreground font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5"
               >
-                {deleteMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                <span>Soft Delete Listing</span>
+                {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                <span>Save Listing</span>
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Rejection Modal Dialog */}
-      {rejectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in font-sans p-4">
-          <div className="bg-surface border border-border rounded-lg max-w-md w-full shadow-2xl p-6 relative animate-scale">
-            <button
-              onClick={() => setRejectModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <AlertOctagon className="h-6 w-6 text-danger" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Provide Rejection Reason</h3>
+          }
+        >
+          <form
+            id="edit-listing-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              editMutation.mutate({ id: selectedListing.id, data: editForm });
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Book Title <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
             </div>
 
-            <form onSubmit={handleConfirmRejection} className="space-y-4">
-              {rejectError && (
-                <p className="text-xs font-semibold text-danger bg-danger/10 border border-danger/20 p-2 rounded">
-                  {rejectError}
-                </p>
-              )}
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-text-primary uppercase tracking-wider block">
-                  Reason for rejection <span className="text-danger">*</span>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-text-primary mb-1.5">
+                  Price (₹) <span className="text-danger">*</span>
                 </label>
-                <textarea
-                  rows={4}
-                  value={rejectionReason}
-                  onChange={(e) => {
-                    setRejectionReason(e.target.value);
-                    if (e.target.value.trim()) setRejectError(null);
-                  }}
-                  placeholder="e.g. Inappropriate images, incorrect price, incomplete description, or fake ISBN..."
-                  className="w-full p-3 text-xs bg-background border border-border rounded-md text-text-primary focus:ring-2 focus:ring-danger focus:outline-none"
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  value={editForm.price}
+                  onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                  className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-mono"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setRejectModalOpen(false)}
-                  className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={moderateMutation.isPending}
-                  className="px-5 py-2 bg-danger hover:bg-danger-hover text-white rounded text-xs font-bold uppercase tracking-wider transition-all flex items-center space-x-1"
-                >
-                  {moderateMutation.isPending ? (
-                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <EyeOff className="h-3.5 w-3.5" />
-                  )}
-                  <span>Reject Listing</span>
-                </button>
+              <div>
+                <label className="block text-xs font-bold text-text-primary mb-1.5">
+                  Stock Units <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  value={editForm.stock}
+                  onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })}
+                  className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-mono"
+                />
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Moderation & Listing Status
+              </label>
+              <select
+                value={editForm.status}
+                onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
+              >
+                <option value="pending">Pending Review</option>
+                <option value="active">Active (Published on Storefront)</option>
+                <option value="rejected">Rejected (Flagged by Admin)</option>
+                <option value="archived">Archived</option>
+                <option value="removed">Removed (Soft Deleted)</option>
+              </select>
+            </div>
+          </form>
+        </AdminDialog>
+      )}
+
+      {/* SOFT DELETE DANGER DIALOG */}
+      {selectedListing && (
+        <AdminDangerDialog
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setSelectedListing(null);
+          }}
+          onConfirm={() => deleteMutation.mutate(selectedListing.id)}
+          isPending={deleteMutation.isPending}
+          title="Confirm Soft Delete Listing"
+          entityName={selectedListing.title}
+          description={
+            <span>
+              Are you sure you want to remove listing <strong>{selectedListing.title}</strong> from
+              the marketplace?
+            </span>
+          }
+          impacts={[
+            'The listing will be immediately delisted from search, category pages, and home carousels.',
+            'Customers who currently have this item in their cart will be alerted that stock is unavailable.',
+            'The seller will receive a status notification update in their seller inventory dashboard.',
+            'Listing record will remain in the operational archive and can be restored if necessary.',
+          ]}
+          confirmText="Soft Delete Listing"
+        />
+      )}
+
+      {/* REJECTION REASON PRESET DANGER DIALOG */}
+      {selectedListing && (
+        <AdminDangerDialog
+          isOpen={rejectModalOpen}
+          onClose={() => {
+            setRejectModalOpen(false);
+            setRejectionReason('');
+            setRejectError(null);
+          }}
+          onConfirm={() => {
+            if (!rejectionReason.trim()) {
+              setRejectError('Please select or specify a valid reason for rejection.');
+              return;
+            }
+            moderateMutation.mutate({
+              id: selectedListing.id,
+              status: 'rejected',
+              rejectionReason,
+            });
+            setRejectModalOpen(false);
+            setRejectionReason('');
+          }}
+          isPending={moderateMutation.isPending}
+          title="Reject Book Listing"
+          entityName={selectedListing.title}
+          description={
+            <span>
+              Rejecting this listing will decline seller submission for{' '}
+              <strong>{selectedListing.title}</strong> and send an automated explanation.
+            </span>
+          }
+          impacts={[
+            'Listing status will transition to "Rejected".',
+            'Listing will not appear in the marketplace catalog.',
+            'The seller will be notified with your rejection explanation to correct and re-submit.',
+          ]}
+          reasonPrompt={{
+            label: 'Explanation / Rejection Reason',
+            placeholder: 'Choose a preset below or type custom feedback for the seller...',
+            value: rejectionReason,
+            onChange: (val) => {
+              setRejectionReason(val);
+              if (val.trim()) setRejectError(null);
+            },
+            required: true,
+            error: rejectError,
+          }}
+          confirmText="Decline & Reject Listing"
+        />
       )}
     </AdminLayout>
   );

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { apiClient } from '@/lib/api-client';
 import { UsedBookRequest, UsedBookRequestStatus } from '@bookmarket/types';
 import {
@@ -52,6 +51,47 @@ export default function SellerUsedRequestsPage() {
     },
   });
 
+  const acceptMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiClient(`/used-book-requests/${id}/accept`, {
+        method: 'PATCH',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seller-used-requests'] });
+      setSuccessMsg('Request accepted! Buyer contact unlocked.');
+      setTimeout(() => setSuccessMsg(null), 3500);
+    },
+    onSettled: () => {
+      setUpdatingId(null);
+    },
+  });
+
+  const declineMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      apiClient(`/used-book-requests/${id}/decline`, {
+        method: 'PATCH',
+        body: JSON.stringify({ reason }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seller-used-requests'] });
+      setSuccessMsg('Request declined.');
+      setTimeout(() => setSuccessMsg(null), 3000);
+    },
+    onSettled: () => {
+      setUpdatingId(null);
+    },
+  });
+
+  const handleAccept = (id: string) => {
+    setUpdatingId(id);
+    acceptMutation.mutate(id);
+  };
+
+  const handleDecline = (id: string) => {
+    setUpdatingId(id);
+    declineMutation.mutate({ id, reason: 'Book no longer available or price mismatch.' });
+  };
+
   const handleUpdateStatus = (id: string, status: UsedBookRequestStatus, note?: string) => {
     setUpdatingId(id);
     statusMutation.mutate({ id, status, note });
@@ -77,7 +117,7 @@ export default function SellerUsedRequestsPage() {
               <span>Used Book Buyer Requests</span>
             </h1>
             <p className="text-sm text-text-secondary mt-1">
-              Buyers interested in your used books. Contact them directly via WhatsApp or email to coordinate payment & handover.
+              Buyers interested in your used books. Accept requests to unlock direct WhatsApp & contact coordinates.
             </p>
           </div>
         </div>
@@ -114,6 +154,7 @@ export default function SellerUsedRequestsPage() {
         ) : (
           <div className="space-y-4">
             {requests.map((req) => {
+              const isLocked = req.buyerContact?.isContactUnlocked === false && req.status === 'requested';
               const whatsappNumber = req.buyerContact?.whatsappPhone || req.buyerContact?.phone;
               const cleanWhatsapp = whatsappNumber ? whatsappNumber.replace(/[^0-9]/g, '') : null;
 
@@ -141,102 +182,146 @@ export default function SellerUsedRequestsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <h3 className="font-serif text-lg font-bold text-text-primary">{req.title}</h3>
-                      <p className="text-sm font-extrabold text-brand font-mono">Asking Price: ₹{req.price.toFixed(2)}</p>
-                      <p className="text-xs text-text-muted capitalize">Condition: {req.condition.replace(/_/g, ' ')}</p>
+                      <p className="text-sm font-extrabold text-brand font-mono">Total Asking: ₹{(req.totalAskingPrice || req.price).toFixed(2)}</p>
+                      
+                      {/* Multi-item breakdown if present */}
+                      {req.items && req.items.length > 0 ? (
+                        <div className="mt-2 space-y-1.5 bg-muted/40 p-2.5 rounded-xl border border-border/70">
+                          <p className="text-[11px] font-bold text-text-secondary uppercase">Books in Request ({req.items.length})</p>
+                          {req.items.map((it, idx) => (
+                            <div key={idx} className="flex justify-between text-xs text-text-primary">
+                              <span className="truncate max-w-[200px]">{it.title}</span>
+                              <span className="font-mono font-bold">₹{it.price.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-text-muted capitalize">Condition: {req.condition.replace(/_/g, ' ')}</p>
+                      )}
                     </div>
 
-                    {/* Buyer Contact Details Panel (Secure) */}
-                    <div className="p-4 bg-muted/60 rounded-2xl border border-border space-y-2 text-xs">
+                    {/* Buyer Contact Details Panel (Privacy-Aware) */}
+                    <div className="p-4 bg-muted/60 rounded-2xl border border-border space-y-2.5 text-xs">
                       <span className="font-bold text-text-primary uppercase tracking-wider text-[10px] block border-b border-border pb-1">
-                        Buyer Contact Details
+                        Buyer Details & Privacy
                       </span>
-                      <p className="font-bold text-text-primary text-sm">{req.buyerContact?.name}</p>
-                      <p className="text-text-secondary flex items-center gap-1.5">
-                        <Mail className="h-3.5 w-3.5 text-brand" /> {req.buyerContact?.email}
-                      </p>
-                      {req.buyerContact?.phone && (
-                        <p className="text-text-secondary flex items-center gap-1.5">
-                          <Phone className="h-3.5 w-3.5 text-brand" /> {req.buyerContact?.phone}
-                        </p>
-                      )}
-                      {req.buyerContact?.note && (
-                        <p className="text-text-muted italic bg-background p-2 rounded-xl border border-border/80">
-                          &quot;{req.buyerContact.note}&quot;
-                        </p>
-                      )}
+                      
+                      {isLocked ? (
+                        <div className="space-y-3 py-2">
+                          <p className="font-bold text-text-primary text-sm">{req.buyerContact?.name || 'Verified Buyer'}</p>
+                          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-900 dark:text-amber-200 text-xs">
+                            🔒 <strong>Contact Locked:</strong> Buyer&apos;s phone & WhatsApp are protected. Click <strong>&quot;Accept Request&quot;</strong> below to reveal contact coordinates.
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleAccept(req.id)}
+                              disabled={updatingId === req.id}
+                              className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs text-xs"
+                            >
+                              Accept Request (Unlock Contact)
+                            </button>
+                            <button
+                              onClick={() => handleDecline(req.id)}
+                              disabled={updatingId === req.id}
+                              className="px-3 py-2 border border-danger text-danger font-bold rounded-xl hover:bg-danger/10 text-xs"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-bold text-text-primary text-sm">{req.buyerContact?.name}</p>
+                          <p className="text-text-secondary flex items-center gap-1.5">
+                            <Mail className="h-3.5 w-3.5 text-brand" /> {req.buyerContact?.email}
+                          </p>
+                          {req.buyerContact?.phone && (
+                            <p className="text-text-secondary flex items-center gap-1.5">
+                              <Phone className="h-3.5 w-3.5 text-brand" /> {req.buyerContact?.phone}
+                            </p>
+                          )}
+                          {req.buyerContact?.note && (
+                            <p className="text-text-muted italic bg-background p-2 rounded-xl border border-border/80">
+                              &quot;{req.buyerContact.note}&quot;
+                            </p>
+                          )}
 
-                      {/* WhatsApp / Email Quick Action */}
-                      <div className="pt-2 flex flex-wrap gap-2">
-                        {cleanWhatsapp && (
-                          <a
-                            href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
-                              `Hi ${req.buyerContact?.name}, I am contacting you regarding your BookFry used book request for "${req.title}".`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => handleUpdateStatus(req.id, 'seller_contacted_buyer', 'Seller initiated WhatsApp conversation')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" /> WhatsApp Buyer
-                          </a>
-                        )}
-                        <a
-                          href={`mailto:${req.buyerContact?.email}?subject=${encodeURIComponent(
-                            `BookFry Request #${req.requestNumber} - ${req.title}`
-                          )}`}
-                          onClick={() => handleUpdateStatus(req.id, 'seller_contacted_buyer', 'Seller sent email to buyer')}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand hover:bg-brand-hover text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
-                        >
-                          <Mail className="h-3.5 w-3.5" /> Email Buyer
-                        </a>
-                      </div>
+                          {/* WhatsApp / Email Quick Action */}
+                          <div className="pt-2 flex flex-wrap gap-2">
+                            {cleanWhatsapp && (
+                              <a
+                                href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
+                                  `Hi ${req.buyerContact?.name}, I accepted your BookFry used book request for "${req.title}". Let's arrange handover!`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => handleUpdateStatus(req.id, 'seller_contacted_buyer', 'Seller initiated WhatsApp conversation')}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" /> WhatsApp Buyer
+                              </a>
+                            )}
+                            <a
+                              href={`mailto:${req.buyerContact?.email}?subject=${encodeURIComponent(
+                                `BookFry Request #${req.requestNumber} - ${req.title}`
+                              )}`}
+                              onClick={() => handleUpdateStatus(req.id, 'seller_contacted_buyer', 'Seller sent email to buyer')}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand hover:bg-brand-hover text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                            >
+                              <Mail className="h-3.5 w-3.5" /> Email Buyer
+                            </a>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
                   {/* Seller Status Actions */}
-                  <div className="pt-3 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <span className="font-bold text-text-secondary">Update Request Status:</span>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => handleUpdateStatus(req.id, 'accepted', 'Seller accepted request.')}
-                        disabled={updatingId === req.id}
-                        className="px-3 py-1.5 bg-success text-white font-bold rounded-xl hover:bg-success/90 disabled:opacity-50"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(req.id, 'in_discussion', 'In discussion regarding handover.')}
-                        disabled={updatingId === req.id}
-                        className="px-3 py-1.5 bg-warning text-white font-bold rounded-xl hover:bg-warning/90 disabled:opacity-50"
-                      >
-                        In Discussion
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(req.id, 'completed', 'Transaction completed.')}
-                        disabled={updatingId === req.id}
-                        className="px-3 py-1.5 bg-brand text-white font-bold rounded-xl hover:bg-brand-hover disabled:opacity-50"
-                      >
-                        Mark Completed
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(req.id, 'declined', 'Seller declined request.')}
-                        disabled={updatingId === req.id}
-                        className="px-3 py-1.5 border border-danger text-danger font-bold rounded-xl hover:bg-danger/10 disabled:opacity-50"
-                      >
-                        Decline
-                      </button>
+                  {!isLocked && (
+                    <div className="pt-3 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs">
+                      <span className="font-bold text-text-secondary">Update Request Status:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {req.status !== 'accepted' && (
+                          <button
+                            onClick={() => handleUpdateStatus(req.id, 'accepted', 'Seller accepted request.')}
+                            disabled={updatingId === req.id}
+                            className="px-3 py-1.5 bg-success text-white font-bold rounded-xl hover:bg-success/90 disabled:opacity-50"
+                          >
+                            Accept
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleUpdateStatus(req.id, 'in_discussion', 'In discussion regarding handover.')}
+                          disabled={updatingId === req.id}
+                          className="px-3 py-1.5 bg-warning text-white font-bold rounded-xl hover:bg-warning/90 disabled:opacity-50"
+                        >
+                          In Discussion
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(req.id, 'completed', 'Transaction completed.')}
+                          disabled={updatingId === req.id}
+                          className="px-3 py-1.5 bg-brand text-white font-bold rounded-xl hover:bg-brand-hover disabled:opacity-50"
+                        >
+                          Mark Completed
+                        </button>
+                        <button
+                          onClick={() => handleDecline(req.id)}
+                          disabled={updatingId === req.id}
+                          className="px-3 py-1.5 border border-danger text-danger font-bold rounded-xl hover:bg-danger/10 disabled:opacity-50"
+                        >
+                          Decline
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

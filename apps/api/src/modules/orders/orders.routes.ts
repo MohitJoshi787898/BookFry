@@ -40,6 +40,11 @@ router.post(
 
 // Order status mutation & returns resolution
 router.patch(
+  '/:orderId/sub-orders/:subOrderId/status',
+  requireRoles(['seller', 'admin']),
+  asyncHandler(controller.updateSubOrderStatus)
+);
+router.patch(
   '/:id/status',
   requireRoles(['seller', 'admin']),
   validate({ body: updateOrderStatusSchema }),

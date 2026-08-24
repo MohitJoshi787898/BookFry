@@ -26,6 +26,61 @@ export class UsedBookRequestsController {
     }
   };
 
+  createBatchRequests = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { listingIds, phone, whatsappPhone, note, preferredContactMethod } = req.body;
+      if (!Array.isArray(listingIds) || listingIds.length === 0) {
+        res.status(400).json({
+          success: false,
+          data: null,
+          error: { code: 'VALIDATION_ERROR', message: 'listingIds array is required' },
+        });
+        return;
+      }
+      const requests = await this.service.createBatchRequests(req.user!.id, {
+        listingIds,
+        phone,
+        whatsappPhone,
+        note,
+        preferredContactMethod,
+      });
+      res.status(201).json({
+        success: true,
+        data: requests,
+        error: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  acceptRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const updated = await this.service.acceptRequest(req.params.id, req.user!.id);
+      res.status(200).json({
+        success: true,
+        data: updated,
+        error: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  declineRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { reason } = req.body;
+      const updated = await this.service.declineRequest(req.params.id, req.user!.id, reason);
+      res.status(200).json({
+        success: true,
+        data: updated,
+        error: null,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   getBuyerRequests = async (
     req: Request,
     res: Response,

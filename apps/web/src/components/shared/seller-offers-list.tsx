@@ -10,6 +10,11 @@ export interface SellerOffer {
   id: string; // Listing ID
   sellerId: string;
   sellerName: string;
+  sellerCity?: string;
+  sellerState?: string;
+  sellerPincode?: string;
+  campusName?: string;
+  distanceKm?: number;
   condition: 'new' | 'like_new' | 'good' | 'fair' | 'acceptable' | string;
   price: number;
   discountPrice?: number;
@@ -114,10 +119,25 @@ export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListP
                     {isNewBook ? '⚡ Online Payment' : '🤝 Direct Contact'}
                   </span>
                 </div>
-                <p className="text-xs text-text-muted flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  <span>{isNewBook ? 'Ships via BookFry Express Doorstep Pickup' : 'Seller Direct Contact & Pickup Option'}</span>
-                </p>
+                <div className="flex items-center flex-wrap gap-2 text-xs text-text-muted">
+                  <p className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-secondary shrink-0" />
+                    <span>
+                      {offer.campusName
+                        ? offer.campusName
+                        : offer.sellerCity
+                        ? `${offer.sellerCity}${offer.sellerState ? `, ${offer.sellerState}` : ''}`
+                        : isNewBook
+                        ? 'Ships via BookFry Express'
+                        : 'Local Pickup / Contact'}
+                    </span>
+                  </p>
+                  {offer.distanceKm !== undefined && (
+                    <span className="text-[10px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.2 rounded-md">
+                      ~{offer.distanceKm} km away
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Price & Action */}

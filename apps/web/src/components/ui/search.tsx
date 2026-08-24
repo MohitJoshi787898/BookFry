@@ -69,7 +69,7 @@ export function SearchInput({
   };
 
   return (
-    <div className={cn('relative flex items-center w-full font-sans text-xs', className)}>
+    <div className={cn('relative flex items-center w-full font-sans text-sm', className)}>
       <SearchIcon className="absolute left-3.5 h-4 w-4 text-text-muted pointer-events-none z-10" />
 
       <input
@@ -78,16 +78,16 @@ export function SearchInput({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full pl-9 pr-9 py-2.5 bg-slate-50/40 text-text-primary border border-border rounded-md transition-all focus:outline-none focus:ring-1 focus:ring-secondary focus:border-secondary font-medium"
+        className="w-full pl-10 pr-10 h-11 bg-card text-text-primary border border-border rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary font-medium placeholder:text-text-muted shadow-2xs"
       />
 
       <div className="absolute right-3.5 flex items-center gap-1.5 z-10">
-        {loading && <Loader2 className="h-3.5 w-3.5 text-text-muted animate-spin" />}
+        {loading && <Loader2 className="h-4 w-4 text-text-muted animate-spin" />}
         {!loading && internalValue && (
           <button
             type="button"
             onClick={handleClear}
-            className="p-0.5 rounded-full hover:bg-muted text-text-muted hover:text-text-primary transition-colors focus-ring"
+            className="p-1 rounded-full hover:bg-muted text-text-muted hover:text-text-primary transition-colors focus-ring"
             aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />

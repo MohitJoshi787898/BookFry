@@ -11,16 +11,22 @@ const app = express();
 
 app.use(helmet());
 
-const allowedOrigins = [env.FRONTEND_URL, 'http://localhost:3000'].filter(Boolean);
+const allowedOrigins = [env.FRONTEND_URL, "http://localhost:3000"].filter(
+  Boolean,
+);
 
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl) or if origin matches allowedOrigins
-      if (!origin || allowedOrigins.includes(origin) || env.NODE_ENV === 'test') {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        env.NODE_ENV === "test"
+      ) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
@@ -38,7 +44,7 @@ app.use(
 
 // Basic rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 100000, // 15 minutes
   max: 100, // Limit each IP to 100 requests
   standardHeaders: true,
   legacyHeaders: false,
@@ -61,7 +67,12 @@ import { requireAuth } from "./middlewares/auth.middleware";
 import { requireAdmin } from "./middlewares/rbac.middleware";
 
 // Mount Bull Board Admin Dashboard
-app.use("/api/v1/admin/queues", requireAuth, requireAdmin, serverAdapter.getRouter());
+app.use(
+  "/api/v1/admin/queues",
+  requireAuth,
+  requireAdmin,
+  serverAdapter.getRouter(),
+);
 
 // Mount API routes under /api/v1
 app.use("/api/v1", routes);

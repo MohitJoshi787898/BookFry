@@ -59,18 +59,18 @@ export function Table<T>({
   }
 
   return (
-    <div className={cn('w-full overflow-x-auto border border-border rounded-xl bg-card font-sans text-xs', className)}>
+    <div className={cn('w-full overflow-x-auto border border-border rounded-xl bg-card font-sans text-sm shadow-2xs', className)}>
       <table className="w-full text-left border-collapse">
         {/* Table Header */}
         <thead>
-          <tr className="border-b border-border bg-slate-50/50">
+          <tr className="border-b border-border bg-muted/40">
             {columns.map((col, i) => {
               const isSorted = col.accessorKey && sortColumn === col.accessorKey;
               return (
                 <th
                   key={i}
                   className={cn(
-                    'p-4 font-bold text-text-secondary select-none',
+                    'p-3.5 sm:p-4 text-xs font-bold uppercase tracking-wider text-text-secondary select-none',
                     col.sortable && onSort ? 'cursor-pointer hover:text-text-primary' : '',
                     col.className
                   )}
@@ -82,12 +82,12 @@ export function Table<T>({
                       <span className="text-text-muted shrink-0">
                         {isSorted ? (
                           sortDirection === 'asc' ? (
-                            <ArrowUp className="h-3 w-3" />
+                            <ArrowUp className="h-3.5 w-3.5 text-secondary" />
                           ) : (
-                            <ArrowDown className="h-3 w-3" />
+                            <ArrowDown className="h-3.5 w-3.5 text-secondary" />
                           )
                         ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-60" />
+                          <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
                         )}
                       </span>
                     )}
@@ -105,9 +105,9 @@ export function Table<T>({
               key={rIndex}
               onClick={() => onRowClick?.(row)}
               className={cn(
-                'transition-colors hover:bg-slate-50/30',
+                'transition-colors hover:bg-muted/30',
                 onRowClick ? 'cursor-pointer' : '',
-                rIndex % 2 === 1 ? 'bg-slate-50/[0.08]' : ''
+                rIndex % 2 === 1 ? 'bg-muted/10' : ''
               )}
             >
               {columns.map((col, cIndex) => {
@@ -117,7 +117,7 @@ export function Table<T>({
                     : null;
 
                 return (
-                  <td key={cIndex} className={cn('p-4 font-medium text-text-primary', col.className)}>
+                  <td key={cIndex} className={cn('p-3.5 sm:p-4 text-sm font-medium text-text-primary', col.className)}>
                     {col.cell ? col.cell(row) : cellValue !== null ? String(cellValue) : ''}
                   </td>
                 );

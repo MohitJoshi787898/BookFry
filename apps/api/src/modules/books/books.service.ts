@@ -66,6 +66,10 @@ export class BooksService {
         id: l._id.toString(),
         sellerId: sellerObj?._id ? sellerObj._id.toString() : (l.sellerId ? l.sellerId.toString() : ''),
         sellerName: sellerObj?.name || 'Verified Seller',
+        sellerCity: l.city || sellerObj?.addresses?.[0]?.city || undefined,
+        sellerState: l.state || sellerObj?.addresses?.[0]?.state || undefined,
+        sellerPincode: l.pincode || sellerObj?.addresses?.[0]?.zipCode || undefined,
+        campusName: l.campusName,
         condition: l.condition,
         price: l.price,
         discountPrice: l.discountPrice,
@@ -97,6 +101,10 @@ export class BooksService {
         id: l._id.toString(),
         sellerId: sellerObj?._id ? sellerObj._id.toString() : (l.sellerId ? l.sellerId.toString() : ''),
         sellerName: sellerObj?.name || 'Verified Seller',
+        sellerCity: l.city || sellerObj?.addresses?.[0]?.city || undefined,
+        sellerState: l.state || sellerObj?.addresses?.[0]?.state || undefined,
+        sellerPincode: l.pincode || sellerObj?.addresses?.[0]?.zipCode || undefined,
+        campusName: l.campusName,
         condition: l.condition,
         price: l.price,
         discountPrice: l.discountPrice,
@@ -105,6 +113,20 @@ export class BooksService {
         createdAt: l.createdAt.toISOString(),
       };
     });
+  }
+
+  private calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Earth radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return parseFloat((R * c).toFixed(1));
   }
 
   async listBooks(query: {
@@ -116,6 +138,13 @@ export class BooksService {
     condition?: string;
     minPrice?: number;
     maxPrice?: number;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    campusName?: string;
+    lat?: number;
+    lng?: number;
+    maxDistanceKm?: number;
     sortBy?: string;
     sortOrder: 'asc' | 'desc';
   }): Promise<{ books: Book[]; total: number }> {
@@ -154,6 +183,13 @@ export class BooksService {
         condition: query.condition,
         minPrice: query.minPrice,
         maxPrice: query.maxPrice,
+        city: query.city,
+        state: query.state,
+        pincode: query.pincode,
+        campusName: query.campusName,
+        lat: query.lat,
+        lng: query.lng,
+        maxDistanceKm: query.maxDistanceKm,
       }
     );
 
@@ -167,6 +203,16 @@ export class BooksService {
       const bookId = doc.primaryListingId
         ? doc.primaryListingId.toString()
         : doc._id.toString();
+
+      let distanceKm: number | undefined;
+      if (
+        query.lat !== undefined &&
+        query.lng !== undefined &&
+        doc.primaryListingLocation?.coordinates?.length === 2
+      ) {
+        const [listingLng, listingLat] = doc.primaryListingLocation.coordinates;
+        distanceKm = this.calculateDistanceKm(query.lat, query.lng, listingLat, listingLng);
+      }
 
       return {
         id: bookId,
@@ -182,6 +228,11 @@ export class BooksService {
         images: doc.images || [],
         stock: doc.listingCount || 1,
         sellerId: doc.primaryListingSellerId ? doc.primaryListingSellerId.toString() : '',
+        sellerCity: doc.primaryListingCity,
+        sellerState: doc.primaryListingState,
+        sellerPincode: doc.primaryListingPincode,
+        campusName: doc.primaryListingCampusName,
+        distanceKm,
         status: 'active' as BookStatus,
         tags: doc.tags || [],
         language: doc.language || 'English',
@@ -218,15 +269,22 @@ export class BooksService {
       publisher?: string;
       edition?: string;
       pageCount?: number;
+      city?: string;
+      state?: string;
+      pincode?: string;
+      campusName?: string;
+      lat?: number;
+      lng?: number;
       images?: Array<{ url: string; publicId: string }>;
     }
   ): Promise<Book> {
     // 0. Auto promote user to 'seller' role if needed
     const { UserModel } = await import('../../models/user.model');
-    await UserModel.updateOne(
-      { _id: new mongoose.Types.ObjectId(sellerId), roles: { $ne: 'seller' } },
-      { $addToSet: { roles: 'seller' } }
-    );
+    const sellerUser = await UserModel.findByIdAndUpdate(
+      sellerId,
+      { $addToSet: { roles: 'seller' } },
+      { new: true }
+    ).exec();
 
     const slug = this.generateSlug(data.title, data.isbn);
 
@@ -249,7 +307,21 @@ export class BooksService {
       viewsCount: 0,
     });
 
-    // 2. Check if seller already has a listing for this catalog entry
+    // 2. Resolve seller listing location details (explicit or from profile default address)
+    const defaultAddress = sellerUser?.addresses?.find((a) => a.isDefault) || sellerUser?.addresses?.[0];
+    const listingCity = data.city || defaultAddress?.city || undefined;
+    const listingState = data.state || defaultAddress?.state || undefined;
+    const listingPincode = data.pincode || defaultAddress?.zipCode || undefined;
+    const listingCampus = data.campusName || undefined;
+
+    let listingLocation: { type: 'Point'; coordinates: [number, number] } | undefined;
+    if (data.lat !== undefined && data.lng !== undefined) {
+      listingLocation = { type: 'Point', coordinates: [data.lng, data.lat] };
+    } else if (defaultAddress?.location?.coordinates?.length === 2) {
+      listingLocation = { type: 'Point', coordinates: defaultAddress.location.coordinates };
+    }
+
+    // 3. Check if seller already has a listing for this catalog entry
     const existingListing = await this.listingRepository.findBySellerAndCatalog(
       sellerId,
       catalog._id.toString()
@@ -268,6 +340,12 @@ export class BooksService {
       existingListing.stock = data.stock;
       existingListing.status = 'pending';
       existingListing.rejectionReason = '';
+      if (listingCity) existingListing.city = listingCity;
+      if (listingState) existingListing.state = listingState;
+      if (listingPincode) existingListing.pincode = listingPincode;
+      if (listingCampus) existingListing.campusName = listingCampus;
+      if (listingLocation) existingListing.location = listingLocation;
+
       existingListing.moderationHistory.push({
         status: 'pending',
         notes: 'Resubmitted listing for review',
@@ -277,7 +355,7 @@ export class BooksService {
       return this.mapCatalogAndListingToBook(catalog, existingListing);
     }
 
-    // 3. Create new seller listing referencing canonical catalog entry
+    // 4. Create new seller listing referencing canonical catalog entry
     const listing = await this.listingRepository.create({
       catalogId: catalog._id as mongoose.Types.ObjectId,
       sellerId: new mongoose.Types.ObjectId(sellerId),
@@ -285,6 +363,11 @@ export class BooksService {
       price: data.price,
       discountPrice: data.discountPrice,
       stock: data.stock,
+      city: listingCity,
+      state: listingState,
+      pincode: listingPincode,
+      campusName: listingCampus,
+      location: listingLocation,
       status: 'pending',
       rejectionReason: '',
       moderationHistory: [
@@ -318,6 +401,12 @@ export class BooksService {
       publisher: string;
       edition: string;
       pageCount: number;
+      city: string;
+      state: string;
+      pincode: string;
+      campusName: string;
+      lat: number;
+      lng: number;
       status: BookStatus;
       images: Array<{ url: string; publicId: string }>;
     }>
@@ -339,6 +428,13 @@ export class BooksService {
     if (data.condition) updateData.condition = data.condition;
     if (data.stock !== undefined) updateData.stock = data.stock;
     if (data.status) updateData.status = data.status;
+    if (data.city !== undefined) updateData.city = data.city;
+    if (data.state !== undefined) updateData.state = data.state;
+    if (data.pincode !== undefined) updateData.pincode = data.pincode;
+    if (data.campusName !== undefined) updateData.campusName = data.campusName;
+    if (data.lat !== undefined && data.lng !== undefined) {
+      updateData.location = { type: 'Point', coordinates: [data.lng, data.lat] };
+    }
 
     if (!isAdmin && (listing.status === 'rejected' || data.status === 'pending')) {
       updateData.status = 'pending';
@@ -400,6 +496,10 @@ export class BooksService {
       images: catalog.images || [],
       stock: listing ? listing.stock : 0,
       sellerId: listing ? listing.sellerId.toString() : '',
+      sellerCity: listing ? listing.city : undefined,
+      sellerState: listing ? listing.state : undefined,
+      sellerPincode: listing ? listing.pincode : undefined,
+      campusName: listing ? listing.campusName : undefined,
       status: listing ? listing.status : ('active' as BookStatus),
       tags: catalog.tags || [],
       language: catalog.language || 'English',

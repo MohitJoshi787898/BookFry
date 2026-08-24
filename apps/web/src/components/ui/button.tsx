@@ -59,11 +59,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      xs: iconOnly ? 'p-1 text-xs' : 'px-2.5 py-1 text-xs',
-      sm: iconOnly ? 'p-1.5 text-xs' : 'px-3.5 py-1.5 text-xs',
-      md: iconOnly ? 'p-2 text-sm' : 'px-5 py-2.5 text-sm',
-      lg: iconOnly ? 'p-3 text-base' : 'px-7 py-3.5 text-base',
-      xl: iconOnly ? 'p-4 text-lg' : 'px-9 py-4.5 text-lg',
+      xs: iconOnly ? 'p-1.5 text-xs min-h-[28px] min-w-[28px]' : 'px-2.5 py-1 text-xs min-h-[28px]',
+      sm: iconOnly ? 'p-2 text-xs min-h-[36px] min-w-[36px]' : 'px-3.5 py-1.5 text-xs sm:text-sm font-medium min-h-[36px]',
+      md: iconOnly ? 'p-2.5 text-sm min-h-[42px] min-w-[42px]' : 'px-5 py-2.5 text-sm font-semibold min-h-[42px]',
+      lg: iconOnly ? 'p-3 text-base min-h-[48px] min-w-[48px]' : 'px-6 py-3 text-sm sm:text-base font-bold min-h-[48px]',
+      xl: iconOnly ? 'p-4 text-lg min-h-[52px] min-w-[52px]' : 'px-8 py-3.5 text-base sm:text-lg font-bold min-h-[52px]',
     };
 
     const getRoundedStyle = () => {

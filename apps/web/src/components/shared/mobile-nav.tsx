@@ -53,7 +53,7 @@ export function MobileNav() {
                 >
                   <PlusCircle className="h-7 w-7 stroke-[2.5]" />
                 </motion.div>
-                <span className="text-[10px] font-extrabold text-secondary tracking-tight mt-1 leading-none">
+                <span className="text-xs font-extrabold text-secondary tracking-tight mt-1 leading-none">
                   Sell
                 </span>
               </Link>
@@ -64,7 +64,7 @@ export function MobileNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="relative flex flex-col items-center py-1 px-3 min-w-[44px] min-h-[44px] justify-center text-center group focus-ring rounded-xl"
+              className="relative flex flex-col items-center py-1.5 px-3 min-w-[48px] min-h-[48px] justify-center text-center group focus-ring rounded-xl"
             >
               <motion.div
                 whileTap={{ scale: 0.85 }}
@@ -81,14 +81,14 @@ export function MobileNav() {
                 />
 
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 bg-secondary text-secondary-foreground text-[9px] font-black rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 bg-secondary text-secondary-foreground text-[10px] font-black rounded-full flex items-center justify-center shadow-sm">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </motion.div>
 
               <span
-                className={`text-[10px] tracking-tight leading-none mt-0.5 transition-all duration-200 ${
+                className={`text-[11px] tracking-tight leading-none mt-0.5 transition-all duration-200 ${
                   isActive
                     ? 'font-extrabold text-primary dark:text-primary'
                     : 'font-medium text-muted-foreground group-hover:text-foreground'

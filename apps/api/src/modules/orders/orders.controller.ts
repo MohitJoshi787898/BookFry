@@ -72,6 +72,23 @@ export class OrdersController {
     res.status(200).json(ApiResponse.success(order));
   };
 
+  updateSubOrderStatus = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    const roles = req.user!.roles;
+    const { orderId, subOrderId } = req.params;
+    const { status, note, carrier, trackingNumber, trackingUrl, estimatedDays } = req.body;
+    const order = await this.ordersService.updateSubOrderStatus(
+      orderId,
+      subOrderId,
+      userId,
+      roles,
+      status as OrderStatus,
+      { carrier, trackingNumber, trackingUrl, estimatedDays },
+      note
+    );
+    res.status(200).json(ApiResponse.success(order));
+  };
+
   requestReturn = async (req: Request, res: Response): Promise<void> => {
     const buyerId = req.user!.id;
     const { id } = req.params;

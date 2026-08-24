@@ -12,7 +12,7 @@ import { Navbar } from '@/components/shared/navbar';
 import { Footer } from '@/components/shared/footer';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
-import { Check } from 'lucide-react';
+import { Check, Package, Truck, MessageCircle } from 'lucide-react';
 
 import { CartHeroHeader } from '@/components/cart/cart-hero-header';
 import { CartItemCard } from '@/components/cart/cart-item-card';
@@ -247,6 +247,22 @@ export default function CartPage() {
     }
   };
 
+  const newItems = items.filter(
+    (i) => (i.listingDetail?.condition || i.bookDetail?.condition) === 'new'
+  );
+  const usedItems = items.filter(
+    (i) => (i.listingDetail?.condition || i.bookDetail?.condition) !== 'new'
+  );
+
+  const newSellerIds = Array.from(
+    new Set(
+      newItems.map(
+        (i) => i.listingDetail?.sellerId || (i as { sellerId?: string }).sellerId || 'seller'
+      )
+    )
+  );
+  const isMultiSeller = newSellerIds.length > 1;
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
       <Navbar />
@@ -277,17 +293,65 @@ export default function CartPage() {
                 }}
               />
 
-              <div className="space-y-3">
-                {items.map((item) => (
-                  <CartItemCard
-                    key={item.listingId || item.bookId}
-                    item={item}
-                    isLoading={isCartLoading}
-                    onQtyChange={(key, cur, chg) => updateQuantity(isAuthenticated, key, cur + chg)}
-                    onRemove={(key) => removeItem(isAuthenticated, key)}
-                  />
-                ))}
-              </div>
+              {/* Multi-Seller Shipment Advisory */}
+              {isMultiSeller && (
+                <div className="p-4 rounded-2xl bg-brand/10 border border-brand/20 flex items-start gap-3 text-xs text-foreground font-sans">
+                  <div className="p-1.5 rounded-xl bg-brand text-brand-foreground shrink-0 mt-0.5">
+                    <Package className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-extrabold text-brand">Multi-Seller Order Notice</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Your cart contains new books from <strong>{newSellerIds.length} different sellers</strong>. Your books will be dispatched in <strong>{newSellerIds.length} separate parcels</strong> with individual tracking numbers.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* New Books Section */}
+              {newItems.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 font-mono">
+                      <Truck className="h-3.5 w-3.5 text-primary" /> New Books — Online Payment ({newItems.length})
+                    </h3>
+                  </div>
+                  {newItems.map((item) => (
+                    <CartItemCard
+                      key={item.listingId || item.bookId}
+                      item={item}
+                      isLoading={isCartLoading}
+                      onQtyChange={(key, cur, chg) => updateQuantity(isAuthenticated, key, cur + chg)}
+                      onRemove={(key) => removeItem(isAuthenticated, key)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Used Books Section */}
+              {usedItems.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 font-mono">
+                      <MessageCircle className="h-3.5 w-3.5 text-brand" /> Used Books — Direct Seller Request ({usedItems.length})
+                    </h3>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-muted/60 border border-border/80 text-xs text-muted-foreground">
+                    <p className="leading-relaxed">
+                      💡 <strong>P2P Direct Contact:</strong> Used books do not require online payment. Sellers will receive your request and contact you directly via WhatsApp / Email.
+                    </p>
+                  </div>
+                  {usedItems.map((item) => (
+                    <CartItemCard
+                      key={item.listingId || item.bookId}
+                      item={item}
+                      isLoading={isCartLoading}
+                      onQtyChange={(key, cur, chg) => updateQuantity(isAuthenticated, key, cur + chg)}
+                      onRemove={(key) => removeItem(isAuthenticated, key)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right Column: Order Summary */}

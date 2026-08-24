@@ -7,6 +7,7 @@ export const QUEUE_NAMES = {
   RECOMMENDATIONS: 'recommendations-queue',
   ORDER_SLA: 'order-sla-queue',
   EMAIL: 'email-queue',
+  PUSH: 'push-queue',
 } as const;
 
 const redisConnection = getRedisClient();
@@ -42,11 +43,16 @@ export const emailQueue = queueOptions
   ? new Queue(QUEUE_NAMES.EMAIL, queueOptions)
   : null;
 
+export const pushQueue = queueOptions
+  ? new Queue(QUEUE_NAMES.PUSH, queueOptions)
+  : null;
+
 export const allQueues = [
   pageViewQueue,
   recommendationsQueue,
   orderSlaQueue,
   emailQueue,
+  pushQueue,
 ].filter(Boolean) as Queue[];
 
 logger.info(`[BullMQ] Initialized ${allQueues.length} queue instances.`);

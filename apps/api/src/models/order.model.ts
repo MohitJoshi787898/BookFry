@@ -25,10 +25,38 @@ export interface IReturnRequest {
   resolvedAt?: Date;
 }
 
+export interface IShippingDetails {
+  carrier?: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  shippedAt?: Date;
+  estimatedDelivery?: Date;
+  deliveredAt?: Date;
+}
+
+export interface ISubOrder {
+  _id?: mongoose.Types.ObjectId;
+  subOrderNumber: string;
+  sellerId: mongoose.Types.ObjectId;
+  items: IOrderItem[];
+  subtotal: number;
+  shippingFee: number;
+  tax: number;
+  total: number;
+  sellerPayout: number;
+  status: OrderStatus;
+  shippingDetails?: IShippingDetails;
+  timeline: IOrderTimeline[];
+  returnRequest?: IReturnRequest;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface IOrderDocument extends Document {
   orderNumber: string;
   buyerId: mongoose.Types.ObjectId;
   items: IOrderItem[];
+  subOrders: ISubOrder[];
   shippingAddress: {
     street: string;
     city: string;
@@ -110,11 +138,47 @@ const ALL_STATUSES = [
   'return_rejected',
 ];
 
+const ShippingDetailsSchema = new Schema<IShippingDetails>(
+  {
+    carrier: { type: String },
+    trackingNumber: { type: String },
+    trackingUrl: { type: String },
+    shippedAt: { type: Date },
+    estimatedDelivery: { type: Date },
+    deliveredAt: { type: Date },
+  },
+  { _id: false }
+);
+
+const SubOrderSchema = new Schema<ISubOrder>(
+  {
+    subOrderNumber: { type: String, required: true },
+    sellerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    items: [OrderItemSchema],
+    subtotal: { type: Number, required: true, min: 0 },
+    shippingFee: { type: Number, required: true, min: 0, default: 0 },
+    tax: { type: Number, required: true, min: 0, default: 0 },
+    total: { type: Number, required: true, min: 0 },
+    sellerPayout: { type: Number, required: true, min: 0 },
+    status: {
+      type: String,
+      required: true,
+      enum: ALL_STATUSES,
+      default: 'pending',
+    },
+    shippingDetails: { type: ShippingDetailsSchema, default: () => ({}) },
+    timeline: { type: [OrderTimelineSchema], default: [] },
+    returnRequest: { type: ReturnRequestSchema, default: undefined },
+  },
+  { timestamps: true }
+);
+
 const OrderSchema = new Schema<IOrderDocument>(
   {
     orderNumber: { type: String, required: true, unique: true, index: true },
     buyerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     items: [OrderItemSchema],
+    subOrders: { type: [SubOrderSchema], default: [] },
     shippingAddress: {
       street: { type: String, required: true },
       city: { type: String, required: true },
@@ -153,6 +217,7 @@ const OrderSchema = new Schema<IOrderDocument>(
 
 OrderSchema.index({ buyerId: 1, createdAt: -1 });
 OrderSchema.index({ 'items.sellerId': 1, createdAt: -1 });
+OrderSchema.index({ 'subOrders.sellerId': 1, createdAt: -1 });
 
 export const OrderModel = mongoose.model<IOrderDocument>('Order', OrderSchema);
 export default OrderModel;

@@ -7,7 +7,26 @@ import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
-import { Users, Ban, ShieldAlert, Filter, Eye, Pencil, Trash2, X, RefreshCw } from 'lucide-react';
+import {
+  Users,
+  Ban,
+  ShieldAlert,
+  Filter,
+  Eye,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  UserCheck,
+  Shield,
+  CheckCircle2,
+} from 'lucide-react';
+import {
+  AdminDialog,
+  AdminDetailSection,
+  AdminDetailRow,
+  AdminStatBadge,
+} from '@/components/admin/admin-dialog';
+import { AdminDangerDialog } from '@/components/admin/admin-danger-dialog';
 
 interface AdminUser {
   id: string;
@@ -272,174 +291,294 @@ export default function AdminUsersPage() {
         />
       )}
 
-      {/* VIEW DETAIL MODAL */}
-      {viewModalOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <button
-              onClick={() => setViewModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Users className="h-6 w-6 text-brand" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">User Account Details</h3>
-            </div>
-            <div className="space-y-3 text-xs">
-              <div className="bg-background-subtle p-3 rounded-lg border border-border space-y-1.5">
-                <p><span className="font-bold text-text-muted">User ID:</span> <span className="font-mono text-text-primary">{selectedUser.id}</span></p>
-                <p><span className="font-bold text-text-muted">Full Name:</span> <span className="font-bold text-text-primary">{selectedUser.name}</span></p>
-                <p><span className="font-bold text-text-muted">Email:</span> <span className="text-text-primary">{selectedUser.email}</span></p>
-                {selectedUser.phone && <p><span className="font-bold text-text-muted">Phone:</span> <span className="text-text-primary">{selectedUser.phone}</span></p>}
-              </div>
-
-              <div>
-                <p className="font-bold text-text-muted uppercase text-[10px] mb-1">Assigned Roles</p>
-                <div className="flex gap-1.5">
-                  {(selectedUser.roles || []).map((r) => (
-                    <span key={r} className="px-2.5 py-1 bg-brand/10 border border-brand/20 text-brand rounded text-[10px] font-bold uppercase">{r}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="font-bold text-text-muted uppercase text-[10px] mb-1">Account Status</p>
-                <p className="font-bold">{selectedUser.isBanned ? <span className="text-danger">Soft-Deleted / Banned</span> : <span className="text-success">Active & Verified</span>}</p>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-4 border-t border-border mt-4">
+      {/* VIEW USER DETAILS MODAL */}
+      {selectedUser && (
+        <AdminDialog
+          isOpen={viewModalOpen}
+          onClose={() => {
+            setViewModalOpen(false);
+            setSelectedUser(null);
+          }}
+          size="lg"
+          title={selectedUser.name}
+          subtitle={`User ID: ${selectedUser.id}`}
+          icon={<Users className="h-5 w-5 text-secondary" />}
+          badge={
+            selectedUser.isBanned ? (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-danger/10 text-danger border border-danger/25">
+                Suspended / Banned
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-success/10 text-success border border-success/25">
+                Active & Verified
+              </span>
+            )
+          }
+          headerActions={
+            <div className="flex items-center gap-1.5 mr-2">
               <button
-                onClick={() => setViewModalOpen(false)}
-                className="px-4 py-2 bg-brand text-white text-xs font-bold rounded hover:bg-brand-hover"
+                onClick={() => {
+                  setViewModalOpen(false);
+                  setEditForm({
+                    name: selectedUser.name,
+                    email: selectedUser.email,
+                    roles: selectedUser.roles || [],
+                  });
+                  setEditModalOpen(true);
+                }}
+                className="p-1.5 text-text-muted hover:text-secondary hover:bg-muted rounded-xl transition-all flex items-center gap-1 text-xs font-bold"
+                title="Edit Account"
               >
-                Close
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+              <button
+                onClick={() => {
+                  banMutation.mutate(selectedUser.id);
+                  setSelectedUser({ ...selectedUser, isBanned: !selectedUser.isBanned });
+                }}
+                disabled={banMutation.isPending}
+                className={`p-1.5 rounded-xl transition-all flex items-center gap-1 text-xs font-bold ${
+                  selectedUser.isBanned
+                    ? 'text-success hover:bg-success/10'
+                    : 'text-danger hover:bg-danger/10'
+                }`}
+                title={selectedUser.isBanned ? 'Unban Account' : 'Suspend Account'}
+              >
+                <Ban className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {selectedUser.isBanned ? 'Reactivate' : 'Suspend'}
+                </span>
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* EDIT USER MODAL */}
-      {editModalOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <button
-              onClick={() => setEditModalOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full text-text-muted hover:bg-background-subtle hover:text-text-primary"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Pencil className="h-6 w-6 text-accent" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Edit User Account</h3>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                editMutation.mutate({ userId: selectedUser.id, data: editForm });
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Name</label>
-                <input
-                  type="text"
-                  required
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full p-2.5 border border-border rounded bg-background text-text-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-text-muted mb-1">Roles</label>
-                <div className="flex gap-4">
-                  {['customer', 'seller', 'admin'].map((role) => (
-                    <label key={role} className="flex items-center space-x-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={editForm.roles.includes(role)}
-                        onChange={(e) => {
-                          const newRoles = e.target.checked
-                            ? [...editForm.roles, role]
-                            : editForm.roles.filter((r) => r !== role);
-                          setEditForm({ ...editForm, roles: newRoles });
-                        }}
-                        className="rounded border-border text-brand focus:ring-brand"
-                      />
-                      <span className="capitalize text-text-primary">{role}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2 border border-border rounded text-text-primary hover:bg-background-subtle font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={editMutation.isPending}
-                  className="px-5 py-2 bg-accent text-white font-bold rounded hover:bg-accent/90 flex items-center space-x-1"
-                >
-                  {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                  <span>Save Changes</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* SOFT DELETE CONFIRMATION MODAL */}
-      {deleteModalOpen && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 font-sans">
-          <div className="bg-surface border border-border rounded-xl max-w-md w-full shadow-2xl p-6 relative">
-            <div className="flex items-center space-x-3 border-b border-border pb-4 mb-4">
-              <Trash2 className="h-6 w-6 text-danger" />
-              <h3 className="font-serif text-lg font-bold text-text-primary">Confirm Soft Delete</h3>
-            </div>
-
-            <p className="text-xs text-text-secondary mb-4">
-              Are you sure you want to soft delete / suspend user <span className="font-bold text-text-primary">{selectedUser.name}</span>? Their account status will be set to <span className="font-bold text-danger">Deleted / Suspended</span>.
-            </p>
-
-            <div className="flex justify-end gap-3 pt-2">
+          }
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <p className="text-xs text-text-muted font-mono">
+                {selectedUser.email}
+              </p>
               <button
-                onClick={() => setDeleteModalOpen(false)}
-                className="px-4 py-2 border border-border rounded text-xs font-bold text-text-primary hover:bg-background-subtle"
+                onClick={() => {
+                  setViewModalOpen(false);
+                  setSelectedUser(null);
+                }}
+                className="px-5 py-2 bg-secondary text-secondary-foreground text-xs font-bold rounded-xl hover:bg-secondary/90 shadow-xs"
+              >
+                Close Profile
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-5">
+            {/* Stat Badges */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <AdminStatBadge
+                label="Account Status"
+                value={selectedUser.isBanned ? 'Suspended' : 'Active'}
+                variant={selectedUser.isBanned ? 'danger' : 'success'}
+              />
+              <AdminStatBadge
+                label="Primary Role"
+                value={selectedUser.roles?.[0]?.toUpperCase() || 'CUSTOMER'}
+                variant="info"
+              />
+              <AdminStatBadge
+                label="Security"
+                value="JWT Auth"
+                variant="default"
+              />
+            </div>
+
+            {/* Profile Information */}
+            <AdminDetailSection
+              title="Identity & Contact Profile"
+              icon={<UserCheck className="h-4 w-4" />}
+            >
+              <div className="p-4 bg-muted/30 border border-border rounded-2xl space-y-2">
+                <AdminDetailRow label="Full Name" value={selectedUser.name} />
+                <AdminDetailRow label="Email Address" value={selectedUser.email} copyable />
+                {selectedUser.phone && (
+                  <AdminDetailRow label="Phone Number" value={selectedUser.phone} copyable />
+                )}
+                {selectedUser.createdAt && (
+                  <AdminDetailRow
+                    label="Registered On"
+                    value={new Date(selectedUser.createdAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  />
+                )}
+              </div>
+            </AdminDetailSection>
+
+            {/* Roles & Permissions */}
+            <AdminDetailSection
+              title="Assigned Roles & Marketplace Access"
+              icon={<Shield className="h-4 w-4" />}
+            >
+              <div className="flex flex-wrap gap-2 pt-1">
+                {(selectedUser.roles || []).map((r) => (
+                  <div
+                    key={r}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold uppercase tracking-wider bg-primary/10 border-primary/20 text-primary"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                    <span>{r}</span>
+                  </div>
+                ))}
+              </div>
+            </AdminDetailSection>
+          </div>
+        </AdminDialog>
+      )}
+
+      {/* EDIT USER FORM MODAL */}
+      {selectedUser && (
+        <AdminDialog
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setSelectedUser(null);
+          }}
+          size="md"
+          title="Edit User Account"
+          subtitle={`Modifying profile for ${selectedUser.name}`}
+          icon={<Pencil className="h-5 w-5 text-secondary" />}
+          footer={
+            <div className="flex items-center justify-end gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setSelectedUser(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
               >
                 Cancel
               </button>
               <button
-                onClick={() => deleteMutation.mutate(selectedUser.id)}
-                disabled={deleteMutation.isPending}
-                className="px-5 py-2 bg-danger text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-danger-hover flex items-center space-x-1"
+                type="submit"
+                form="edit-user-form"
+                disabled={editMutation.isPending}
+                className="px-5 py-2 bg-secondary text-secondary-foreground font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5"
               >
-                {deleteMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                <span>Soft Delete User</span>
+                {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                <span>Save Changes</span>
               </button>
             </div>
-          </div>
-        </div>
+          }
+        >
+          <form
+            id="edit-user-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              editMutation.mutate({ userId: selectedUser.id, data: editForm });
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Full Name <span className="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-text-primary mb-1.5">
+                Email Address <span className="text-danger">*</span>
+              </label>
+              <input
+                type="email"
+                required
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-xs font-bold text-text-primary">
+                Assigned Platform Roles
+              </label>
+              <p className="text-[11px] text-text-muted mb-2">
+                Select the privileges and portals accessible to this user.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'customer', label: 'Customer', desc: 'Shop & browse' },
+                  { id: 'seller', label: 'Seller', desc: 'Manage inventory' },
+                  { id: 'admin', label: 'Admin', desc: 'Full operations' },
+                ].map((role) => {
+                  const isChecked = editForm.roles.includes(role.id);
+                  return (
+                    <label
+                      key={role.id}
+                      className={`p-2.5 rounded-xl border flex flex-col gap-1 cursor-pointer transition-all ${
+                        isChecked
+                          ? 'bg-secondary/10 border-secondary text-secondary'
+                          : 'border-border bg-background hover:bg-muted/50 text-text-secondary'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold capitalize">{role.label}</span>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const newRoles = e.target.checked
+                              ? [...editForm.roles, role.id]
+                              : editForm.roles.filter((r) => r !== role.id);
+                            setEditForm({ ...editForm, roles: newRoles });
+                          }}
+                          className="rounded border-border text-secondary focus:ring-secondary"
+                        />
+                      </div>
+                      <span className="text-[10px] opacity-75">{role.desc}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </form>
+        </AdminDialog>
+      )}
+
+      {/* SOFT DELETE DANGER DIALOG */}
+      {selectedUser && (
+        <AdminDangerDialog
+          isOpen={deleteModalOpen}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={() => deleteMutation.mutate(selectedUser.id)}
+          isPending={deleteMutation.isPending}
+          title="Confirm Account Suspension"
+          entityName={`${selectedUser.name} (${selectedUser.email})`}
+          description={
+            <span>
+              Are you sure you want to suspend / soft delete user account{' '}
+              <strong>{selectedUser.name}</strong>?
+            </span>
+          }
+          impacts={[
+            'User will be logged out of active sessions immediately.',
+            'Access to buyer orders, seller dashboard, and listing creation will be revoked.',
+            'Active book listings will be hidden from the public marketplace search.',
+            'Account can be reactivated by administrators at any time.',
+          ]}
+          confirmText="Suspend User Account"
+        />
       )}
     </AdminLayout>
   );

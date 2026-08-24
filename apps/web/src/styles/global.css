@@ -144,6 +144,10 @@
       system-ui,
       -apple-system,
       sans-serif;
+    font-size: 0.9375rem; /* 15px base for optimal readability */
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     transition:
       background-color 0.2s ease,
       color 0.2s ease;
@@ -157,6 +161,17 @@
   h6 {
     font-family: var(--font-sans), sans-serif;
     font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+
+  /* Prevent unwanted auto-zoom on iOS Safari while maintaining desktop crispness */
+  @media (max-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 
   ::selection {

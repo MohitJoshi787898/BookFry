@@ -95,13 +95,13 @@ export function Dialog({
         </div>
 
         {/* Content Body */}
-        <div className="flex-grow p-5 overflow-y-auto text-xs text-text-secondary font-medium leading-relaxed">
+        <div className="flex-grow p-5 sm:p-6 overflow-y-auto text-sm text-text-secondary font-normal leading-relaxed">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="px-5 py-3 border-t border-border bg-slate-50/50 flex justify-end gap-3">
+          <div className="px-5 sm:px-6 py-3.5 border-t border-border bg-muted/30 flex justify-end gap-3">
             {footer}
           </div>
         )}

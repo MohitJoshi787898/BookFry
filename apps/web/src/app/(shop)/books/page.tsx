@@ -27,7 +27,9 @@ import {
   BookOpen,
   Sparkles,
   ChevronRight,
+  MapPin,
 } from 'lucide-react';
+import { useLocationStore } from '@/stores/location.store';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -58,8 +60,9 @@ function FilterPanel({
   minPrice, setMinPrice, maxPrice, setMaxPrice, languages, toggleLanguage,
   handleReset, onApply, setPage,
 }: FilterPanelProps) {
+  const { locationName, setModalOpen, clearLocation } = useLocationStore();
   const [expanded, setExpanded] = useState({
-    category: true, conditionType: true, condition: true, price: true, language: false,
+    location: true, category: true, conditionType: true, condition: true, price: true, language: false,
   });
   const toggle = (key: keyof typeof expanded) =>
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -76,55 +79,99 @@ function FilterPanel({
   };
 
   return (
-    <div className="space-y-1 font-sans">
+    <div className="rounded-2xl border border-border bg-card p-5 space-y-5 font-sans shadow-2xs">
+      {/* Delivery Location */}
+      <div className="space-y-2.5">
+        <button
+          onClick={() => toggle('location')}
+          className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider hover:text-secondary transition-colors"
+        >
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5 text-secondary" />
+            <span>Delivery Location</span>
+          </div>
+          {expanded.location ? <ChevronUp className="h-4 w-4 text-secondary" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
+        </button>
+        {expanded.location && (
+          <div className="pt-1 space-y-2">
+            <div className="p-3 rounded-xl bg-muted/40 border border-border flex items-center justify-between">
+              <div className="min-w-0 pr-2">
+                <p className="text-[10px] uppercase font-black tracking-wider text-muted-foreground">Deliver to</p>
+                <p className="text-xs font-bold text-foreground truncate">{locationName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalOpen(true)}
+                className="px-2.5 py-1 rounded-lg bg-secondary text-secondary-foreground text-[11px] font-bold shrink-0 hover:bg-secondary/90 transition-colors"
+              >
+                Change
+              </button>
+            </div>
+            {locationName !== 'All India' && (
+              <button
+                type="button"
+                onClick={clearLocation}
+                className="w-full text-center text-xs font-semibold text-danger hover:underline"
+              >
+                Reset to All India
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-border/60" />
+
       {/* Book Type (New vs Used) */}
-      <div className="rounded-2xl overflow-hidden border border-border/80 bg-card">
+      <div className="space-y-2.5">
         <button
           onClick={() => toggle('conditionType')}
-          className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-text-primary uppercase tracking-wider hover:bg-background-subtle transition-colors"
+          className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider hover:text-secondary transition-colors"
         >
           <span>Book Type</span>
-          {expanded.conditionType ? <ChevronUp className="h-3.5 w-3.5 text-secondary" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
+          {expanded.conditionType ? <ChevronUp className="h-4 w-4 text-secondary" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
         </button>
         {expanded.conditionType && (
-          <div className="px-3 pb-3 pt-1 border-t border-border/50 flex flex-col gap-1.5">
+          <div className="pt-1 flex flex-col gap-1.5">
             {[
               { id: 'all', label: 'All Books (New & Used)' },
-              { id: 'new', label: 'New Books Only (Online Payment)' },
-              { id: 'used', label: 'Used Books Only (Direct Contact)' },
+              { id: 'new', label: 'New Books (Online Payment)' },
+              { id: 'used', label: 'Used Books (Direct Contact)' },
             ].map((t) => (
               <button
                 key={t.id}
                 onClick={() => { setConditionType(t.id as 'all' | 'new' | 'used'); setPage(1); }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-between ${
+                className={`w-full text-left px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center justify-between ${
                   conditionType === t.id
-                    ? 'bg-secondary text-secondary-foreground shadow-xs'
-                    : 'text-text-secondary hover:bg-background-subtle'
+                    ? 'bg-secondary text-secondary-foreground shadow-2xs'
+                    : 'text-text-secondary hover:bg-muted'
                 }`}
               >
                 <span>{t.label}</span>
-                {conditionType === t.id && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+                {conditionType === t.id && <ChevronRight className="h-4 w-4 shrink-0" />}
               </button>
             ))}
           </div>
         )}
       </div>
 
+      <hr className="border-border/60" />
+
       {/* Category */}
-      <div className="rounded-2xl overflow-hidden border border-border/80 bg-card mt-2">
+      <div className="space-y-2.5">
         <button
           onClick={() => toggle('category')}
-          className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-text-primary uppercase tracking-wider hover:bg-background-subtle transition-colors"
+          className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider hover:text-secondary transition-colors"
         >
           <span>Category</span>
-          {expanded.category ? <ChevronUp className="h-3.5 w-3.5 text-secondary" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
+          {expanded.category ? <ChevronUp className="h-4 w-4 text-secondary" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
         </button>
         {expanded.category && (
-          <div className="px-3 pb-3 space-y-1 border-t border-border/50">
+          <div className="pt-1 space-y-1 max-h-60 overflow-y-auto no-scrollbar">
             <button
               onClick={() => { setCategory(''); setPage(1); }}
-              className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all mt-1 ${
-                category === '' ? 'bg-primary text-primary-foreground' : 'text-text-secondary hover:bg-background-subtle'
+              className={`w-full text-left px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                category === '' ? 'bg-primary text-primary-foreground' : 'text-text-secondary hover:bg-muted'
               }`}
             >
               All Categories
@@ -133,39 +180,41 @@ function FilterPanel({
               <button
                 key={cat.id}
                 onClick={() => { setCategory(cat.id); setPage(1); }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
-                  category === cat.id ? 'bg-secondary text-secondary-foreground' : 'text-text-secondary hover:bg-background-subtle'
+                className={`w-full text-left px-3.5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center justify-between ${
+                  category === cat.id ? 'bg-secondary text-secondary-foreground' : 'text-text-secondary hover:bg-muted'
                 }`}
               >
                 <span className="truncate">{cat.name}</span>
-                {category === cat.id && <ChevronRight className="h-3 w-3 shrink-0" />}
+                {category === cat.id && <ChevronRight className="h-4 w-4 shrink-0" />}
               </button>
             ))}
           </div>
         )}
       </div>
 
+      <hr className="border-border/60" />
+
       {/* Condition */}
-      <div className="rounded-2xl overflow-hidden border border-border/80 bg-card mt-2">
+      <div className="space-y-2.5">
         <button
           onClick={() => toggle('condition')}
-          className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-text-primary uppercase tracking-wider hover:bg-background-subtle transition-colors"
+          className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider hover:text-secondary transition-colors"
         >
           <span>Condition</span>
-          {expanded.condition ? <ChevronUp className="h-3.5 w-3.5 text-secondary" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
+          {expanded.condition ? <ChevronUp className="h-4 w-4 text-secondary" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
         </button>
         {expanded.condition && (
-          <div className="px-3 pb-3 pt-1 border-t border-border/50 flex flex-wrap gap-2">
+          <div className="pt-1 flex flex-wrap gap-2">
             {['like_new', 'good', 'fair', 'acceptable'].map((cond) => {
               const isChecked = conditions.includes(cond);
               return (
                 <button
                   key={cond}
                   onClick={() => toggleCondition(cond)}
-                  className={`px-3 py-1.5 rounded-full border text-[11px] font-extrabold transition-all active:scale-95 ${
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 ${
                     isChecked
                       ? conditionColors[cond]
-                      : 'border-border text-text-muted bg-background-subtle hover:border-border'
+                      : 'border-border text-text-secondary bg-muted/40 hover:bg-muted'
                   }`}
                 >
                   {conditionLabels[cond]}
@@ -176,17 +225,19 @@ function FilterPanel({
         )}
       </div>
 
+      <hr className="border-border/60" />
+
       {/* Price Range */}
-      <div className="rounded-2xl overflow-hidden border border-border/80 bg-card mt-2">
+      <div className="space-y-2.5">
         <button
           onClick={() => toggle('price')}
-          className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-text-primary uppercase tracking-wider hover:bg-background-subtle transition-colors"
+          className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider hover:text-secondary transition-colors"
         >
           <span>Price Range</span>
-          {expanded.price ? <ChevronUp className="h-3.5 w-3.5 text-secondary" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
+          {expanded.price ? <ChevronUp className="h-4 w-4 text-secondary" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
         </button>
         {expanded.price && (
-          <div className="px-3 pb-3 pt-2 border-t border-border/50 space-y-3">
+          <div className="pt-1 space-y-3">
             {/* Quick Ranges */}
             <div className="flex flex-wrap gap-1.5">
               {[
@@ -200,8 +251,8 @@ function FilterPanel({
                   <button
                     key={r.label}
                     onClick={() => { setMinPrice(r.min); setMaxPrice(r.max); setPage(1); }}
-                    className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all active:scale-95 ${
-                      isActive ? 'bg-secondary text-secondary-foreground border-secondary' : 'border-border text-text-muted bg-background-subtle hover:border-border'
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all active:scale-95 ${
+                      isActive ? 'bg-secondary text-secondary-foreground border-secondary font-bold' : 'border-border text-text-secondary bg-muted/40 hover:bg-muted'
                     }`}
                   >
                     {r.label}
@@ -212,54 +263,58 @@ function FilterPanel({
             {/* Custom Range */}
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">₹</span>
                 <input
                   type="number" value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-full pl-6 pr-2 py-2 border border-border rounded-xl text-xs text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-secondary font-medium"
+                  className="w-full pl-7 pr-2.5 py-2 border border-border rounded-lg text-sm text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary font-medium"
                   placeholder="Min"
                 />
               </div>
-              <span className="text-text-muted text-xs font-bold">–</span>
+              <span className="text-text-muted text-sm font-bold">–</span>
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-xs">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm font-medium">₹</span>
                 <input
                   type="number" value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full pl-6 pr-2 py-2 border border-border rounded-xl text-xs text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-secondary font-medium"
+                  className="w-full pl-7 pr-2.5 py-2 border border-border rounded-lg text-sm text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary font-medium"
                   placeholder="Max"
                 />
               </div>
             </div>
             <button
               onClick={() => setPage(1)}
-              className="w-full py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold rounded-xl text-[11px] uppercase tracking-wider transition-all active:scale-95"
+              className="w-full py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-lg text-xs uppercase tracking-wider transition-all active:scale-98 shadow-xs"
             >
-              Apply Price Filter
+              Apply Price
             </button>
           </div>
         )}
       </div>
 
+      <hr className="border-border/60" />
+
       {/* Language */}
-      <div className="rounded-2xl overflow-hidden border border-border/80 bg-card mt-2">
+      <div className="space-y-2.5">
         <button
           onClick={() => toggle('language')}
-          className="w-full flex items-center justify-between px-4 py-3.5 text-xs font-extrabold text-text-primary uppercase tracking-wider hover:bg-background-subtle transition-colors"
+          className="w-full flex items-center justify-between text-xs font-bold text-text-primary uppercase tracking-wider hover:text-secondary transition-colors"
         >
           <span>Language</span>
-          {expanded.language ? <ChevronUp className="h-3.5 w-3.5 text-secondary" /> : <ChevronDown className="h-3.5 w-3.5 text-text-muted" />}
+          {expanded.language ? <ChevronUp className="h-4 w-4 text-secondary" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
         </button>
         {expanded.language && (
-          <div className="px-3 pb-3 pt-1 border-t border-border/50 flex gap-2">
+          <div className="pt-1 flex gap-2">
             {['english', 'hindi'].map((lang) => {
               const isChecked = languages.includes(lang);
               return (
                 <button
                   key={lang}
                   onClick={() => toggleLanguage(lang)}
-                  className={`flex-1 py-2 rounded-xl border text-xs font-extrabold capitalize transition-all active:scale-95 ${
-                    isChecked ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-text-muted bg-background-subtle'
+                  className={`px-3.5 py-1.5 rounded-lg border text-xs font-semibold capitalize transition-all active:scale-95 ${
+                    isChecked
+                      ? 'bg-secondary text-secondary-foreground border-secondary font-bold'
+                      : 'border-border text-text-secondary bg-muted/40 hover:bg-muted'
                   }`}
                 >
                   {lang}
@@ -270,18 +325,19 @@ function FilterPanel({
         )}
       </div>
 
-      {/* CTA / Reset */}
-      <div className="flex gap-2 pt-1">
+      {/* Reset & Apply Button for Drawer */}
+      <div className="pt-2 flex items-center gap-2">
         <button
           onClick={handleReset}
-          className="flex-1 h-10 border border-border rounded-xl text-xs font-extrabold text-text-secondary hover:bg-background-subtle transition-all flex items-center justify-center gap-1.5 active:scale-95"
+          className="flex-1 py-2 text-xs font-semibold text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors flex items-center justify-center gap-1.5"
         >
-          <RotateCcw className="h-3.5 w-3.5" /> Clear All
+          <RotateCcw className="h-3.5 w-3.5" />
+          <span>Reset All</span>
         </button>
         {onApply && (
           <button
             onClick={onApply}
-            className="flex-1 h-10 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all active:scale-95"
+            className="flex-1 py-2 bg-secondary text-secondary-foreground font-bold rounded-lg text-xs uppercase tracking-wider"
           >
             Apply Filters
           </button>
@@ -333,21 +389,52 @@ function BooksCatalog() {
   }, [searchParam, categoryParam, conditionTypeParam, categories]);
 
   const {
+    selectedCity,
+    selectedPincode,
+    selectedCampus,
+    coords,
+    locationName,
+    clearLocation,
+  } = useLocationStore();
+
+  const {
     data: booksData = { books: [], total: 0 },
     isLoading, isError, refetch,
   } = useQuery<{ books: Book[]; total: number }>({
-    queryKey: ['books', page, search, category, conditionType, conditions.join(','), minPrice, maxPrice, sortBy, sortOrder],
+    queryKey: [
+      'books',
+      page,
+      search,
+      category,
+      conditionType,
+      conditions.join(','),
+      minPrice,
+      maxPrice,
+      selectedCity,
+      selectedPincode,
+      selectedCampus,
+      coords?.lat,
+      coords?.lng,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: () =>
       apiClient('/books', {
         params: {
-          page: String(page), limit: '18',
+          page: String(page),
+          limit: '18',
           ...(search && { search }),
           ...(category && { category }),
           ...(conditionType !== 'all' && { conditionType }),
           ...(conditions.length > 0 && { condition: conditions.join(',') }),
           ...(minPrice && { minPrice }),
           ...(maxPrice && { maxPrice }),
-          sortBy, sortOrder,
+          ...(selectedCity && { city: selectedCity }),
+          ...(selectedPincode && { pincode: selectedPincode }),
+          ...(selectedCampus && { campusName: selectedCampus }),
+          ...(coords && { lat: String(coords.lat), lng: String(coords.lng), maxDistanceKm: '50' }),
+          sortBy,
+          sortOrder,
         },
       }),
   });
@@ -389,23 +476,23 @@ function BooksCatalog() {
           />
           <div className="relative z-10 max-w-4xl space-y-5">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-[11px] font-bold text-primary-foreground/50">
+            <nav className="flex items-center gap-1.5 text-xs font-medium text-primary-foreground/70">
               <Link href="/" className="hover:text-primary-foreground transition-colors">Home</Link>
-              <ChevronRight className="h-3 w-3" />
-              <span className="text-primary-foreground/90">Browse All Books</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+              <span className="text-primary-foreground font-semibold">Browse All Books</span>
             </nav>
 
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/20 border border-secondary/30 text-[11px] font-extrabold uppercase tracking-wider text-secondary">
-                  <Sparkles className="h-3 w-3 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/20 border border-secondary/30 text-xs font-bold uppercase tracking-wider text-secondary">
+                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
                   <span>Student Marketplace</span>
                 </span>
               </div>
               <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold text-primary-foreground tracking-tight">
                 {selectedCategoryName ? selectedCategoryName : 'All Books'}
                 {!isLoading && (
-                  <span className="text-base sm:text-xl font-normal text-primary-foreground/50 ml-3">
+                  <span className="text-base sm:text-xl font-normal text-primary-foreground/60 ml-3">
                     {booksData.total.toLocaleString()} results
                   </span>
                 )}
@@ -413,9 +500,9 @@ function BooksCatalog() {
             </div>
 
             {/* Premium Search Bar */}
-            <div className="flex gap-2 max-w-2xl">
+            <div className="flex gap-2.5 max-w-2xl">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/40 pointer-events-none" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/50 pointer-events-none" />
                 <input
                   ref={searchRef}
                   type="search"
@@ -423,17 +510,17 @@ function BooksCatalog() {
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   placeholder="Search books, authors, ISBN..."
                   aria-label="Search books"
-                  className="w-full h-12 pl-10 pr-4 bg-primary-foreground/10 border border-primary-foreground/20 rounded-2xl text-sm text-primary-foreground placeholder:text-primary-foreground/40 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                  className="w-full h-12 pl-11 pr-4 bg-primary-foreground/10 border border-primary-foreground/25 rounded-xl text-sm text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all font-medium"
                 />
               </div>
               <button
                 onClick={() => setIsMobileFiltersOpen(true)}
-                className="lg:hidden h-12 px-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold rounded-2xl flex items-center gap-2 text-xs transition-all active:scale-95 relative"
+                className="lg:hidden h-12 px-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-xl flex items-center gap-2 text-xs sm:text-sm transition-all active:scale-95 relative shadow-xs"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="hidden sm:inline">Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-secondary text-secondary-foreground border-2 border-background text-[10px] font-black rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-secondary text-secondary-foreground border-2 border-background text-[10px] font-black rounded-full flex items-center justify-center shadow-xs">
                     {activeFilterCount}
                   </span>
                 )}
@@ -458,7 +545,7 @@ function BooksCatalog() {
             />
           </aside>
 
-          {/* ── Catalog Right Pane ──────────────────────────────────────────── */}
+          {/* ── Catalog Right Pane ──────────────────────────────────── */}
           <div className="flex-grow min-w-0 space-y-5">
 
             {/* Toolbar: Sort + View Mode */}
@@ -468,28 +555,38 @@ function BooksCatalog() {
                 {selectedCategoryName && (
                   <button
                     onClick={() => setCategory('')}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary dark:text-primary rounded-full text-[11px] font-extrabold hover:bg-danger/10 hover:border-danger/20 hover:text-danger transition-all group"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 text-primary dark:text-primary rounded-full text-xs font-semibold hover:bg-danger/10 hover:border-danger/20 hover:text-danger transition-all group"
                   >
                     <span>{selectedCategoryName}</span>
-                    <X className="h-3 w-3 group-hover:rotate-90 transition-transform" />
+                    <X className="h-3.5 w-3.5 group-hover:rotate-90 transition-transform" />
                   </button>
                 )}
                 {conditions.map((cond) => (
                   <button
                     key={cond}
                     onClick={() => toggleCondition(cond)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-success/10 border border-success/20 text-success rounded-full text-[11px] font-extrabold hover:bg-danger/10 hover:border-danger/20 hover:text-danger transition-all group"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-success/10 border border-success/20 text-success rounded-full text-xs font-semibold hover:bg-danger/10 hover:border-danger/20 hover:text-danger transition-all group"
                   >
                     <span>{conditionLabels[cond]}</span>
-                    <X className="h-3 w-3 group-hover:rotate-90 transition-transform" />
+                    <X className="h-3.5 w-3.5 group-hover:rotate-90 transition-transform" />
                   </button>
                 ))}
-                {activeFilterCount > 0 && (
+                {locationName !== 'All India' && (
                   <button
-                    onClick={handleReset}
-                    className="text-[11px] font-extrabold text-danger hover:underline flex items-center gap-1"
+                    onClick={clearLocation}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/10 border border-secondary/30 text-secondary rounded-full text-xs font-bold hover:bg-danger/10 hover:border-danger/20 hover:text-danger transition-all group"
                   >
-                    <RotateCcw className="h-3 w-3" /> Reset
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>{locationName}</span>
+                    <X className="h-3.5 w-3.5 group-hover:rotate-90 transition-transform" />
+                  </button>
+                )}
+                {(activeFilterCount > 0 || locationName !== 'All India') && (
+                  <button
+                    onClick={() => { handleReset(); clearLocation(); }}
+                    className="text-xs font-semibold text-danger hover:underline flex items-center gap-1 ml-1"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" /> Reset All
                   </button>
                 )}
               </div>
@@ -497,7 +594,7 @@ function BooksCatalog() {
               {/* Right side: Sort + View Mode */}
               <div className="flex items-center gap-3 shrink-0">
                 <div className="flex items-center gap-2">
-                  <label htmlFor="sort" className="text-[11px] font-bold text-text-muted hidden sm:block">Sort:</label>
+                  <label htmlFor="sort" className="text-xs font-semibold text-text-muted hidden sm:block">Sort:</label>
                   <select
                     id="sort"
                     value={`${sortBy}-${sortOrder}`}
@@ -505,7 +602,7 @@ function BooksCatalog() {
                       const [field, order] = e.target.value.split('-');
                       setSortBy(field); setSortOrder(order as 'asc' | 'desc'); setPage(1);
                     }}
-                    className="h-9 px-3 pr-7 bg-card border border-border rounded-xl text-xs font-extrabold text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer appearance-none"
+                    className="h-10 px-3 pr-8 bg-card border border-border rounded-xl text-xs sm:text-sm font-semibold text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary cursor-pointer"
                   >
                     <option value="createdAt-desc">Most Popular</option>
                     <option value="price-asc">Price: Low → High</option>
