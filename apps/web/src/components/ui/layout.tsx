@@ -3,17 +3,21 @@ import { cn } from '@/lib/utils';
 
 export type LayoutProps = React.HTMLAttributes<HTMLDivElement>;
 
+/**
+ * Full-Width Page & Section Shell
+ * Intelligently expands to 100% available viewport with responsive horizontal padding.
+ */
 export function Container({ className, ...props }: LayoutProps) {
   return (
     <div
-      className={cn('w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8', className)}
+      className={cn('w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16', className)}
       {...props}
     />
   );
 }
 
 export function Section({ className, ...props }: LayoutProps) {
-  return <section className={cn('py-8 md:py-12 border-b border-border/40 last:border-b-0', className)} {...props} />;
+  return <section className={cn('py-8 md:py-12 border-b border-border/40 last:border-b-0 w-full', className)} {...props} />;
 }
 
 export function Grid({
@@ -125,7 +129,7 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-border/60 mb-6 font-sans', className)}>
+    <div className={cn('flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-border/60 mb-6 font-sans w-full', className)}>
       <div className="space-y-1">
         <h1 className="font-serif text-2xl font-bold tracking-tight text-text-primary">
           {title}

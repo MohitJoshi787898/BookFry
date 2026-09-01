@@ -14,14 +14,14 @@ const TRUST_ITEMS = [
 export function FooterTrustBar() {
   return (
     <div className="w-full border-b border-border/60 bg-muted/20 font-sans">
-      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-6">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6">
         <div className="flex gap-4 overflow-x-auto no-scrollbar lg:grid lg:grid-cols-5 pb-2 lg:pb-0">
           {TRUST_ITEMS.map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
-              className="flex items-center gap-3.5 shrink-0 w-64 lg:w-auto bg-card lg:bg-transparent border border-border/80 lg:border-none rounded-3xl p-4 lg:p-0 shadow-xs lg:shadow-none hover:border-[#F26522]/40 transition-all"
+              className="flex items-center gap-3.5 shrink-0 w-64 lg:w-auto bg-card lg:bg-transparent border border-border/80 lg:border-none rounded-3xl p-4 lg:p-0 shadow-xs lg:shadow-none hover:border-secondary/40 transition-all"
             >
-              <div className="h-11 w-11 shrink-0 rounded-2xl bg-[#F26522]/10 border border-[#F26522]/20 flex items-center justify-center text-[#F26522] shadow-xs">
+              <div className="h-11 w-11 shrink-0 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shadow-xs">
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">

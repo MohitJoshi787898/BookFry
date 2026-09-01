@@ -53,8 +53,8 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               }}
             />
             <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
-              <span className={`px-2 py-0.5 rounded-full bg-background/90 backdrop-blur-md border text-[9px] font-extrabold uppercase tracking-wider shadow-2xs ${
-                condition === 'new' ? 'border-success/60 text-success' : 'border-brand/60 text-brand'
+              <span className={`px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-md border text-xs font-extrabold uppercase tracking-wider shadow-2xs ${
+                condition === 'new' ? 'border-success/60 text-success' : 'border-secondary/60 text-secondary'
               }`}>
                 {condition === 'new' ? 'New • Pay Online' : 'Used • Direct Contact'}
               </span>
@@ -75,7 +75,7 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               <button
                 onClick={() => onRemove(itemKey)}
                 disabled={isLoading}
-                className="h-9 w-9 flex items-center justify-center rounded-2xl border border-border/80 text-muted-foreground hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-all shrink-0 active:scale-90"
+                className="h-10 w-10 flex items-center justify-center rounded-2xl border border-border/80 text-muted-foreground hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-all shrink-0 active:scale-90 cursor-pointer"
                 title="Remove item"
                 aria-label="Remove item"
               >
@@ -83,15 +83,15 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               </button>
             </div>
 
-            <p className="text-xs text-muted-foreground font-medium">by <span className="text-foreground font-semibold">{book.author}</span></p>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium">by <span className="text-foreground font-semibold">{book.author}</span></p>
 
             {/* Quality & Speed Badges */}
             <div className="flex flex-wrap gap-2 pt-1">
-              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-success/10 border border-success/20 text-success text-[10px] font-extrabold">
-                <ShieldCheck className="h-3 w-3" /> Verified Quality
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/10 border border-success/20 text-success text-xs font-extrabold">
+                <ShieldCheck className="h-3.5 w-3.5" /> Verified Quality
               </span>
-              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-extrabold">
-                <Clock className="h-3 w-3" /> 2–4 Days Dispatch
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-extrabold">
+                <Clock className="h-3.5 w-3.5" /> 2–4 Days Dispatch
               </span>
             </div>
           </div>
@@ -103,11 +103,11 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               <div className="flex items-baseline gap-2">
                 <span className="text-lg sm:text-xl font-extrabold text-foreground">₹{itemTotal.toFixed(0)}</span>
                 <span className="text-xs text-muted-foreground line-through font-medium">₹{strikePrice.toFixed(0)}</span>
-                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-secondary/10 border border-secondary/20 text-[10px] font-extrabold text-secondary">
-                  <Tag className="h-2.5 w-2.5" /> 20% OFF
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/20 text-xs font-extrabold text-secondary">
+                  <Tag className="h-3 w-3" /> 20% OFF
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground font-medium">₹{item.priceSnapshot.toFixed(0)} / book</p>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">₹{item.priceSnapshot.toFixed(0)} / book</p>
             </div>
 
             {/* Stepper Control */}
@@ -115,19 +115,19 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               <button
                 onClick={() => onQtyChange(itemKey, item.quantity, -1, stock)}
                 disabled={item.quantity <= 1 || isLoading}
-                className="h-9 w-9 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30 active:scale-90 text-foreground"
+                className="h-10 w-10 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30 active:scale-90 text-foreground cursor-pointer"
                 aria-label="Decrease quantity"
               >
-                <Minus className="h-3.5 w-3.5" />
+                <Minus className="h-4 w-4" />
               </button>
-              <span className="w-9 text-center text-sm font-extrabold text-foreground font-mono">{item.quantity}</span>
+              <span className="w-10 text-center text-sm font-extrabold text-foreground font-mono">{item.quantity}</span>
               <button
                 onClick={() => onQtyChange(itemKey, item.quantity, 1, stock)}
                 disabled={item.quantity >= stock || isLoading}
-                className="h-9 w-9 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30 active:scale-90 text-foreground"
+                className="h-10 w-10 flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30 active:scale-90 text-foreground cursor-pointer"
                 aria-label="Increase quantity"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4" />
               </button>
             </div>
           </div>

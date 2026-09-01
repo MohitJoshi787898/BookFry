@@ -17,7 +17,7 @@ export function StatItem({ icon: Icon, value, label }: StatItemProps) {
         <span className="text-base sm:text-lg font-black text-brand tracking-tight dark:text-foreground">
           {value}
         </span>
-        <p className="text-[9px] text-text-muted uppercase font-bold tracking-wider mt-0.5">
+        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mt-0.5">
           {label}
         </p>
       </div>

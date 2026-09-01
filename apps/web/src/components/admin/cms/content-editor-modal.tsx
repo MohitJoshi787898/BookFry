@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, RefreshCw, Plus, Trash2 } from 'lucide-react';
+import { Save, RefreshCw, Plus, Trash2, Layout, Type, Settings2 } from 'lucide-react';
 import { SectionData } from '@/components/marketing/section-renderer';
+import { AdminModal } from '@/components/admin/admin-modal';
+
 
 export interface ContentEditorModalProps {
   section: SectionData | null;
@@ -67,37 +69,95 @@ export function ContentEditorModal({
     handleContentChange(field, list);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans animate-in fade-in duration-200">
-      <div className="bg-card border border-border/90 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 p-6 sm:p-8">
-        <div className="flex items-center justify-between border-b border-border/60 pb-4">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase text-secondary tracking-widest">
-              Section Architecture: {section.type}
-            </span>
-            <h3 className="font-serif text-xl font-bold text-foreground">
-              Edit Section Details &amp; Nested Elements
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+  // Determine section type category for badge
+  const sectionTypeLabel: Record<string, string> = {
+    hero: 'Hero Section',
+    features: 'Features Bar',
+    category_grid: 'Category Grid',
+    knowledge_story: 'Knowledge Exchange',
+    why_us: 'Why BookFry',
+    testimonials: 'Testimonials',
+    faq: 'FAQ',
+    banner: 'Promotional Banner',
+    carousel: 'Book Carousel',
+    cta: 'CTA Block',
+  };
 
-        <form onSubmit={handleSubmit} className="space-y-5 text-xs">
+  const typeIcon = section?.type === 'hero' ? <Layout className="h-4 w-4" />
+    : section?.type === 'faq' || section?.type === 'features' ? <Type className="h-4 w-4" />
+    : <Settings2 className="h-4 w-4" />;
+
+  return (
+    <AdminModal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="full"
+      title="Edit Homepage Section"
+      subtitle={section ? `${sectionTypeLabel[section.type] ?? section.type} — ID: ${section.sectionId}` : ''}
+      icon={typeIcon}
+      badge={
+        section ? (
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${section.enabled ? 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 border-emerald-500/25' : 'bg-muted text-muted-foreground border-border'}`}>
+            {section.enabled ? 'Live' : 'Hidden'}
+          </span>
+        ) : undefined
+      }
+      loading={isSaving}
+      closeOnOverlayClick={false}
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSaving}
+            className="px-5 py-2 border border-border/80 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="cms-section-editor-form"
+            disabled={isSaving}
+            className="px-6 py-2 bg-secondary hover:bg-secondary/90 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all flex items-center gap-2 disabled:opacity-60 shadow-md cursor-pointer"
+          >
+            {isSaving ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            <span>{isSaving ? 'Saving...' : 'Save All Changes'}</span>
+          </button>
+        </>
+      }
+    >
+      {/* Section type header bar */}
+      {section && (
+        <div className="flex items-center gap-2 px-1 pb-4 border-b border-border/60 mb-2 -mt-1">
+          <span className="text-[10px] font-black uppercase tracking-widest text-secondary">
+            Section Architecture:
+          </span>
+          <span className="text-[10px] font-bold text-foreground bg-secondary/10 border border-secondary/20 px-2 py-0.5 rounded-full">
+            {section.type}
+          </span>
+          <span className="ml-auto text-[10px] text-muted-foreground">
+            Position #{(section.order ?? 0) + 1}
+          </span>
+        </div>
+      )}
+
+      <form id="cms-section-editor-form" onSubmit={handleSubmit} className="space-y-5 text-xs">
+        {/* Title + Subtitle always shown */}
+        <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-[11px] font-bold uppercase text-muted-foreground mb-1.5">
-              Section Main Title *
+              Section Main Title <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-medium focus:ring-2 focus:ring-secondary/40 focus:outline-none"
+              className="w-full px-4 py-2.5 border border-border/80 rounded-xl bg-background text-foreground font-medium text-sm focus:ring-2 focus:ring-secondary/40 focus:outline-none transition-shadow"
             />
           </div>
 
@@ -109,9 +169,10 @@ export function ContentEditorModal({
               rows={2}
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
-              className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground font-medium focus:ring-2 focus:ring-secondary/40 focus:outline-none leading-relaxed"
+              className="w-full p-3 border border-border/80 rounded-xl bg-background text-foreground font-medium text-sm focus:ring-2 focus:ring-secondary/40 focus:outline-none leading-relaxed transition-shadow"
             />
           </div>
+        </div>
 
           {/* ================= HERO SECTION CONTROLS ================= */}
           {section.type === 'hero' && (
@@ -711,30 +772,12 @@ export function ContentEditorModal({
           )}
 
           <div className="flex items-center justify-end space-x-3 pt-4 border-t border-border/60">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 border border-border rounded-2xl text-xs font-bold hover:bg-muted"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-6 py-2.5 bg-secondary hover:bg-secondary/90 text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center space-x-2 disabled:opacity-60 shadow-md"
-            >
-              {isSaving ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              <span>{isSaving ? 'Saving...' : 'Save All Changes'}</span>
-            </button>
+            {/* Footer buttons are now in AdminModal footer prop — this spacer just closes the form cleanly */}
           </div>
         </form>
-      </div>
-    </div>
+    </AdminModal>
   );
 }
 
 export default ContentEditorModal;
+

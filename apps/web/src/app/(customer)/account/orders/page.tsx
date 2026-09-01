@@ -1,136 +1,156 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
-import { apiClient } from "@/lib/api-client";
-import { Order } from "@bookmarket/types";
-import { ReturnRequestModal } from "@/components/shared/return-request-modal";
-import { OrdersHeroHeader } from "@/components/orders/orders-hero-header";
-import { OrdersFilterBar, OrderFilterTab } from "@/components/orders/orders-filter-bar";
-import { OrdersPolicyBanner } from "@/components/orders/orders-policy-banner";
-import { OrdersCardItem } from "@/components/orders/orders-card-item";
-import { OrdersSkeleton } from "@/components/orders/orders-skeleton";
-import { OrdersEmptyState } from "@/components/orders/orders-empty-state";
-import { AlertCircle } from "lucide-react";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { RoleHero } from '@/components/shared/role-hero';
+import { RoleFilterBar } from '@/components/shared/role-filter-bar';
+import { RoleEmptyState } from '@/components/shared/role-empty-state';
+import { OrdersCardItem } from '@/components/orders/orders-card-item';
+import { ReturnRequestModal } from '@/components/shared/return-request-modal';
+import { apiClient } from '@/lib/api-client';
+import { useAuthStore } from '@/stores/auth.store';
+import { Order } from '@bookmarket/types';
+import { RotateCcw, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CustomerOrdersPage() {
-  const [activeTab, setActiveTab] = useState<OrderFilterTab>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const { isAuthenticated } = useAuthStore();
+  const [statusTab, setStatusTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [returnModalOrder, setReturnModalOrder] = useState<Order | null>(null);
 
   const {
     data: orders = [],
-    isLoading,
     isError,
     refetch,
   } = useQuery<Order[]>({
-    queryKey: ["buyer-orders"],
-    queryFn: () => apiClient("/orders"),
+    queryKey: ['buyer-orders-list'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient<unknown>('/orders');
+        if (Array.isArray(res)) return res as Order[];
+        const resData = res as Record<string, unknown>;
+        if ('data' in resData && Array.isArray(resData.data)) return resData.data as Order[];
+        return [];
+      } catch {
+        return [];
+      }
+    },
+    enabled: isAuthenticated,
   });
 
-  // Tab Filtering & Search
-  const filteredOrders = orders.filter((order) => {
-    // 1. Tab filter
-    if (activeTab === "in_progress" && !["pending", "confirmed", "shipped"].includes(order.status)) {
-      return false;
-    }
-    if (activeTab === "delivered" && order.status !== "delivered") {
-      return false;
-    }
-    if (activeTab === "returns" && !["return_requested", "return_approved", "return_rejected"].includes(order.status)) {
-      return false;
-    }
-    if (activeTab === "cancelled" && !["cancelled", "refunded"].includes(order.status)) {
-      return false;
-    }
+  if (!isAuthenticated) {
+    return (
+      <RoleEmptyState
+        title="Sign In to Track Orders"
+        description="Log in to view your textbook shipments, delivery status, and invoices."
+        mascotVariant="reading"
+      />
+    );
+  }
 
-    // 2. Search query filter (Order number or item title)
+  const rawOrders = orders || [];
+  const inTransitCount = rawOrders.filter((o) => ['pending', 'confirmed', 'shipped'].includes(o.status)).length;
+  const deliveredCount = rawOrders.filter((o) => o.status === 'delivered').length;
+  const returnsCount = rawOrders.filter((o) => ['return_requested', 'return_approved', 'return_rejected'].includes(o.status)).length;
+
+  const filteredOrders = rawOrders.filter((o) => {
+    if (statusTab === 'in_transit' && !['pending', 'confirmed', 'shipped'].includes(o.status)) return false;
+    if (statusTab === 'delivered' && o.status !== 'delivered') return false;
+    if (statusTab === 'returns' && !['return_requested', 'return_approved', 'return_rejected'].includes(o.status)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      const matchOrderNum = order.orderNumber.toLowerCase().includes(q);
-      const matchTitle = order.items.some((item) => item.title.toLowerCase().includes(q));
+      const matchOrderNum = o.orderNumber.toLowerCase().includes(q);
+      const matchTitle = o.items?.some((it) => it.title.toLowerCase().includes(q));
       return matchOrderNum || matchTitle;
     }
-
     return true;
   });
 
-  const tabCounts: Record<OrderFilterTab, number> = {
-    all: orders.length,
-    in_progress: orders.filter((o) => ["pending", "confirmed", "shipped"].includes(o.status)).length,
-    delivered: orders.filter((o) => o.status === "delivered").length,
-    returns: orders.filter((o) => ["return_requested", "return_approved", "return_rejected"].includes(o.status)).length,
-    cancelled: orders.filter((o) => ["cancelled", "refunded"].includes(o.status)).length,
-  };
+  const filterChips = [
+    { id: 'all', label: 'All Orders', count: rawOrders.length },
+    { id: 'in_transit', label: 'In-Transit', count: inTransitCount },
+    { id: 'delivered', label: 'Delivered', count: deliveredCount },
+    { id: 'returns', label: 'Returns & Refunds', count: returnsCount },
+  ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-200">
-      <Navbar />
+    <div className="space-y-6">
+      <RoleHero
+        title="My Orders &amp; Delivery Tracking"
+        subtitle="Track textbook shipments in real-time, view verified delivery proofs, and request hassle-free 7-day returns."
+        badgeText="Student Order Pipeline"
+        showMascot={true}
+        mascotPose="reading"
+        stats={[
+          { label: 'Total Purchases', value: rawOrders.length, badge: 'All Time', isPositive: true },
+          { label: 'In-Transit', value: inTransitCount, badge: inTransitCount > 0 ? 'On The Way' : 'Delivered', isPositive: true },
+          { label: 'Delivered', value: deliveredCount, badge: 'Completed', isPositive: true },
+          { label: 'Return Guarantee', value: '7 Days', badge: '100% Escrow', isPositive: true },
+        ]}
+      />
 
-      <main className="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Banner Header */}
-        <OrdersHeroHeader orders={orders} />
-
-        {/* Used Book Requests Banner Link */}
-        <div className="my-4 p-4 rounded-2xl bg-brand/10 border border-brand/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-sans">
+      {/* 7-Day Return Policy Guarantee Banner */}
+      <div className="p-4 rounded-3xl bg-secondary/10 border border-secondary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-sans">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 rounded-2xl bg-secondary/15 text-secondary shrink-0">
+            <RotateCcw className="h-5 w-5" />
+          </div>
           <div>
-            <h3 className="text-sm font-bold text-text-primary">Looking for your Used Book Requests?</h3>
-            <p className="text-xs text-text-secondary">Requests sent directly to sellers for second-hand books are managed on a dedicated page.</p>
+            <h4 className="text-xs sm:text-sm font-bold text-foreground">
+              BookFry 7-Day Student Return Guarantee
+            </h4>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Every textbook purchase is protected with our doorstep return guarantee. If book condition differs from description, get a 100% refund.
+            </p>
           </div>
-          <Link
-            href="/account/requests"
-            className="px-4 py-2 bg-brand text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-brand-hover transition-colors shrink-0 shadow-xs"
-          >
-            View Used Requests
-          </Link>
         </div>
+        <Link
+          href="/account/requests"
+          className="text-xs font-bold text-secondary hover:underline flex items-center gap-1 shrink-0 self-end sm:self-center"
+        >
+          <span>Used Requests</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
 
-        {/* 7-Day Return Policy Banner */}
-        <OrdersPolicyBanner />
+      <RoleFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search order number or book title..."
+        filterChips={filterChips}
+        activeFilter={statusTab}
+        onFilterSelect={setStatusTab}
+      />
 
-        {/* Filter Tabs & Search */}
-        <OrdersFilterBar
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          counts={tabCounts}
+      {isError ? (
+        <RoleEmptyState
+          title="Order History Load Issue"
+          description="Failed to load your order history."
+          mascotVariant="pointing"
+          action={{ label: 'Retry Fetch', onClick: () => refetch() }}
         />
-
-        {/* Orders Content */}
-        {isLoading ? (
-          <OrdersSkeleton />
-        ) : isError ? (
-          <div className="text-center py-12 rounded-3xl bg-card border border-border/80 p-8 space-y-4 my-6 shadow-sm">
-            <AlertCircle className="h-12 w-12 text-rose-500 mx-auto" />
-            <h2 className="text-xl font-bold text-foreground font-serif">Failed to load order history</h2>
-            <p className="text-sm text-muted-foreground">Check your connection or session credentials.</p>
-            <button
-              onClick={() => refetch()}
-              className="px-6 py-2.5 rounded-2xl bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-md"
-            >
-              Retry
-            </button>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <OrdersEmptyState searchQuery={searchQuery} onClearSearch={() => setSearchQuery("")} />
-        ) : (
-          <div className="space-y-4">
-            {filteredOrders.map((order) => (
-              <OrdersCardItem
-                key={order.id}
-                order={order}
-                onOpenReturnModal={(ord) => setReturnModalOrder(ord)}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-
-      <Footer />
+      ) : filteredOrders.length === 0 ? (
+        <RoleEmptyState
+          title="No Orders Found"
+          description={searchQuery ? 'Try clearing your search query.' : 'Browse our verified textbook marketplace and find the best deals for your semester!'}
+          mascotVariant="searching"
+          action={{
+            label: 'Browse Books',
+            onClick: () => window.location.assign('/books'),
+          }}
+        />
+      ) : (
+        <div className="space-y-4">
+          {filteredOrders.map((order) => (
+            <OrdersCardItem
+              key={order.id}
+              order={order}
+              onOpenReturnModal={(ord) => setReturnModalOrder(ord)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Return Request Modal */}
       {returnModalOrder && (

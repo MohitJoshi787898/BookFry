@@ -33,10 +33,10 @@ export const conditionOptions: ConditionOption[] = [
     badge: 'MOST POPULAR',
     description: 'Minor cover wear, binding tight, readable clean pages.',
     icon: ThumbsUp,
-    iconBg: 'bg-[#F26522]/10',
-    iconColor: 'text-[#F26522]',
-    badgeBg: 'bg-[#F26522]/15 text-[#F26522] border border-[#F26522]/20',
-    badgeColor: 'text-[#F26522]',
+    iconBg: 'bg-secondary/10',
+    iconColor: 'text-secondary',
+    badgeBg: 'bg-secondary/15 text-secondary border border-secondary/20',
+    badgeColor: 'text-secondary',
   },
   {
     id: 'fair',
@@ -79,8 +79,8 @@ export function BookConditionCardGroup({ value, onChange }: BookConditionCardPro
             onClick={() => onChange(opt.id)}
             className={`cursor-pointer rounded-3xl border p-5 transition-all duration-200 relative flex flex-col justify-between h-48 select-none shadow-xs active:scale-95 ${
               selected
-                ? 'border-[#F26522] bg-[#F26522]/10 text-[#F26522] shadow-md shadow-[#F26522]/10'
-                : 'border-border/80 bg-card hover:border-[#F26522]/40 hover:bg-muted/40'
+                ? 'border-secondary bg-secondary/10 text-secondary shadow-md shadow-secondary/10'
+                : 'border-border/80 bg-card hover:border-secondary/40 hover:bg-muted/40'
             }`}
           >
             {/* Top row: Icon and Radio indicator */}
@@ -92,8 +92,8 @@ export function BookConditionCardGroup({ value, onChange }: BookConditionCardPro
               {/* Radio Indicator */}
               <div className="pt-1">
                 {selected ? (
-                  <div className="h-5 w-5 rounded-full border-2 border-[#F26522] flex items-center justify-center bg-card">
-                    <div className="h-2.5 w-2.5 rounded-full bg-[#F26522]" />
+                  <div className="h-5 w-5 rounded-full border-2 border-secondary flex items-center justify-center bg-card">
+                    <div className="h-2.5 w-2.5 rounded-full bg-secondary" />
                   </div>
                 ) : (
                   <div className="h-5 w-5 rounded-full border border-border/80 bg-card" />

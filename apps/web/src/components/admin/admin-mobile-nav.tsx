@@ -47,11 +47,11 @@ export function AdminMobileNav() {
               href={item.href}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all active:scale-95 ${
                 isActive
-                  ? 'bg-[#F26522] text-white shadow-md shadow-[#F26522]/20 border border-[#F26522]'
+                  ? 'bg-secondary text-secondary-foreground shadow-md border border-secondary'
                   : 'bg-background text-muted-foreground border border-border/60 hover:text-foreground'
               }`}
             >
-              <Icon className={`h-4 w-4 ${isActive ? 'text-amber-300' : 'text-secondary'}`} />
+              <Icon className={`h-4 w-4 ${isActive ? 'text-secondary-foreground' : 'text-secondary'}`} />
               <span>{item.name}</span>
             </Link>
           );

@@ -1,4 +1,5 @@
 import { NotificationsRepository } from './notifications.repository';
+import { sseManager } from './sse.manager';
 import { NotFoundError, UnauthorizedError } from '../../utils/AppError';
 import { Notification } from '@bookmarket/types';
 import { PushNotificationService } from '../../services/push-notification.service';
@@ -67,6 +68,15 @@ export class NotificationsService {
       meta,
     });
 
+    const dto = this.mapToDTO(doc);
+
+    // Live real-time SSE stream delivery
+    try {
+      sseManager.broadcastToUser(userId, 'notification:new', dto);
+    } catch {
+      // Non-blocking
+    }
+
     // Automatically trigger Web/Mobile Push notification asynchronously
     if (options?.sendPush !== false) {
       this.pushService
@@ -81,7 +91,7 @@ export class NotificationsService {
         .catch((err) => console.warn('[Push Notification Dispatch Warning]:', err));
     }
 
-    return this.mapToDTO(doc);
+    return dto;
   }
 
   /** Register or add device FCM push token for user */

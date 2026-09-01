@@ -29,8 +29,11 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
       roles: decoded.roles,
     };
     next();
-  } catch (error) {
-    throw new UnauthorizedError('Authentication token expired or invalid');
+  } catch (error: any) {
+    if (error?.name === 'TokenExpiredError') {
+      throw new UnauthorizedError('Authentication token expired', 'TOKEN_EXPIRED');
+    }
+    throw new UnauthorizedError('Authentication token expired or invalid', 'INVALID_TOKEN');
   }
 };
 

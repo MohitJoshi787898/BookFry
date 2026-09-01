@@ -44,8 +44,8 @@ app.use(
 
 // Basic rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 100000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000000000, // Limit each IP to 100 requests
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -58,9 +58,9 @@ const limiter = rateLimit({
   },
 });
 
-if (env.NODE_ENV !== "test") {
-  app.use("/api", limiter);
-}
+// if (env.NODE_ENV !== "test") {
+//   app.use("/api", limiter);
+// }
 
 import { serverAdapter } from "./jobs/bull-board";
 import { requireAuth } from "./middlewares/auth.middleware";

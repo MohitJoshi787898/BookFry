@@ -76,7 +76,7 @@ export function Drawer({
     <div className="fixed inset-0 z-50 flex font-sans" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#060E17]/60 backdrop-blur-3xs transition-opacity duration-300"
+        className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300"
         onClick={() => {
           if (closeOnOverlayClick && !loading) {
             onClose();

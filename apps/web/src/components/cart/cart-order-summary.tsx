@@ -72,7 +72,7 @@ export function CartOrderSummary({
                 {parseAddress(activeAddress.street).labelName}
               </p>
               {activeAddress.isDefault && (
-                <span className="px-2 py-0.5 rounded-full bg-secondary/15 text-[9px] font-extrabold text-secondary uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-secondary/15 text-xs font-extrabold text-secondary uppercase">
                   Default
                 </span>
               )}

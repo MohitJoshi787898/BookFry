@@ -4,18 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AdminSidebar } from './admin-sidebar';
 import { AdminHeader } from './admin-header';
-import { AdminMobileNav } from './admin-mobile-nav';
 import { AdminMobileBottomBar } from './admin-mobile-bottom-bar';
+import { AdminMobileDrawer } from './admin-mobile-drawer';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
 import { User } from '@bookmarket/types';
 
-interface AdminLayoutProps {
+export interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { isAuthenticated, user, setAuth } = useAuthStore();
 
   // Query database profile to check for admin role updates
@@ -29,11 +30,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     if (meData?.user) {
       const dbRoles = meData.user.roles;
       const currentRoles = user?.roles || [];
-      const hasChanged = dbRoles.length !== currentRoles.length || dbRoles.some((r: string) => !(currentRoles as string[]).includes(r));
-      
+      const hasChanged =
+        dbRoles.length !== currentRoles.length ||
+        dbRoles.some((r: string) => !(currentRoles as string[]).includes(r));
+
       if (hasChanged) {
-        // Perform silent refresh to retrieve new JWT access token with the admin claims
-        (apiClient('/auth/refresh', { method: 'POST' }) as Promise<{ user: Omit<User, 'createdAt' | 'updatedAt' | 'addresses'>; accessToken: string }>)
+        (
+          apiClient('/auth/refresh', { method: 'POST' }) as Promise<{
+            user: Omit<User, 'createdAt' | 'updatedAt' | 'addresses'>;
+            accessToken: string;
+          }>
+        )
           .then((res) => {
             if (res.user && res.accessToken) {
               setAuth(res.user, res.accessToken);
@@ -47,19 +54,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }, [meData, user, setAuth]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50/50 dark:bg-background text-foreground font-sans antialiased">
-      {/* Collapsible Left Navigation Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground font-sans antialiased">
+      {/* Desktop & Tablet Collapsible Left Sidebar */}
       <AdminSidebar collapsed={collapsed} onToggleCollapse={() => setCollapsed(!collapsed)} />
 
-      {/* Main Content Area (Header + Scrollable Canvas) */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <AdminHeader />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 pb-24 sm:pb-8">
-          <AdminMobileNav />
+
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 space-y-6 pb-24 md:pb-8">
           {children}
         </main>
 
-        <AdminMobileBottomBar />
+        {/* Native Mobile Bottom Navigation Dock */}
+        <AdminMobileBottomBar onOpenDrawer={() => setIsDrawerOpen(true)} />
+
+        {/* Native Mobile All-Tools Drawer */}
+        <AdminMobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
       </div>
     </div>
   );

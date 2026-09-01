@@ -13,8 +13,8 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all',
-          hoverable && 'hover:shadow-md hover:-translate-y-0.5 duration-200',
+          'app-surface rounded-xl text-card-foreground transition-all',
+          hoverable && 'hover:border-ring/30 hover:shadow-md hover:-translate-y-0.5 duration-200',
           clickable && 'cursor-pointer active:scale-[0.99]',
           borderAccent === true && 'border-t-2 border-t-primary',
           borderAccent === 'primary' && 'border-t-2 border-t-primary',

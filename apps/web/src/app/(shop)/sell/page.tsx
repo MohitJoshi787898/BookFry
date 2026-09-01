@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { sellBookSchema, SellBookFormData } from '@/lib/validations/sell-form.schema';
 import { BookConditionCardGroup } from '@/components/sell/book-condition-card';
 import { ImageUploader } from '@/components/sell/image-uploader';
@@ -361,9 +360,9 @@ function SellBookPageInner() {
 
         {/* Unauthenticated Banner */}
         {!isAuthenticated && (
-          <div className="p-5 bg-card border border-[#F26522]/30 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-sans shadow-xl">
+          <div className="p-5 bg-card border border-secondary/30 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-sans shadow-xl">
             <div className="space-y-1">
-              <span className="font-extrabold text-[#F26522] flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="font-extrabold text-secondary flex items-center gap-1.5 uppercase tracking-wider">
                 <ShieldAlert className="h-4 w-4" />
                 <span>Authentication Required</span>
               </span>
@@ -373,7 +372,7 @@ function SellBookPageInner() {
             </div>
             <button
               onClick={() => router.push(`/login?redirectTo=/sell`)}
-              className="px-5 py-2.5 bg-[#F26522] text-white font-bold rounded-2xl hover:bg-[#D64E0F] transition-all shadow-md shadow-[#F26522]/20 shrink-0 active:scale-95"
+              className="px-5 py-2.5 bg-secondary text-secondary-foreground font-bold rounded-2xl hover:bg-secondary/90 transition-all shadow-md shrink-0 active:scale-95"
             >
               Sign In to Post Book
             </button>
@@ -386,11 +385,11 @@ function SellBookPageInner() {
             <span>
               Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}
             </span>
-            <span className="text-[#F26522] font-mono">{Math.round((currentStep / STEPS.length) * 100)}%</span>
+            <span className="text-secondary font-mono">{Math.round((currentStep / STEPS.length) * 100)}%</span>
           </div>
           <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#F26522] transition-all duration-300 rounded-full"
+              className="h-full bg-secondary transition-all duration-300 rounded-full"
               style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
             />
           </div>
@@ -428,7 +427,7 @@ function SellBookPageInner() {
                   }}
                   className="px-4 py-2 border border-border/80 hover:bg-muted rounded-2xl flex items-center gap-1.5 text-xs font-bold text-foreground shadow-xs transition-all active:scale-95"
                 >
-                  <Bookmark className="h-3.5 w-3.5 text-[#F26522]" />
+                  <Bookmark className="h-3.5 w-3.5 text-secondary" />
                   <span className="hidden sm:inline">Save as Draft</span>
                 </button>
               </div>
@@ -436,7 +435,7 @@ function SellBookPageInner() {
 
             {/* Draft notice banner */}
             {draftRestored && (
-              <div className="p-4 bg-[#F26522]/10 border border-[#F26522]/20 rounded-2xl flex items-center justify-between text-xs text-[#F26522] font-bold">
+              <div className="p-4 bg-secondary/10 border border-secondary/20 rounded-2xl flex items-center justify-between text-xs text-secondary font-bold">
                 <span>Restored listing draft details</span>
                 <button
                   onClick={clearDraft}
@@ -484,7 +483,7 @@ function SellBookPageInner() {
                                 type="radio"
                                 value="auto"
                                 {...register('source')}
-                                className="accent-[#F26522]"
+                                className="accent-secondary"
                               />
                               <span>Auto Fetch via ISBN (Recommended)</span>
                             </label>
@@ -493,7 +492,7 @@ function SellBookPageInner() {
                                 type="radio"
                                 value="manual"
                                 {...register('source')}
-                                className="accent-[#F26522]"
+                                className="accent-secondary"
                               />
                               <span>Manual Entry</span>
                             </label>
@@ -516,7 +515,7 @@ function SellBookPageInner() {
                                 type="button"
                                 onClick={handleFetchIsbnDetails}
                                 disabled={isFetchingIsbn}
-                                className="px-5 py-2.5 bg-[#F26522] hover:bg-[#D64E0F] text-white text-xs font-bold rounded-2xl transition-all shadow-md shadow-[#F26522]/20 flex items-center gap-1.5 shrink-0 active:scale-95"
+                                className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-xs font-bold rounded-2xl transition-all shadow-md flex items-center gap-1.5 shrink-0 active:scale-95"
                               >
                                 {isFetchingIsbn ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : <Search className="h-4 w-4" />}
                                 <span>Fetch Details</span>
@@ -576,7 +575,7 @@ function SellBookPageInner() {
                           type="text"
                           placeholder="e.g. Engineering Mathematics 3rd Edition (H.K. Dass)"
                           {...register('title')}
-                          className="w-full px-4 py-3 text-xs border border-border/80 rounded-2xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#F26522]/40"
+                          className="w-full px-4 py-3 text-xs border border-border/80 rounded-2xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary/40"
                         />
                         {errors.title && <p className="text-xs text-rose-500 font-bold">{errors.title.message}</p>}
                       </div>
@@ -676,7 +675,7 @@ function SellBookPageInner() {
                             <input
                               type="checkbox"
                               {...register('freeShipping')}
-                              className="accent-[#F26522] rounded"
+                              className="accent-secondary rounded"
                             />
                             <span>Offer Free Shipping to Buyer (Recommended)</span>
                           </label>
@@ -701,7 +700,7 @@ function SellBookPageInner() {
                               type="radio"
                               value="upi"
                               {...register('preferredPayment')}
-                              className="accent-[#F26522]"
+                              className="accent-secondary"
                             />
                             <span>UPI Direct Transfer</span>
                           </label>
@@ -710,7 +709,7 @@ function SellBookPageInner() {
                               type="radio"
                               value="bank"
                               {...register('preferredPayment')}
-                              className="accent-[#F26522]"
+                              className="accent-secondary"
                             />
                             <span>Bank Account (NEFT)</span>
                           </label>
@@ -833,7 +832,7 @@ function SellBookPageInner() {
                             <input
                               type="checkbox"
                               {...register('hidePhone')}
-                              className="accent-[#F26522] rounded"
+                              className="accent-secondary rounded"
                             />
                             <span>Hide my WhatsApp from public ad details</span>
                           </label>
@@ -928,7 +927,7 @@ function SellBookPageInner() {
                       <div className="p-5 bg-muted/30 border border-border/80 rounded-3xl space-y-3.5 text-xs font-medium font-sans">
                         <div className="flex justify-between border-b border-border/50 pb-2">
                           <span className="font-bold text-foreground">Book Title:</span>
-                          <span className="font-bold text-[#F26522] truncate max-w-[200px]">{formValues.title}</span>
+                          <span className="font-bold text-secondary truncate max-w-[200px]">{formValues.title}</span>
                         </div>
                         <div className="flex justify-between border-b border-border/50 pb-2">
                           <span className="font-bold text-foreground">Target price:</span>
@@ -951,7 +950,7 @@ function SellBookPageInner() {
                           <input
                             type="checkbox"
                             {...register('confirmOwnership')}
-                            className="accent-[#F26522] rounded mt-0.5"
+                            className="accent-secondary rounded mt-0.5"
                           />
                           <span>I confirm that this book matches the conditions and descriptions specified.</span>
                         </label>
@@ -963,7 +962,7 @@ function SellBookPageInner() {
                           <input
                             type="checkbox"
                             {...register('agreePolicy')}
-                            className="accent-[#F26522] rounded mt-0.5"
+                            className="accent-secondary rounded mt-0.5"
                           />
                           <span>I agree to BookFry seller policies, payout schedules, and commission rates.</span>
                         </label>
@@ -996,7 +995,7 @@ function SellBookPageInner() {
                         onClick={nextStep}
                         variant="secondary"
                         rightIcon={<ArrowRight className="h-4 w-4" />}
-                        className="px-6 py-2.5 bg-[#F26522] hover:bg-[#D64E0F] text-white rounded-2xl text-xs font-extrabold shadow-md shadow-[#F26522]/20 active:scale-95"
+                        className="px-6 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-2xl text-xs font-extrabold shadow-md active:scale-95"
                       >
                         Continue
                       </Button>
@@ -1006,7 +1005,7 @@ function SellBookPageInner() {
                         loading={isSubmitting}
                         variant="secondary"
                         rightIcon={<Sparkles className="h-4 w-4 text-amber-300" />}
-                        className="px-8 py-3 bg-[#F26522] hover:bg-[#D64E0F] text-white rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-[#F26522]/30 active:scale-95"
+                        className="px-8 py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-2xl text-xs font-extrabold uppercase tracking-wider shadow-lg active:scale-95"
                       >
                         Post Book For Sale
                       </Button>
@@ -1023,8 +1022,6 @@ function SellBookPageInner() {
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

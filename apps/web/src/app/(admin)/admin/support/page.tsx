@@ -5,14 +5,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
+import { AdminFilterBar } from '@/components/admin/admin-filter-bar';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { useAuthStore } from '@/stores/auth.store';
-import { ShieldAlert, CheckCircle2, AlertCircle, Eye, Pencil, Trash2, RefreshCw, LifeBuoy } from 'lucide-react';
 import {
-  AdminDialog,
+  Eye,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  LifeBuoy,
+  MessageSquare,
+  Mail,
+  User,
+} from 'lucide-react';
+import {
+  AdminModal,
   AdminDetailRow,
   AdminStatBadge,
-} from '@/components/admin/admin-dialog';
-import { AdminDangerDialog } from '@/components/admin/admin-danger-dialog';
+  AdminDetailSection,
+} from '@/components/admin/admin-modal';
+import { AdminDangerModal } from '@/components/admin/admin-danger-modal';
 import { apiClient } from '@/lib/api-client';
 
 interface SupportTicket {
@@ -32,7 +44,8 @@ export default function AdminSupportPage() {
   const isAdmin = currentUser?.roles.includes('admin');
   const queryClient = useQueryClient();
 
-  // Modals state
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -43,7 +56,7 @@ export default function AdminSupportPage() {
     status: 'open' as 'open' | 'in_progress' | 'resolved',
   });
 
-  const { data: tickets = [], isLoading } = useQuery<SupportTicket[]>({
+  const { data: tickets = [], isLoading, isError, refetch } = useQuery<SupportTicket[]>({
     queryKey: ['admin-support-tickets'],
     queryFn: () => apiClient('/admin/support-tickets'),
     enabled: !!isAdmin,
@@ -51,10 +64,7 @@ export default function AdminSupportPage() {
 
   const editMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      apiClient(`/admin/support-tickets/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      }),
+      apiClient(`/admin/support-tickets/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-support-tickets'] });
       setEditModalOpen(false);
@@ -63,10 +73,7 @@ export default function AdminSupportPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) =>
-      apiClient(`/admin/support-tickets/${id}`, {
-        method: 'DELETE',
-      }),
+    mutationFn: (id: string) => apiClient(`/admin/support-tickets/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-support-tickets'] });
       setDeleteModalOpen(false);
@@ -77,115 +84,110 @@ export default function AdminSupportPage() {
   if (!isAdmin) {
     return (
       <AdminLayout>
-        <div className="text-center py-16 border border-border/80 bg-card rounded-3xl font-sans space-y-4 shadow-xl my-8">
-          <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
-          <h2 className="font-serif text-2xl font-bold text-foreground">Access Restricted</h2>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            You must have Administrative privileges to view customer support tickets and helpdesk queues.
-          </p>
-        </div>
+        <AdminEmptyState
+          title="Access Restricted"
+          description="Super Administrator role required to view and manage customer helpdesk tickets."
+          mascotVariant="reading"
+        />
       </AdminLayout>
     );
   }
 
-  const openTicketsCount = tickets.filter((t) => t.status === 'open').length;
-  const inProgressCount = tickets.filter((t) => t.status === 'in_progress').length;
-  const resolvedCount = tickets.filter((t) => t.status === 'resolved').length;
+  const rawTickets = tickets || [];
+  const filteredTickets = rawTickets.filter((t) => {
+    const matchesStatus = !statusFilter || t.status === statusFilter;
+    const matchesSearch =
+      !searchQuery.trim() ||
+      t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.ticketNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.userEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const filterChips = [
+    { id: '', label: 'All Inquiries', count: rawTickets.length },
+    { id: 'open', label: 'Unassigned / Open', count: rawTickets.filter((t) => t.status === 'open').length },
+    { id: 'in_progress', label: 'In Progress', count: rawTickets.filter((t) => t.status === 'in_progress').length },
+    { id: 'resolved', label: 'Resolved Tickets', count: rawTickets.filter((t) => t.status === 'resolved').length },
+  ];
 
   const columns: Column<SupportTicket>[] = [
     {
-      header: 'Ticket ID & User',
+      header: 'Ticket Details',
       cell: (t) => (
         <div className="font-sans">
-          <span className="font-mono font-bold text-[#F26522]">{t.ticketNumber}</span>
-          <p className="text-[11px] text-muted-foreground font-medium">{t.userEmail}</p>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-black uppercase text-secondary bg-secondary/10 px-2 py-0.5 rounded-md border border-secondary/20">
+              #{t.ticketNumber}
+            </span>
+            <p className="font-bold text-foreground line-clamp-1">{t.subject}</p>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Student: <span className="font-semibold text-foreground">{t.name}</span> ({t.userEmail})
+          </p>
         </div>
       ),
     },
     {
-      header: 'Issue Subject',
-      cell: (t) => <span className="font-bold text-foreground text-xs sm:text-sm">{t.subject}</span>,
-    },
-    {
       header: 'Priority',
-      cell: (t) => (
-        <span
-          className={`px-2.5 py-0.5 border text-[10px] font-black uppercase tracking-wider rounded-full ${
-            t.priority === 'high'
-              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
-              : t.priority === 'medium'
-              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-              : 'bg-muted text-muted-foreground border-border/80'
-          }`}
-        >
-          {t.priority}
-        </span>
-      ),
+      cell: (t) => {
+        const pColors = {
+          high: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30',
+          medium: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+          low: 'bg-muted text-muted-foreground border-border',
+        };
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${pColors[t.priority] || pColors.low}`}>
+            {t.priority}
+          </span>
+        );
+      },
     },
     {
       header: 'Status',
-      cell: (t) => (
-        <span
-          className={`inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-            t.status === 'resolved'
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-              : t.status === 'in_progress'
-              ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20'
-              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-          }`}
-        >
-          {t.status === 'resolved' ? (
-            <CheckCircle2 className="h-3.5 w-3.5" />
-          ) : (
-            <AlertCircle className="h-3.5 w-3.5" />
-          )}
-          <span>{t.status.replace('_', ' ')}</span>
-        </span>
-      ),
+      cell: (t) => {
+        const sColors = {
+          open: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30',
+          in_progress: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',
+          resolved: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+        };
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${sColors[t.status] || sColors.open}`}>
+            {t.status.replace('_', ' ')}
+          </span>
+        );
+      },
     },
     {
       header: 'Actions',
       className: 'text-right',
       cell: (t) => (
-        <div className="flex items-center justify-end space-x-2 font-sans">
-          {/* View Details */}
+        <div className="flex items-center justify-end space-x-1.5 font-sans">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedTicket(t);
-              setViewModalOpen(true);
-            }}
-            className="p-2 rounded-xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-all active:scale-95 shadow-xs"
-            title="View Details"
+            onClick={() => { setSelectedTicket(t); setViewModalOpen(true); }}
+            className="p-1.5 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+            title="View Ticket"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-3.5 w-3.5" />
           </button>
-
-          {/* Edit Ticket */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               setSelectedTicket(t);
               setEditForm({ subject: t.subject, priority: t.priority, status: t.status });
               setEditModalOpen(true);
             }}
-            className="p-2 rounded-xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-secondary transition-all active:scale-95 shadow-xs"
-            title="Edit Ticket"
+            className="p-1.5 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-secondary transition-all cursor-pointer"
+            title="Edit / Resolve"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-3.5 w-3.5" />
           </button>
-
-          {/* Soft Delete */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedTicket(t);
-              setDeleteModalOpen(true);
-            }}
-            className="p-2 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95 shadow-xs"
-            title="Soft Delete Ticket"
+            onClick={() => { setSelectedTicket(t); setDeleteModalOpen(true); }}
+            className="p-1.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
+            title="Delete Ticket"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       ),
@@ -194,165 +196,118 @@ export default function AdminSupportPage() {
 
   return (
     <AdminLayout>
-      {/* Brand Hero Section Header */}
       <AdminHero
-        title="Support Tickets & Campus Helpdesk"
-        subtitle="Resolve buyer & seller inquiries, shipment tracking support, and order dispute tickets across India."
-        badgeText="Campus Helpdesk & Resolution"
+        title="Customer Helpdesk & Support"
+        subtitle="Manage student fulfillment inquiries, delivery escalations, and payment resolution tickets."
+        badgeText="Student Support"
         stats={[
-          { label: "Total Tickets", value: tickets.length, badge: "All Inquiries", isPositive: true },
-          { label: "Open Queue", value: openTicketsCount, badge: "Action Required", isPositive: false },
-          { label: "In Progress", value: inProgressCount, badge: "Active Resolution", isPositive: true },
-          { label: "Resolved", value: resolvedCount, badge: "Completed", isPositive: true },
+          { label: 'Total Inquiries', value: rawTickets.length, badge: 'Tickets', isPositive: true },
+          { label: 'Unassigned / Open', value: rawTickets.filter((t) => t.status === 'open').length, badge: 'Queue', isPositive: false },
+          { label: 'Resolved Tickets', value: rawTickets.filter((t) => t.status === 'resolved').length, badge: 'Resolved', isPositive: true },
         ]}
       />
 
-      <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-xl font-sans">
+      <AdminFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search ticket ID, student name, or email..."
+        filterChips={filterChips}
+        activeFilter={statusFilter}
+        onFilterSelect={setStatusFilter}
+      />
+
+      {isError ? (
+        <AdminEmptyState
+          title="Support Desk Error"
+          description="Failed to retrieve customer support records from the ticketing service."
+          mascotVariant="pointing"
+          action={{ label: 'Retry Fetch', onClick: () => refetch() }}
+        />
+      ) : (
         <AdminDataTable
-          title="Support Ticket Inbox"
-          subtitle="Active customer service queries and escalation tickets"
-          data={tickets}
+          title="Helpdesk Support Queue"
+          subtitle="Manage active customer questions and campus escalations"
+          data={filteredTickets}
           columns={columns}
           searchField="subject"
-          searchPlaceholder="Search ticket or user..."
+          searchPlaceholder="Search ticket..."
           isLoading={isLoading}
         />
-      </div>
+      )}
 
       {/* VIEW TICKET DETAILS MODAL */}
       {selectedTicket && (
-        <AdminDialog
+        <AdminModal
           isOpen={viewModalOpen}
-          onClose={() => {
-            setViewModalOpen(false);
-            setSelectedTicket(null);
-          }}
+          onClose={() => { setViewModalOpen(false); setSelectedTicket(null); }}
           size="lg"
           title={`Ticket #${selectedTicket.ticketNumber}`}
-          subtitle={`Submitted by ${selectedTicket.name} • ${selectedTicket.createdAt}`}
+          subtitle={selectedTicket.subject}
           icon={<LifeBuoy className="h-5 w-5 text-secondary" />}
           badge={
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
-                selectedTicket.status === 'resolved'
-                  ? 'bg-success/10 text-success border border-success/20'
-                  : selectedTicket.status === 'in_progress'
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'bg-warning/10 text-warning border border-warning/20'
-              }`}
-            >
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-secondary/15 text-secondary border border-secondary/20">
               {selectedTicket.status.replace('_', ' ')}
             </span>
           }
-          headerActions={
-            <button
-              onClick={() => {
-                setViewModalOpen(false);
-                setEditForm({
-                  subject: selectedTicket.subject,
-                  priority: selectedTicket.priority,
-                  status: selectedTicket.status,
-                });
-                setEditModalOpen(true);
-              }}
-              className="p-1.5 text-text-muted hover:text-secondary hover:bg-muted rounded-xl transition-all flex items-center gap-1 text-xs font-bold mr-2"
-              title="Edit Ticket Parameters"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Update</span>
-            </button>
-          }
           footer={
             <div className="flex items-center justify-between w-full">
-              <p className="text-xs text-text-muted font-mono">
-                Customer: <span className="font-bold text-text-primary">{selectedTicket.userEmail}</span>
-              </p>
-              <button
-                onClick={() => {
-                  setViewModalOpen(false);
-                  setSelectedTicket(null);
-                }}
-                className="px-5 py-2 bg-secondary text-secondary-foreground text-xs font-bold rounded-xl hover:bg-secondary/90 shadow-xs"
+              <a
+                href={`mailto:${selectedTicket.userEmail}?subject=Re: [Ticket #${selectedTicket.ticketNumber}] ${selectedTicket.subject}`}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary hover:underline"
               >
-                Close Ticket
+                <Mail className="h-3.5 w-3.5" />
+                <span>Reply to Student via Email</span>
+              </a>
+              <button
+                onClick={() => { setViewModalOpen(false); setSelectedTicket(null); }}
+                className="px-5 py-2.5 bg-secondary text-white text-xs font-extrabold uppercase tracking-wider rounded-2xl hover:bg-secondary/90 shadow-md shadow-secondary/20 cursor-pointer"
+              >
+                Close
               </button>
             </div>
           }
         >
-          <div className="space-y-5">
-            {/* Stat Badges */}
+          <div className="space-y-4 font-sans">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <AdminStatBadge
-                label="Priority Level"
-                value={selectedTicket.priority.toUpperCase()}
-                variant={
-                  selectedTicket.priority === 'high'
-                    ? 'danger'
-                    : selectedTicket.priority === 'medium'
-                    ? 'warning'
-                    : 'default'
-                }
-              />
-              <AdminStatBadge
-                label="Resolution Status"
-                value={selectedTicket.status.replace('_', ' ').toUpperCase()}
-                variant={
-                  selectedTicket.status === 'resolved'
-                    ? 'success'
-                    : selectedTicket.status === 'in_progress'
-                    ? 'info'
-                    : 'warning'
-                }
-              />
-              <AdminStatBadge
-                label="Created Date"
-                value={selectedTicket.createdAt}
-                variant="default"
-              />
+              <AdminStatBadge label="Priority" value={selectedTicket.priority.toUpperCase()} variant={selectedTicket.priority === 'high' ? 'danger' : 'info'} />
+              <AdminStatBadge label="Ticket Status" value={selectedTicket.status.toUpperCase()} variant={selectedTicket.status === 'resolved' ? 'success' : 'warning'} />
+              <AdminStatBadge label="Channel" value="Web Portal" variant="default" />
             </div>
 
-            {/* Requester & Subject Info */}
-            <div className="p-4 bg-muted/30 border border-border rounded-2xl space-y-2">
-              <AdminDetailRow label="Subject" value={selectedTicket.subject} />
-              <AdminDetailRow label="Requester Name" value={selectedTicket.name} />
-              <AdminDetailRow label="Email Address" value={selectedTicket.userEmail} copyable />
-              <AdminDetailRow label="Ticket Number" value={`#${selectedTicket.ticketNumber}`} copyable />
-            </div>
-
-            {/* Message Body */}
-            <div>
-              <p className="font-bold text-text-muted uppercase text-[11px] tracking-wider mb-1.5">
-                Customer Message
-              </p>
-              <div className="p-4 bg-background border border-border rounded-2xl text-text-primary text-xs leading-relaxed">
-                {selectedTicket.message}
+            <AdminDetailSection title="Ticket Narrative & Message" icon={<MessageSquare className="h-4 w-4" />}>
+              <div className="p-4 bg-card rounded-2xl border border-border/80 space-y-2">
+                <p className="text-xs text-foreground leading-relaxed font-medium">
+                  {selectedTicket.message}
+                </p>
               </div>
-            </div>
+            </AdminDetailSection>
+
+            <AdminDetailSection title="Student Contact Information" icon={<User className="h-4 w-4" />}>
+              <div className="p-4 bg-muted/30 border border-border/80 rounded-2xl space-y-2">
+                <AdminDetailRow label="Student Name" value={selectedTicket.name} />
+                <AdminDetailRow label="College Email" value={selectedTicket.userEmail} copyable />
+                <AdminDetailRow label="Submitted At" value={selectedTicket.createdAt} />
+              </div>
+            </AdminDetailSection>
           </div>
-        </AdminDialog>
+        </AdminModal>
       )}
 
-      {/* EDIT TICKET FORM MODAL */}
+      {/* EDIT / RESOLVE TICKET MODAL */}
       {selectedTicket && (
-        <AdminDialog
+        <AdminModal
           isOpen={editModalOpen}
-          onClose={() => {
-            setEditModalOpen(false);
-            setSelectedTicket(null);
-          }}
+          onClose={() => { setEditModalOpen(false); setSelectedTicket(null); }}
           size="md"
-          title={`Update Ticket #${selectedTicket.ticketNumber}`}
-          subtitle={`Adjusting priority and resolution progress`}
+          title={`Resolve Ticket #${selectedTicket.ticketNumber}`}
+          subtitle="Update priority level or advance ticket status"
           icon={<Pencil className="h-5 w-5 text-secondary" />}
           footer={
             <div className="flex items-center justify-end gap-3 w-full">
               <button
                 type="button"
-                onClick={() => {
-                  setEditModalOpen(false);
-                  setSelectedTicket(null);
-                }}
-                className="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
+                onClick={() => { setEditModalOpen(false); setSelectedTicket(null); }}
+                className="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
@@ -360,10 +315,10 @@ export default function AdminSupportPage() {
                 type="submit"
                 form="edit-ticket-form"
                 disabled={editMutation.isPending}
-                className="px-5 py-2 bg-secondary text-secondary-foreground font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5"
+                className="px-5 py-2.5 bg-secondary text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-md shadow-secondary/20 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                <span>Save Changes</span>
+                <span>Save Ticket</span>
               </button>
             </div>
           }
@@ -374,30 +329,26 @@ export default function AdminSupportPage() {
               e.preventDefault();
               editMutation.mutate({ id: selectedTicket.id, data: editForm });
             }}
-            className="space-y-4 text-xs"
+            className="space-y-4 text-xs font-sans"
           >
             <div>
-              <label className="block text-xs font-bold text-text-primary mb-1.5">
-                Subject Title <span className="text-danger">*</span>
-              </label>
+              <label className="block text-xs font-bold text-foreground mb-1.5">Subject Line *</label>
               <input
                 type="text"
                 required
                 value={editForm.subject}
                 onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
-                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+                className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-text-primary mb-1.5">
-                  Priority Level
-                </label>
+                <label className="block text-xs font-bold text-foreground mb-1.5">Priority Level</label>
                 <select
                   value={editForm.priority}
                   onChange={(e) => setEditForm({ ...editForm, priority: e.target.value as 'high' | 'medium' | 'low' })}
-                  className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
+                  className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
                 >
                   <option value="high">High Priority</option>
                   <option value="medium">Medium Priority</option>
@@ -406,47 +357,36 @@ export default function AdminSupportPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-text-primary mb-1.5">
-                  Lifecycle Status
-                </label>
+                <label className="block text-xs font-bold text-foreground mb-1.5">Resolution Status</label>
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'open' | 'in_progress' | 'resolved' })}
-                  className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
+                  className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
                 >
-                  <option value="open">Open Inquiry</option>
+                  <option value="open">Open / Unresolved</option>
                   <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
+                  <option value="resolved">Resolved &amp; Closed</option>
                 </select>
               </div>
             </div>
           </form>
-        </AdminDialog>
+        </AdminModal>
       )}
 
-      {/* SOFT DELETE TICKET DANGER DIALOG */}
+      {/* DELETE DANGER MODAL */}
       {selectedTicket && (
-        <AdminDangerDialog
+        <AdminDangerModal
           isOpen={deleteModalOpen}
-          onClose={() => {
-            setDeleteModalOpen(false);
-            setSelectedTicket(null);
-          }}
+          onClose={() => { setDeleteModalOpen(false); setSelectedTicket(null); }}
           onConfirm={() => deleteMutation.mutate(selectedTicket.id)}
           isPending={deleteMutation.isPending}
-          title="Confirm Archive / Soft Delete Ticket"
+          title="Confirm Delete Support Ticket"
           entityName={`Ticket #${selectedTicket.ticketNumber}`}
-          description={
-            <span>
-              Are you sure you want to soft delete / archive ticket{' '}
-              <strong>#{selectedTicket.ticketNumber}</strong>?
-            </span>
-          }
+          description={<span>Are you sure you want to delete helpdesk ticket <strong>#{selectedTicket.ticketNumber}</strong>?</span>}
           impacts={[
-            'The ticket will be removed from the active queue and moved to resolved archive.',
-            'Staff assignment and notification listeners on this ticket will be unlinked.',
+            'The conversation thread and ticket history will be permanently erased.',
           ]}
-          confirmText="Archive / Soft Delete"
+          confirmText="Delete Ticket"
         />
       )}
     </AdminLayout>

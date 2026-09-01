@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { ApiResponse } from '../../utils/ApiResponse';
-import { env } from '../../config/env';
 import { UnauthorizedError } from '../../utils/AppError';
+import { getRefreshTokenCookieOptions, getClearRefreshTokenCookieOptions } from '../../utils/cookie';
 import { UserRole } from '@bookmarket/types';
 
 export class AuthController {
@@ -55,12 +55,7 @@ export class AuthController {
 
     await this.usersService.updateRefreshToken(userDoc._id.toString(), refreshToken);
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
     const userDTO = this.usersService.mapToDTO(userDoc);
     res.status(201).json(ApiResponse.success({ user: userDTO, accessToken }));
@@ -70,12 +65,7 @@ export class AuthController {
     const { email, password } = req.body;
     const { user, accessToken, refreshToken } = await this.authService.login(email, password);
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
     const userDTO = this.usersService.mapToDTO(user);
     res.status(200).json(ApiResponse.success({ user: userDTO, accessToken }));
@@ -84,17 +74,12 @@ export class AuthController {
   refresh = async (req: Request, res: Response): Promise<void> => {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
-      throw new UnauthorizedError('Refresh token missing');
+      throw new UnauthorizedError('Refresh token missing', 'REFRESH_TOKEN_MISSING');
     }
 
     const { accessToken, newRefreshToken, user } = await this.authService.refresh(refreshToken);
 
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('refreshToken', newRefreshToken, getRefreshTokenCookieOptions());
 
     const userDTO = this.usersService.mapToDTO(user);
     res.status(200).json(ApiResponse.success({ user: userDTO, accessToken }));
@@ -106,11 +91,7 @@ export class AuthController {
       await this.authService.logout(userId);
     }
 
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
+    res.clearCookie('refreshToken', getClearRefreshTokenCookieOptions());
 
     res.status(200).json(ApiResponse.success({ message: 'Logged out successfully' }));
   };

@@ -14,7 +14,7 @@ export function SellTipsSidebar() {
 
         <div className="space-y-4 font-sans text-xs text-muted-foreground font-medium">
           <div className="flex items-start space-x-3">
-            <div className="p-2 rounded-xl bg-[#F26522]/10 text-[#F26522] shrink-0">
+            <div className="p-2 rounded-xl bg-secondary/10 text-secondary shrink-0">
               <Camera className="h-4 w-4" />
             </div>
             <div>
@@ -24,7 +24,7 @@ export function SellTipsSidebar() {
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="p-2 rounded-xl bg-[#F26522]/10 text-[#F26522] shrink-0">
+            <div className="p-2 rounded-xl bg-secondary/10 text-secondary shrink-0">
               <BookOpen className="h-4 w-4" />
             </div>
             <div>
@@ -34,7 +34,7 @@ export function SellTipsSidebar() {
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="p-2 rounded-xl bg-[#F26522]/10 text-[#F26522] shrink-0">
+            <div className="p-2 rounded-xl bg-secondary/10 text-secondary shrink-0">
               <Check className="h-4 w-4" />
             </div>
             <div>
@@ -44,7 +44,7 @@ export function SellTipsSidebar() {
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="p-2 rounded-xl bg-[#F26522]/10 text-[#F26522] shrink-0">
+            <div className="p-2 rounded-xl bg-secondary/10 text-secondary shrink-0">
               <Percent className="h-4 w-4" />
             </div>
             <div>
@@ -54,7 +54,7 @@ export function SellTipsSidebar() {
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="p-2 rounded-xl bg-[#F26522]/10 text-[#F26522] shrink-0">
+            <div className="p-2 rounded-xl bg-secondary/10 text-secondary shrink-0">
               <MessageSquare className="h-4 w-4" />
             </div>
             <div>

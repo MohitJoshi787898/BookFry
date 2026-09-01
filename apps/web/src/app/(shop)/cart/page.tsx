@@ -9,7 +9,6 @@ import { useCartStore } from '@/stores/cart.store';
 import { apiClient } from '@/lib/api-client';
 import { User, Address, Book, Order, UsedBookRequest } from '@bookmarket/types';
 import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Check, Package, Truck, MessageCircle } from 'lucide-react';
@@ -267,7 +266,7 @@ export default function CartPage() {
     <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
       <Navbar />
 
-      <main className="flex-grow w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-6">
+      <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6">
         <CartHeroHeader itemCount={items.length} onShareCart={handleShareCart} />
 
         {isCartLoading && items.length === 0 ? (
@@ -443,8 +442,6 @@ export default function CartPage() {
           </Button>
         </div>
       </Dialog>
-
-      <Footer />
     </div>
   );
 }

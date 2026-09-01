@@ -293,7 +293,7 @@ export function CartAddressModal({
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-extrabold text-foreground">{parseAddress(address.street).labelName}</p>
                           {address.isDefault && (
-                            <span className="px-2 py-0.5 rounded-full bg-secondary/15 text-[9px] font-extrabold text-secondary uppercase">
+                            <span className="px-2.5 py-0.5 rounded-full bg-secondary/15 text-xs font-extrabold text-secondary uppercase">
                               Default
                             </span>
                           )}

@@ -45,7 +45,7 @@ export function ProfileOverview({
           </div>
 
           <div className="hidden sm:flex items-end gap-1.5 pb-1 opacity-80">
-            {["bg-[#F26522]", "bg-[#1A3B5C]", "bg-[#FF9900]", "bg-emerald-600"].map((cls, i) => (
+            {["bg-secondary", "bg-primary", "bg-amber-400", "bg-emerald-600"].map((cls, i) => (
               <div
                 key={i}
                 className={`${cls} rounded-sm shadow-sm`}
@@ -105,7 +105,7 @@ export function ProfileOverview({
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="px-5 py-2.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-bold rounded-2xl text-xs transition-all flex items-center gap-2 shadow-md shadow-[#F26522]/20 active:scale-95 disabled:opacity-60"
+                className="px-5 py-2.5 bg-secondary hover:bg-secondary/80 text-white font-bold rounded-2xl text-xs transition-all flex items-center gap-2 shadow-md shadow-secondary/20 active:scale-95 disabled:opacity-60"
               >
                 {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 <span>Save Changes</span>

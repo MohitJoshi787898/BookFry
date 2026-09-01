@@ -44,5 +44,11 @@ export class CartController {
     const cart = await this.cartService.mergeCarts(userId, items);
     res.status(200).json(ApiResponse.success(cart));
   };
+
+  getSummary = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    const summary = await this.cartService.getCartSummary(userId);
+    res.status(200).json(ApiResponse.success(summary));
+  };
 }
 export default CartController;

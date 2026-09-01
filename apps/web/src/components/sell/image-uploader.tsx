@@ -108,7 +108,7 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`font-sans p-2 rounded-3xl transition-all duration-200 ${
-        isDragging ? 'bg-[#F26522]/10 border-2 border-dashed border-[#F26522]' : ''
+        isDragging ? 'bg-secondary/10 border-2 border-dashed border-secondary' : ''
       }`}
     >
       <input
@@ -132,7 +132,7 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
 
                 {/* Cover label at top left for first index */}
                 {slot.index === 0 && (
-                  <span className="absolute top-3 left-3 bg-[#F26522] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                  <span className="absolute top-3 left-3 bg-secondary text-secondary-foreground text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
                     COVER PHOTO
                   </span>
                 )}
@@ -155,7 +155,7 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
             <div
               key="uploader-slot"
               onClick={() => fileInputRef.current?.click()}
-              className="cursor-pointer aspect-square sm:aspect-[4/5] rounded-3xl border-2 border-dashed border-border/80 hover:border-[#F26522] bg-card hover:bg-[#F26522]/5 flex flex-col items-center justify-center text-center p-4 transition-all active:scale-95 shadow-xs"
+              className="cursor-pointer aspect-square sm:aspect-[4/5] rounded-3xl border-2 border-dashed border-border/80 hover:border-secondary bg-card hover:bg-secondary/5 flex flex-col items-center justify-center text-center p-4 transition-all active:scale-95 shadow-xs"
             >
               <div className="h-10 w-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-2">
                 <Plus className="h-5 w-5" />

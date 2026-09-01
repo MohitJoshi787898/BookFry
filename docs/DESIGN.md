@@ -197,3 +197,36 @@ Every view and module MUST implement the 4 core states:
 - Contrast ratio ≥ 4.5:1 for body text; ≥ 3:1 for large display titles and active icons.
 - All interactive controls are keyboard navigable with visible 2px focus rings (`ring-2 ring-primary ring-offset-2`).
 - Every non-text element has an `aria-label` or `alt` text.
+
+---
+
+## 9. Full-Width Application Philosophy & Viewport Utilization Standards
+
+### Core Rule: Page Layout Width = Available Viewport Width
+BookFry follows a strict **Full-Width Application Philosophy** across all devices, eliminating arbitrary website max-width containers (`max-w-7xl`, `max-w-6xl`, `max-w-screen-xl`, `container mx-auto`).
+
+```
+  Traditional Website (BANNED):
+  [ Viewport ────────────────────────────────────────── ]
+  [       (Giant Empty Margins) [ max-w-7xl Box ]       ]
+
+  BookFry Full-Width System (MANDATORY):
+  [ Viewport ────────────────────────────────────────── ]
+  [ Full-Width Shell (Responsive Padding & Dynamic Grid) ]
+```
+
+### 9.1 Responsive Breakpoint & Padding Standards
+| Breakpoint | Viewport Width | Page Shell Padding | Catalog Grid Columns | Data Table Density |
+| :--- | :--- | :--- | :--- | :--- |
+| **Mobile XS/SM** | 320px – 640px | `px-4` | 2 Columns | Compact Card View |
+| **Tablet MD** | 641px – 1024px | `px-6` | 3 Columns | Collapsible Table |
+| **Laptop LG** | 1025px – 1280px | `px-8` | 4 Columns | Standard Table |
+| **Desktop XL** | 1281px – 1536px | `px-12` | 5 Columns | Extended Table |
+| **Ultra-Wide 2XL+** | 1537px – 2560px+ | `px-16` | 6 Columns | Comprehensive Table |
+
+### 9.2 Intentional Component-Level Constraints
+Page shells must be `w-full`. Constraints (`max-w-*`) are permitted **ONLY** at the component level where required for reading ergonomics:
+- **Long Reading Blocks**: `max-w-prose` (65–75 characters per line).
+- **Authentication Cards**: `max-w-md` / `max-w-lg` centered form containers.
+- **Confirmation Modals**: Focused dialog widths (`max-w-md`, `max-w-lg`).
+

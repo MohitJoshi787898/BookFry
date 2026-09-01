@@ -25,7 +25,7 @@ export function PromotionalBannerSection({
 }: PromotionalBannerSectionProps) {
   return (
     <section aria-label={title} className="py-8 sm:py-12 bg-background border-b border-border/80">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-secondary/80 p-6 sm:p-10 shadow-xl text-primary-foreground font-sans">
           {/* Ambient Glows */}
           <div

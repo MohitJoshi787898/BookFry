@@ -18,13 +18,13 @@ export function FooterNewsletter() {
   return (
     <div className="rounded-3xl border border-border/80 bg-card p-6 md:p-8 shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 font-sans">
       <div className="flex items-start gap-4">
-        <div className="h-12 w-12 rounded-2xl bg-[#F26522]/10 border border-[#F26522]/20 flex items-center justify-center shrink-0 text-[#F26522] shadow-xs">
+        <div className="h-12 w-12 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0 text-secondary shadow-xs">
           <Mail className="h-6 w-6" />
         </div>
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-xs font-black text-foreground">
             <span>Join 100,000+ Book Readers</span>
-            <Sparkles className="h-3.5 w-3.5 text-[#F26522]" />
+            <Sparkles className="h-3.5 w-3.5 text-secondary" />
           </div>
           <h4 className="font-serif text-lg font-bold text-foreground">Stay in the Loop for Rare Deals</h4>
           <p className="text-xs text-muted-foreground max-w-sm leading-relaxed font-medium">
@@ -57,11 +57,11 @@ export function FooterNewsletter() {
               value={emailVal}
               onChange={(e) => setEmailVal(e.target.value)}
               placeholder="Enter your student email..."
-              className="h-12 px-4 rounded-2xl border border-border/80 bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#F26522]/40 w-full sm:w-72 font-medium"
+              className="h-12 px-4 rounded-2xl border border-border/80 bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary/40 w-full sm:w-72 font-medium"
             />
             <button
               type="submit"
-              className="h-12 px-7 bg-[#F26522] hover:bg-[#D64E0F] text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 shadow-md shadow-[#F26522]/20 shrink-0"
+              className="h-12 px-7 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 shadow-md shrink-0"
             >
               Subscribe
             </button>

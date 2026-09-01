@@ -231,7 +231,7 @@ export default function LoginPage() {
       </main>
 
       <div className="bg-card border-t border-b border-border/60 py-5 font-sans">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-center justify-between text-left">
             <div className="flex items-center space-x-3.5 py-1">
               <div className="h-10 w-10 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0">

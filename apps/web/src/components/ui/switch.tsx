@@ -36,7 +36,7 @@ export function Switch({ checked, onChange, label, disabled = false, id, classNa
         <div
           className={cn(
             'w-8 h-4.5 bg-border rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2',
-            'peer-checked:bg-[#F26522] peer-hover:opacity-90'
+            'peer-checked:bg-secondary peer-hover:opacity-90'
           )}
         />
         {/* Thumb */}

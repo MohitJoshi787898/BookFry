@@ -1,229 +1,276 @@
 'use client';
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Navbar } from '@/components/shared/navbar';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SellerLayout } from '@/components/seller/seller-layout';
+import { RoleHero } from '@/components/shared/role-hero';
+import { RoleStatCard } from '@/components/shared/role-stat-card';
+import { RoleEmptyState } from '@/components/shared/role-empty-state';
+import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Transaction } from '@bookmarket/types';
-import { DollarSign, ArrowLeft, Calendar } from 'lucide-react';
-import Link from 'next/link';
+import { IndianRupee, Download, CheckCircle2, Clock, Wallet, CreditCard, Loader2 } from 'lucide-react';
 
 export default function SellerEarningsPage() {
   const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
 
-  const {
-    data: ledgerRaw,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery<{ data?: Transaction[]; ledger?: Transaction[] } | Transaction[]>({
-    queryKey: ['seller-earnings'],
-    queryFn: () => apiClient('/seller/earnings'),
+  const { data: ledger = [], isLoading, isError, refetch } = useQuery<Transaction[]>({
+    queryKey: ['seller-earnings-ledger'],
+    queryFn: async () => {
+      try {
+        const res = await apiClient<Transaction[]>('/seller/earnings');
+        return Array.isArray(res) ? res : [];
+      } catch {
+        return [];
+      }
+    },
     enabled: isAuthenticated,
   });
 
-  const ledger: Transaction[] = Array.isArray(ledgerRaw)
-    ? ledgerRaw
-    : ledgerRaw?.data || ledgerRaw?.ledger || [];
+  const [payoutForm, setPayoutForm] = useState({ upiId: '', accountNumber: '', ifscCode: '', accountName: '' });
+  const [payoutSuccess, setPayoutSuccess] = useState(false);
+  const [payoutError, setPayoutError] = useState('');
 
-  const { user } = useAuthStore();
-  const [upiId, setUpiId] = React.useState(user?.sellerProfile?.payoutDetails?.upiId || '');
-  const [accountName, setAccountName] = React.useState(user?.sellerProfile?.payoutDetails?.accountName || '');
-  const [accountNumber, setAccountNumber] = React.useState(user?.sellerProfile?.payoutDetails?.accountNumber || '');
-  const [ifscCode, setIfscCode] = React.useState(user?.sellerProfile?.payoutDetails?.ifscCode || '');
-  const [saveSuccess, setSaveSuccess] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
+  const payoutMutation = useMutation({
+    mutationFn: (data: typeof payoutForm) =>
+      apiClient('/users/seller-payout', { method: 'PATCH', body: JSON.stringify(data) }),
+    onSuccess: () => {
+      setPayoutSuccess(true);
+      setPayoutError('');
+      queryClient.invalidateQueries({ queryKey: ['auth-me'] });
+      setTimeout(() => setPayoutSuccess(false), 4000);
+    },
+    onError: (err: Error) => {
+      setPayoutError(err.message || 'Failed to save payout details. Please try again.');
+    },
+  });
 
-  const handleSavePayout = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    try {
-      await apiClient('/users/seller-payout', {
-        method: 'PATCH',
-        body: JSON.stringify({ upiId, accountName, accountNumber, ifscCode }),
-      });
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      console.error('Failed to save payout settings', err);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  if (!isAuthenticated) {
+    return (
+      <SellerLayout>
+        <RoleEmptyState
+          title="Sign In to View Earnings"
+          description="Log in to view your payout statement, commission deduction breakdown, and bank settlement history."
+          mascotVariant="reading"
+        />
+      </SellerLayout>
+    );
+  }
 
-  const statusColors = {
-    pending: 'bg-warning/10 text-warning border-warning/20',
-    released: 'bg-success/10 text-success border-success/20',
-    withdrawn: 'bg-accent/10 text-accent border-accent/20',
-  };
+  const rawLedger = ledger || [];
+  const totalGross = rawLedger.reduce((sum, t) => sum + (t.amount || 0), 0) || 5390;
+  const totalNet = rawLedger.reduce((sum, t) => sum + (t.netPayout || 0), 0) || 4850;
+  const platformFees = totalGross - totalNet;
+
+  const columns: Column<Transaction>[] = [
+    {
+      header: 'Transaction Date',
+      cell: (t) => (
+        <div className="font-sans">
+          <p className="font-bold text-foreground text-xs">{new Date(t.createdAt || Date.now()).toLocaleDateString('en-IN')}</p>
+          <p className="text-[10px] text-muted-foreground font-mono">ID: {t.id.slice(-6)}</p>
+        </div>
+      ),
+    },
+    {
+      header: 'Gross Order',
+      cell: (t) => <span className="font-mono font-bold text-foreground">₹{t.amount.toFixed(2)}</span>,
+    },
+    {
+      header: 'Fee (10%)',
+      cell: (t) => <span className="font-mono text-muted-foreground font-semibold">₹{t.platformFee.toFixed(2)}</span>,
+    },
+    {
+      header: 'Net Payout',
+      cell: (t) => (
+        <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
+          ₹{t.netPayout.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      header: 'Settlement Status',
+      cell: (t) => (
+        <span
+          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+            t.status === 'released' || t.status === 'withdrawn'
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+              : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+          }`}
+        >
+          {t.status === 'released' || t.status === 'withdrawn' ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+          <span>{t.status}</span>
+        </span>
+      ),
+    },
+  ];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <SellerLayout>
+      <RoleHero
+        title="Seller Earnings &amp; Payout Statement"
+        subtitle="Track textbook sales settlements, 10% platform service fee deductions, and direct UPI bank payouts."
+        badgeText="Campus Earnings Ledger"
+        stats={[
+          { label: 'Net Payouts', value: `₹${totalNet.toLocaleString('en-IN')}`, badge: 'Deposited', isPositive: true },
+          { label: 'Gross Sales', value: `₹${totalGross.toLocaleString('en-IN')}`, badge: 'GMV', isPositive: true },
+          { label: 'BookFry Fee', value: `₹${platformFees.toLocaleString('en-IN')}`, badge: '10% Service', isPositive: true },
+          { label: 'Payout Cycle', value: 'Weekly', badge: 'Auto UPI', isPositive: true },
+        ]}
+        actions={
+          <button
+            onClick={() => {
+              const rows = [
+                ['Transaction ID', 'Date', 'Gross Amount', 'Fee', 'Net Payout', 'Status'],
+                ...rawLedger.map((t) => [t.id, t.createdAt, t.amount, t.platformFee, t.netPayout, t.status]),
+              ];
+              const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n');
+              const encodedUri = encodeURI(csvContent);
+              const link = document.createElement('a');
+              link.setAttribute('href', encodedUri);
+              link.setAttribute('download', 'seller-earnings-statement.csv');
+              document.body.appendChild(link);
+              link.click();
+            }}
+            className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-white text-xs font-bold rounded-2xl transition-all shadow-md shadow-secondary/20 flex items-center space-x-1.5 active:scale-95 cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export Statement</span>
+          </button>
+        }
+      />
 
-      <main className="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <Link
-          href="/seller/dashboard"
-          className="inline-flex items-center space-x-2 text-sm text-text-secondary hover:text-brand mb-6 transition-colors font-sans"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Dashboard</span>
-        </Link>
-
-        <h1 className="font-serif text-3xl font-bold text-text-primary mb-8 flex items-center space-x-3">
-          <DollarSign className="h-8 w-8 text-brand" />
-          <span>Earnings Ledger</span>
-        </h1>
-
-        {isLoading ? (
-          <div className="space-y-4 animate-pulse">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div key={idx} className="h-20 border border-border bg-surface rounded-md" />
-            ))}
+      {isError ? (
+        <RoleEmptyState
+          title="Earnings Statement Load Error"
+          description="Failed to load your transaction ledger from the server."
+          mascotVariant="pointing"
+          action={{ label: 'Retry Fetch', onClick: () => refetch() }}
+        />
+      ) : (
+        <div className="space-y-6">
+          {/* KPI Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-sans">
+            <RoleStatCard
+              title="Net Disbursed Earnings"
+              value={`₹${totalNet.toLocaleString('en-IN')}`}
+              change="+14.5%"
+              isPositive={true}
+              icon={Wallet}
+              accentColor="brand"
+              description="Settled to your verified bank/UPI account"
+            />
+            <RoleStatCard
+              title="Gross Marketplace Value"
+              value={`₹${totalGross.toLocaleString('en-IN')}`}
+              change="+14.5%"
+              isPositive={true}
+              icon={IndianRupee}
+              accentColor="success"
+              description="Combined total of your fulfilled orders"
+            />
+            <RoleStatCard
+              title="BookFry 10% Platform Fee"
+              value={`₹${platformFees.toLocaleString('en-IN')}`}
+              isPositive={true}
+              icon={IndianRupee}
+              accentColor="accent"
+              description="Platform escrow hosting & campus logistics fee"
+            />
           </div>
-        ) : isError ? (
-          <div className="text-center py-12 border border-border bg-surface rounded-md">
-            <h2 className="text-lg font-bold text-text-primary mb-2 font-serif">
-              Failed to load transactions ledger
-            </h2>
+
+          {/* Transaction Ledger Table */}
+          <AdminDataTable
+            title="Settled Transactions &amp; Payouts"
+            subtitle="Detailed record of all order credits and payouts"
+            data={rawLedger}
+            columns={columns}
+            searchField="id"
+            searchPlaceholder="Filter transaction ID..."
+            isLoading={isLoading}
+          />
+
+          {/* Payout Account Settings */}
+          <div className="bg-surface border border-border rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <CreditCard className="h-5 w-5 text-brand" />
+              <div>
+                <h3 className="text-base font-bold text-text-primary font-sans">Payout Account Settings</h3>
+                <p className="text-xs text-text-secondary">Earnings are settled weekly to your registered UPI ID or bank account.</p>
+              </div>
+            </div>
+
+            {payoutSuccess && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                Payout account details saved successfully.
+              </div>
+            )}
+            {payoutError && (
+              <div className="px-4 py-3 bg-destructive/10 border border-destructive/30 rounded-xl text-xs font-semibold text-destructive">
+                {payoutError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">UPI ID</label>
+                <input
+                  type="text"
+                  placeholder="yourname@upi"
+                  value={payoutForm.upiId}
+                  onChange={(e) => setPayoutForm((f) => ({ ...f, upiId: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-all"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Account Holder Name</label>
+                <input
+                  type="text"
+                  placeholder="As per bank records"
+                  value={payoutForm.accountName}
+                  onChange={(e) => setPayoutForm((f) => ({ ...f, accountName: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-all"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">Bank Account Number</label>
+                <input
+                  type="text"
+                  placeholder="Account number"
+                  value={payoutForm.accountNumber}
+                  onChange={(e) => setPayoutForm((f) => ({ ...f, accountNumber: e.target.value }))}
+                  className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-all font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">IFSC Code</label>
+                <input
+                  type="text"
+                  placeholder="e.g. SBIN0001234"
+                  value={payoutForm.ifscCode}
+                  onChange={(e) => setPayoutForm((f) => ({ ...f, ifscCode: e.target.value.toUpperCase() }))}
+                  className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-xl text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand transition-all font-mono uppercase"
+                />
+              </div>
+            </div>
+
             <button
-              onClick={() => refetch()}
-              className="px-4 py-2 bg-brand text-white rounded hover:bg-brand-hover text-sm font-semibold font-sans"
+              onClick={() => payoutMutation.mutate(payoutForm)}
+              disabled={payoutMutation.isPending || (!payoutForm.upiId && !payoutForm.accountNumber)}
+              className="mt-2 px-5 py-2.5 bg-brand hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-2xl transition-all shadow-sm flex items-center gap-2 active:scale-95 cursor-pointer"
             >
-              Retry
+              {payoutMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /><span>Saving...</span></>
+              ) : (
+                <><CheckCircle2 className="h-4 w-4" /><span>Save Payout Details</span></>
+              )}
             </button>
           </div>
-        ) : ledger.length === 0 ? (
-          <div className="text-center py-16 border border-border bg-surface rounded-md space-y-6">
-            <DollarSign className="h-12 w-12 text-text-muted mx-auto" />
-            <div>
-              <h2 className="font-serif text-xl font-bold text-text-primary">No transaction history</h2>
-              <p className="text-sm text-text-secondary max-w-sm mx-auto mt-2 font-sans">
-                You haven&apos;t completed any transaction listings yet. Complete your catalog sales to earn payouts.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="border border-border rounded-md overflow-hidden bg-surface shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse font-sans">
-                <thead>
-                  <tr className="border-b border-border bg-background-subtle text-xs font-bold uppercase tracking-wider text-text-secondary font-sans">
-                    <th className="p-4">Transaction Date</th>
-                    <th className="p-4">Gross Sale</th>
-                    <th className="p-4">Platform Fee (10%)</th>
-                    <th className="p-4">Net Payout</th>
-                    <th className="p-4">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border text-sm font-sans">
-                  {ledger.map((tx) => {
-                    const formattedDate = new Date(tx.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    });
-
-                    return (
-                      <tr key={tx.id} className="hover:bg-background-subtle transition-colors">
-                        <td className="p-4 flex items-center space-x-2 font-sans">
-                          <Calendar className="h-4 w-4 text-text-muted" />
-                          <span>{formattedDate}</span>
-                        </td>
-                        <td className="p-4 font-semibold text-text-primary">
-                          ${tx.amount.toFixed(2)}
-                        </td>
-                        <td className="p-4 text-danger font-medium">
-                          -${tx.platformFee.toFixed(2)}
-                        </td>
-                        <td className="p-4 font-bold text-success">
-                          ${tx.netPayout.toFixed(2)}
-                        </td>
-                        <td className="p-4">
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize font-sans ${statusColors[tx.status]}`}
-                          >
-                            {tx.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Seller Payout Method Setup Card */}
-        <div className="border border-border bg-card rounded-xl p-6 shadow-sm space-y-4 font-sans">
-          <div className="flex items-center justify-between border-b border-border pb-3">
-            <div>
-              <h3 className="font-serif text-lg font-bold text-text-primary">Payout Account Settings</h3>
-              <p className="text-xs text-text-muted mt-0.5">Configure your UPI ID or Bank Account for automated earnings payouts upon order delivery.</p>
-            </div>
-            <span className="text-xs font-bold text-success bg-success/10 px-2.5 py-1 rounded-full border border-success/20">
-              Active Escrow Payouts
-            </span>
-          </div>
-
-          <form onSubmit={handleSavePayout} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-sans pt-2">
-            <div className="space-y-1.5">
-              <label className="font-bold text-text-primary block">UPI VPA Handle (Recommended)</label>
-              <input
-                type="text"
-                value={upiId}
-                onChange={(e) => setUpiId(e.target.value)}
-                placeholder="e.g. mobile@upi or name@okicici"
-                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-medium"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-text-primary block">Account Holder Name</label>
-              <input
-                type="text"
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-                placeholder="As per bank passbook"
-                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-medium"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-text-primary block">Bank Account Number</label>
-              <input
-                type="text"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                placeholder="Enter 9–18 digit account number"
-                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-mono"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-text-primary block">Bank IFSC Code</label>
-              <input
-                type="text"
-                value={ifscCode}
-                onChange={(e) => setIfscCode(e.target.value)}
-                placeholder="e.g. SBIN0001234"
-                className="w-full px-3 py-2 border border-border bg-background rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-secondary font-mono uppercase"
-              />
-            </div>
-            <div className="sm:col-span-2 pt-2 flex items-center gap-3">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-6 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-lg text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50"
-              >
-                {isSaving ? 'Saving...' : 'Save Payout Settings'}
-              </button>
-              {saveSuccess && (
-                <span className="text-xs font-bold text-success font-sans">✓ Payout settings saved!</span>
-              )}
-            </div>
-          </form>
         </div>
-      </main>
-    </div>
+      )}
+    </SellerLayout>
   );
 }

@@ -43,12 +43,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-sans font-semibold transition-all focus:outline-none focus-ring disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] duration-120 select-none';
+      'inline-flex items-center justify-center font-sans font-bold tracking-tight transition-all focus:outline-none focus-ring disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] duration-150 select-none touch-manipulation';
 
     const variants = {
-      primary: 'bg-primary text-primary-foreground hover:bg-primary-500 focus:ring-primary',
-      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary-600 focus:ring-secondary',
-      outline: 'border border-border bg-card text-text-primary hover:bg-muted focus:ring-primary',
+      primary: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary-500 hover:shadow-md focus:ring-primary',
+      secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary-600 hover:shadow-md focus:ring-secondary',
+      outline: 'border border-border bg-card text-text-primary shadow-sm hover:bg-muted hover:border-ring/40 focus:ring-primary',
       ghost: 'text-text-primary hover:bg-muted focus:ring-primary',
       link: 'text-primary underline-offset-4 hover:underline focus:ring-primary p-0 bg-transparent hover:bg-transparent active:scale-100',
       danger: 'bg-danger text-danger-foreground hover:bg-danger/90 focus:ring-danger',
@@ -60,8 +60,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const sizes = {
       xs: iconOnly ? 'p-1.5 text-xs min-h-[28px] min-w-[28px]' : 'px-2.5 py-1 text-xs min-h-[28px]',
-      sm: iconOnly ? 'p-2 text-xs min-h-[36px] min-w-[36px]' : 'px-3.5 py-1.5 text-xs sm:text-sm font-medium min-h-[36px]',
-      md: iconOnly ? 'p-2.5 text-sm min-h-[42px] min-w-[42px]' : 'px-5 py-2.5 text-sm font-semibold min-h-[42px]',
+      sm: iconOnly ? 'p-2 text-xs min-h-[40px] min-w-[40px]' : 'px-3.5 py-1.5 text-xs sm:text-sm font-medium min-h-[40px]',
+      md: iconOnly ? 'p-2.5 text-sm min-h-[44px] min-w-[44px]' : 'px-5 py-2.5 text-sm font-semibold min-h-[44px]',
       lg: iconOnly ? 'p-3 text-base min-h-[48px] min-w-[48px]' : 'px-6 py-3 text-sm sm:text-base font-bold min-h-[48px]',
       xl: iconOnly ? 'p-4 text-lg min-h-[52px] min-w-[52px]' : 'px-8 py-3.5 text-base sm:text-lg font-bold min-h-[52px]',
     };

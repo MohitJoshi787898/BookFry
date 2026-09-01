@@ -60,7 +60,7 @@ export function FAQSection({
       aria-label={title}
       className="py-12 sm:py-16 bg-background border-b border-border/80 transition-colors duration-200"
     >
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-8 font-sans">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 space-y-8 font-sans">
         {/* Header */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20 text-[10px] sm:text-xs font-extrabold uppercase tracking-widest">

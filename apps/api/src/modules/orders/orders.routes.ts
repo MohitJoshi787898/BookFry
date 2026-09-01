@@ -14,6 +14,9 @@ import { asyncHandler } from '../../utils/asyncHandler';
 const router = Router();
 const controller = new OrdersController();
 
+// Public Courier Tracking Webhook (verified via courier webhook signature)
+router.post('/courier-webhook', asyncHandler(controller.courierWebhook));
+
 router.use(requireAuth);
 
 // Invoice endpoint (requires auth & ownership validation)
@@ -38,7 +41,12 @@ router.post(
   asyncHandler(controller.requestReturn)
 );
 
-// Order status mutation & returns resolution
+// Order status mutation, AWB generation & returns resolution
+router.post(
+  '/:orderId/sub-orders/:subOrderId/generate-awb',
+  requireRoles(['seller', 'admin']),
+  asyncHandler(controller.generateSubOrderAwb)
+);
 router.patch(
   '/:orderId/sub-orders/:subOrderId/status',
   requireRoles(['seller', 'admin']),

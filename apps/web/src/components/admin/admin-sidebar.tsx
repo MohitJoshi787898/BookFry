@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   LayoutDashboard,
   BookOpen,
@@ -19,10 +20,11 @@ import {
   Star,
   MessageSquare,
   Sparkles,
-  ChevronRight as ArrowRightIcon,
-} from 'lucide-react';
+  ArrowRight,
+  Activity,
+} from "lucide-react";
 
-interface AdminSidebarProps {
+export interface AdminSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -41,64 +43,83 @@ interface NavGroup {
 
 const navigationGroups: NavGroup[] = [
   {
-    title: 'OVERVIEW & ANALYTICS',
+    title: "Overview",
     items: [
-      { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-      { name: 'Financial Analytics', href: '/admin/reports', icon: BarChart3 },
+      { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+      { name: "Financial Reports", href: "/admin/reports", icon: BarChart3 },
     ],
   },
   {
-    title: 'MARKETPLACE & ORDERS',
+    title: "Marketplace",
     items: [
-      { name: 'Book Listings', href: '/admin/listings', icon: BookOpen, badge: 'Moderation' },
-      { name: 'Orders & Refunds', href: '/admin/orders', icon: ShoppingBag },
-      { name: 'Used Book Requests', href: '/admin/requests', icon: MessageSquare, badge: 'P2P' },
-      { name: 'Categories', href: '/admin/categories', icon: Layers },
-      { name: 'Promotions & Coupons', href: '/admin/promotions', icon: Tag },
-      { name: 'Book Reviews', href: '/admin/reviews', icon: Star },
+      {
+        name: "Book Listings",
+        href: "/admin/listings",
+        icon: BookOpen,
+        badge: "Queue",
+      },
+      { name: "Orders & Refunds", href: "/admin/orders", icon: ShoppingBag },
+      {
+        name: "Used Book Leads",
+        href: "/admin/requests",
+        icon: MessageSquare,
+        badge: "P2P",
+      },
+      { name: "Categories Taxonomy", href: "/admin/categories", icon: Layers },
+      { name: "Promotions & Coupons", href: "/admin/promotions", icon: Tag },
+      { name: "Reviews Moderation", href: "/admin/reviews", icon: Star },
     ],
   },
   {
-    title: 'USERS & SUPPORT',
+    title: "People",
     items: [
-      { name: 'Users & Sellers', href: '/admin/users', icon: Users },
-      { name: 'Support Tickets', href: '/admin/support', icon: MessageSquare, badge: 'Helpdesk' },
+      { name: "Users & Sellers", href: "/admin/users", icon: Users },
+      {
+        name: "Support Helpdesk",
+        href: "/admin/support",
+        icon: MessageSquare,
+        badge: "Tickets",
+      },
     ],
   },
   {
-    title: 'SYSTEM & CONTENT',
+    title: "System",
     items: [
-      { name: 'CMS & Banners', href: '/admin/cms', icon: FileText },
-      { name: 'System Settings', href: '/admin/settings', icon: Settings },
+      { name: "Storefront CMS", href: "/admin/cms", icon: FileText },
+      { name: "System Settings", href: "/admin/settings", icon: Settings },
     ],
   },
 ];
 
 function QuickActionsCard() {
   const actions = [
-    { label: 'Add New Book', href: '/admin/listings' },
-    { label: 'Add Banner', href: '/admin/cms' },
-    { label: 'Send Announcement', href: '/admin/cms' },
-    { label: 'Platform Settings', href: '/admin/settings' },
+    { label: "Moderate Listings", href: "/admin/listings" },
+    { label: "Manage Banners", href: "/admin/cms" },
+    { label: "Issue Coupon", href: "/admin/promotions" },
+    { label: "Platform Settings", href: "/admin/settings" },
   ];
 
   return (
-    <div className="bg-muted/40 border border-border/80 rounded-2xl p-4 space-y-3 font-sans mx-1 shadow-xs">
-      <div className="flex items-center justify-between">
-        <h4 className="text-[10px] font-black uppercase tracking-wider text-foreground flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-[#F26522]" />
-          <span>Quick Actions</span>
-        </h4>
+    <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/80 p-3.5 shadow-sm backdrop-blur-sm">
+      <div className="absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-secondary/80 to-transparent" />
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-foreground">
+          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-secondary/12 text-secondary">
+            <Sparkles className="h-3 w-3" />
+          </span>
+          Quick Shortcuts
+        </div>
       </div>
-      <div className="space-y-2 text-[11px] font-semibold text-muted-foreground">
-        {actions.map((act) => (
+
+      <div className="space-y-1.5">
+        {actions.map((action) => (
           <Link
-            key={act.label}
-            href={act.href}
-            className="flex items-center justify-between hover:text-[#F26522] transition-colors py-0.5 active:scale-95"
+            key={action.label}
+            href={action.href}
+            className="group flex items-center justify-between rounded-xl border border-transparent px-2.5 py-2 text-[11px] font-semibold text-muted-foreground transition-all duration-200 hover:border-border hover:bg-muted/80 hover:text-foreground"
           >
-            <span>{act.label}</span>
-            <ArrowRightIcon className="h-3 w-3 opacity-60" />
+            <span>{action.label}</span>
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-secondary" />
           </Link>
         ))}
       </div>
@@ -106,99 +127,165 @@ function QuickActionsCard() {
   );
 }
 
-function SidebarItem({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+function SidebarItem({
+  item,
+  collapsed,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+}) {
   const pathname = usePathname();
-  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+  const isActive =
+    pathname === item.href ||
+    (item.href !== "/admin/dashboard" && pathname.startsWith(item.href));
   const Icon = item.icon;
 
   return (
     <Link
       href={item.href}
-      className={`flex items-center space-x-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-150 ${
+      className={`group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
+        collapsed ? "justify-center px-2.5" : ""
+      } ${
         isActive
-          ? 'bg-[#F26522]/10 text-[#F26522] font-black border-l-4 border-[#F26522] shadow-xs'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-      } ${collapsed ? 'justify-center px-0' : ''}`}
+          ? "bg-gradient-to-r from-primary/5 via-primary/5 to-secondary/8 text-foreground shadow-[inset_0_1px_0_hsl(var(--card)),0_10px_25px_hsl(var(--shadow-color)/0.08)] ring-1 ring-primary/10"
+          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+      }`}
       title={collapsed ? item.name : undefined}
     >
-      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#F26522]' : 'text-muted-foreground'}`} />
-      {!collapsed && <span className="truncate flex-grow">{item.name}</span>}
-      {!collapsed && item.badge && (
-        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#F26522]/15 text-[#F26522] border border-[#F26522]/20">
-          {item.badge}
-        </span>
+      {isActive && !collapsed && (
+        <span className="absolute inset-y-1.5 left-1.5 w-1 rounded-full bg-secondary" />
+      )}
+      <span
+        className={`relative flex h-8 w-8 items-center justify-center rounded-xl border transition-all duration-200 ${
+          isActive
+            ? "border-secondary/20 bg-secondary/10 text-secondary shadow-sm"
+            : "border-transparent bg-muted/50 text-muted-foreground group-hover:border-border group-hover:bg-muted group-hover:text-foreground"
+        }`}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+
+      {!collapsed && (
+        <>
+          <span className="flex-1 truncate text-left">{item.name}</span>
+          {item.badge && (
+            <span className="inline-flex items-center rounded-full border border-border bg-background/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+              {item.badge}
+            </span>
+          )}
+        </>
       )}
     </Link>
   );
 }
 
-export function AdminSidebar({ collapsed, onToggleCollapse }: AdminSidebarProps) {
+export function AdminSidebar({
+  collapsed,
+  onToggleCollapse,
+}: AdminSidebarProps) {
   return (
     <aside
-      className={`relative bg-card border-r border-border/80 flex flex-col transition-all duration-300 z-30 font-sans ${
-        collapsed ? 'w-16' : 'w-64'
+      className={`hidden md:flex flex-col border-r border-border/80 bg-gradient-to-b from-card via-card to-muted/80 backdrop-blur-lg transition-all duration-300 ease-out z-30 ${
+        collapsed ? "w-20" : "w-72"
       }`}
     >
-      {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-border/80 bg-background/50">
-        {!collapsed && (
-          <Link href="/admin/dashboard" className="flex items-center space-x-2.5">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#1A3B5C] to-[#F26522] flex items-center justify-center text-white font-serif font-black text-sm shadow-md">
-              BF
-            </div>
-            <div className="flex flex-col">
-              <span className="font-serif text-base font-extrabold text-foreground leading-tight tracking-tight">BookFry</span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#F26522]">ADMIN PANEL</span>
-            </div>
-          </Link>
-        )}
-        {collapsed && (
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#1A3B5C] to-[#F26522] flex items-center justify-center text-white font-serif font-black text-sm shadow-md mx-auto">
-            BF
-          </div>
-        )}
+      <div className="relative flex h-full flex-col">
+        <div className="absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-border to-transparent" />
 
-        <button
-          onClick={onToggleCollapse}
-          className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all hidden sm:block active:scale-95"
-          aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
-      </div>
+        <div className="flex items-center justify-between border-b border-border/80 px-4 py-4">
+          {!collapsed ? (
+            <Link
+              href="/admin/dashboard"
+              className="flex min-w-0 items-center gap-3"
+            >
+              <div className="relative h-10 w-10 overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-primary/10 via-card to-secondary/10 shadow-sm">
+                <Image
+                  src="/assets/bookfry/bookfry-fox-pointing.webp"
+                  alt="BookFry Mascot"
+                  fill
+                  sizes="40px"
+                  className="object-contain"
+                />
+              </div>
 
-      {/* Navigation Lists */}
-      <div className="flex-grow overflow-y-auto py-4 px-3 space-y-6">
-        {navigationGroups.map((group) => (
-          <div key={group.title} className="space-y-1.5">
-            {!collapsed && (
-              <h4 className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/70 px-3.5 mb-2">
-                {group.title}
-              </h4>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-black tracking-[-0.02em] text-foreground">
+                  BookFry
+                </div>
+                <div className="truncate text-[9px] font-black uppercase tracking-[0.2em] text-secondary">
+                  Admin Console
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="mx-auto flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-primary/10 via-card to-secondary/10 shadow-sm">
+              <Image
+                src="/assets/bookfry/bookfry-fox-pointing.webp"
+                alt="BookFry Mascot"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={onToggleCollapse}
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-border/80 bg-background/70 text-muted-foreground transition-all duration-200 hover:border-border hover:bg-muted hover:text-foreground active:scale-[0.98]"
+            aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
             )}
+          </button>
+        </div>
 
-            {group.items.map((item) => (
-              <SidebarItem key={item.name} item={item} collapsed={collapsed} />
-            ))}
-          </div>
-        ))}
+        <div className="flex-1 space-y-5 overflow-y-auto px-2.5 py-4">
+          {navigationGroups.map((group) => (
+            <div key={group.title} className="space-y-1.5">
+              {!collapsed && (
+                <div className="px-3 pb-1 pt-1 text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground/80">
+                  {group.title}
+                </div>
+              )}
 
-        {/* Quick Actions Panel */}
-        {!collapsed && <QuickActionsCard />}
-      </div>
+              {group.items.map((item) => (
+                <SidebarItem
+                  key={item.name}
+                  item={item}
+                  collapsed={collapsed}
+                />
+              ))}
+            </div>
+          ))}
 
-      {/* Footer Storefront Toggle link */}
-      <div className="p-3 border-t border-border/80 bg-background/30">
-        <Link
-          href="/"
-          className={`flex items-center space-x-2.5 p-3 rounded-2xl text-xs font-bold text-muted-foreground hover:bg-muted hover:text-[#F26522] transition-all ${
-            collapsed ? 'justify-center' : ''
-          }`}
-          title="Back to Customer Storefront"
-        >
-          <Store className="h-4.5 w-4.5 text-muted-foreground shrink-0" />
-          {!collapsed && <span>Back to Storefront</span>}
-        </Link>
+          {!collapsed && <QuickActionsCard />}
+        </div>
+
+        <div className="border-t border-border/80 bg-background/40 px-2.5 py-3">
+          {!collapsed && (
+            <div className="mb-2 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+              <Activity className="h-3.5 w-3.5 text-emerald-500" />
+              Telemetry Online
+            </div>
+          )}
+
+          <Link
+            href="/"
+            target="_blank"
+            className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-all duration-200 hover:bg-muted/80 hover:text-foreground ${
+              collapsed ? "justify-center px-2.5" : ""
+            }`}
+            title="Back to Customer Storefront"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-border/80 bg-muted/60 text-muted-foreground">
+              <Store className="h-4 w-4" />
+            </span>
+            {!collapsed && <span>Storefront View</span>}
+          </Link>
+        </div>
       </div>
     </aside>
   );

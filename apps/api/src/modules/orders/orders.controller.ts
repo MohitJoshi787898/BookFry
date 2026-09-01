@@ -110,5 +110,18 @@ export class OrdersController {
     const orders = await this.ordersService.getAdminOrders(statusFilter);
     res.status(200).json(ApiResponse.success(orders));
   };
+
+  generateSubOrderAwb = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    const roles = req.user!.roles;
+    const { orderId, subOrderId } = req.params;
+    const result = await this.ordersService.generateSubOrderAwb(orderId, subOrderId, userId, roles);
+    res.status(200).json(ApiResponse.success(result));
+  };
+
+  courierWebhook = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.ordersService.processCourierWebhook(req.body);
+    res.status(200).json(ApiResponse.success(result));
+  };
 }
 export default OrdersController;

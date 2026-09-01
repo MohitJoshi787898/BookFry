@@ -178,7 +178,7 @@ export function Navbar() {
         }`}
       >
         {/* ── Desktop (lg+) ──────────────────────────────────────────── */}
-        <div className="hidden lg:flex items-center gap-3.5 px-8 xl:px-12 h-16 w-full max-w-screen-2xl mx-auto">
+        <div className="hidden lg:flex items-center gap-3.5 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 h-16 w-full">
           {/* Logo */}
           <BookFryLogo />
 
@@ -388,9 +388,9 @@ export function Navbar() {
         {/* ── Desktop Category Bar ────────────────────────────────────── */}
         <nav
           aria-label="Book categories"
-          className="hidden lg:flex w-full border-t border-border/60 bg-muted/50 dark:bg-muted/30 px-8 xl:px-12 h-10 items-center gap-0 overflow-x-auto no-scrollbar"
+          className="hidden lg:flex w-full border-t border-border/60 bg-muted/50 dark:bg-muted/30 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 h-10 items-center gap-0 overflow-x-auto no-scrollbar"
         >
-          <div className="flex items-center gap-1 w-full max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-1 w-full">
             {categorySubnav.map((cat) => (
               <Link
                 key={cat.name}
@@ -488,7 +488,7 @@ export function Navbar() {
                         <Store className="h-4 w-4" />
                         <span>Seller Dashboard</span>
                       </span>
-                      <span className="bg-secondary text-white text-[9px] px-2 py-0.5 rounded-full font-black uppercase">
+                      <span className="bg-secondary text-secondary-foreground text-xs px-2.5 py-0.5 rounded-full font-black uppercase">
                         Portal
                       </span>
                     </Link>

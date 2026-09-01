@@ -35,7 +35,7 @@ export function PushNotificationBanner() {
 
   return (
     <div className="bg-brand/10 border-b border-brand/20 px-4 py-2.5 text-xs text-foreground font-sans transition-all">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div className="w-full flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="p-1 rounded-lg bg-brand text-brand-foreground shrink-0">
             <Bell className="h-3.5 w-3.5" />

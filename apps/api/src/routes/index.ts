@@ -17,10 +17,12 @@ import recommendationsRoutes from '../modules/recommendations/recommendations.ro
 import couponsRoutes from '../modules/coupons/coupons.routes';
 import usedBookRequestsRoutes from '../modules/used-book-requests/used-book-requests.routes';
 
+import healthRoutes from '../modules/health/health.routes';
 import { publicLandingRouter, adminLandingRouter } from '../modules/landing/landing.routes';
 
 const router = Router();
 
+router.use('/health', healthRoutes);
 router.use('/', publicLandingRouter);
 router.use('/admin/landing', adminLandingRouter);
 

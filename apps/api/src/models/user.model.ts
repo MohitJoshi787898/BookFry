@@ -46,6 +46,22 @@ export interface IUserDocument extends Document {
   updatedAt: Date;
 }
 
+const PointSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+      default: 'Point',
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const AddressSchema = new Schema<IAddress>({
   street: { type: String, required: true },
   city: { type: String, required: true },
@@ -54,15 +70,9 @@ const AddressSchema = new Schema<IAddress>({
   country: { type: String, required: true },
   isDefault: { type: Boolean, default: false },
   location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point',
-    },
-    coordinates: {
-      type: [Number],
-      default: undefined,
-    },
+    type: PointSchema,
+    default: undefined,
+    required: false,
   },
 });
 

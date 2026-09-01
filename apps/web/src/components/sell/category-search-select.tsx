@@ -70,12 +70,12 @@ export function CategorySearchSelect({
           error
             ? 'border-rose-500 ring-2 ring-rose-500/20'
             : open
-            ? 'border-[#F26522] ring-2 ring-[#F26522]/20'
-            : 'border-border/80 hover:border-[#F26522]/50'
+            ? 'border-secondary ring-2 ring-secondary/20'
+            : 'border-border/80 hover:border-secondary/50'
         }`}
       >
         <div className="flex items-center space-x-2.5 truncate">
-          <Layers className="h-4 w-4 text-[#F26522] shrink-0" />
+          <Layers className="h-4 w-4 text-secondary shrink-0" />
           {selectedCategory ? (
             <span className="font-extrabold text-foreground truncate">{selectedCategory.name}</span>
           ) : (
@@ -97,7 +97,7 @@ export function CategorySearchSelect({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search Engineering, Medical, Novels..."
-              className="w-full pl-9 pr-4 py-2 text-xs border border-border/60 rounded-xl bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#F26522]"
+              className="w-full pl-9 pr-4 py-2 text-xs border border-border/60 rounded-xl bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-secondary"
             />
           </div>
 
@@ -118,12 +118,12 @@ export function CategorySearchSelect({
                     }}
                     className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-[#F26522]/10 text-[#F26522] font-black'
+                        ? 'bg-secondary/10 text-secondary font-black'
                         : 'hover:bg-muted text-foreground font-semibold'
                     }`}
                   >
                     <span>{opt.name}</span>
-                    {isSelected && <Check className="h-4 w-4 text-[#F26522]" />}
+                    {isSelected && <Check className="h-4 w-4 text-secondary" />}
                   </div>
                 );
               })

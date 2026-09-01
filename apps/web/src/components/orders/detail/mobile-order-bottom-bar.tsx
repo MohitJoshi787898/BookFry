@@ -37,7 +37,7 @@ export function MobileOrderBottomBar({ order }: MobileOrderBottomBarProps) {
         <Link
           href={`/orders/${order.orderNumber}/invoice`}
           target="_blank"
-          className="flex-1 py-2.5 px-3 rounded-2xl bg-[#F26522] hover:bg-[#D64E0F] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md shadow-[#F26522]/20 active:scale-95 transition-transform"
+          className="flex-1 py-2.5 px-3 rounded-2xl bg-secondary hover:bg-secondary/80 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md shadow-secondary/20 active:scale-95 transition-transform"
         >
           <Download className="h-4 w-4" />
           <span>Tax Bill PDF</span>

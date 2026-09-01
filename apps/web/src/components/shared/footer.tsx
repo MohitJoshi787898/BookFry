@@ -129,7 +129,7 @@ export function Footer() {
       <FooterTrustBar />
 
       {/* 2. Main Content Container */}
-      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 pt-10 pb-10 space-y-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 pt-10 pb-10 space-y-10">
         
         {/* Mobile Native Quick Launcher Grid */}
         <FooterMobileAppGrid />
@@ -138,16 +138,16 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-6">
             <Link href="/" className="inline-flex items-center gap-3 group select-none">
-              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#1A3B5C] to-[#F26522] flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+              <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
                 <BookOpen className="h-6 w-6 text-white" />
               </div>
               <span className="text-2xl font-black tracking-tight text-foreground font-serif">
-                Book<span className="text-[#F26522]">Fry</span>
+                Book<span className="text-secondary">Fry</span>
               </span>
             </Link>
 
             <div className="space-y-1.5">
-              <p className="font-serif italic text-[#F26522] font-bold text-sm leading-snug">
+              <p className="font-serif italic text-secondary font-bold text-sm leading-snug">
                 &ldquo;क्योंकि.. पढ़ाई रुकनी नहीं चाहिए&rdquo;
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed max-w-xs font-medium">
@@ -166,7 +166,7 @@ export function Footer() {
                     aria-label={label}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-9 w-9 rounded-2xl bg-muted/60 border border-border/80 text-muted-foreground hover:bg-[#F26522] hover:text-white hover:border-[#F26522] transition-all flex items-center justify-center active:scale-95 shadow-xs"
+                    className="h-9 w-9 rounded-2xl bg-muted/60 border border-border/80 text-muted-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary transition-all flex items-center justify-center active:scale-95 shadow-xs"
                   >
                     {icon}
                   </a>
@@ -178,17 +178,17 @@ export function Footer() {
             <div className="space-y-2 text-xs font-medium text-muted-foreground">
               <a
                 href="mailto:support@bookfry.in"
-                className="flex items-center gap-2 hover:text-[#F26522] transition-colors"
+                className="flex items-center gap-2 hover:text-secondary transition-colors"
               >
-                <Mail className="h-3.5 w-3.5 text-[#F26522] shrink-0" />
+                <Mail className="h-3.5 w-3.5 text-secondary shrink-0" />
                 support@bookfry.in
               </a>
               <div className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-[#F26522] shrink-0" />
+                <Phone className="h-3.5 w-3.5 text-secondary shrink-0" />
                 +91 98765 43210
               </div>
               <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-[#F26522] shrink-0" />
+                <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
                 Bengaluru, Karnataka, India
               </div>
             </div>
@@ -216,7 +216,7 @@ export function Footer() {
 
       {/* 5. Bottom Copyright Bar */}
       <div className="border-t border-border/60 bg-muted/20">
-        <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-8 lg:px-12 py-5">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Copyright + Legal */}
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
@@ -229,7 +229,7 @@ export function Footer() {
                   <Link
                     key={name}
                     href={href}
-                    className="text-[11px] text-muted-foreground hover:text-[#F26522] font-medium transition-colors"
+                    className="text-[11px] text-muted-foreground hover:text-secondary font-medium transition-colors"
                   >
                     {name}
                   </Link>
@@ -257,7 +257,7 @@ export function Footer() {
                 href="https://razorpay.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-[#F26522] transition-colors font-bold"
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-secondary transition-colors font-bold"
                 aria-label="Powered by Razorpay"
               >
                 Razorpay <ExternalLink className="h-2.5 w-2.5" />
@@ -321,11 +321,11 @@ function FooterSectionAccordion({
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-[#F26522] font-medium transition-colors group"
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-secondary font-medium transition-colors group"
                 >
                   <span className="group-hover:underline underline-offset-2">{link.name}</span>
                   {link.badge && (
-                    <span className="text-[9px] font-extrabold bg-[#F26522]/15 text-[#F26522] px-1.5 py-0.5 rounded-full">
+                    <span className="text-[9px] font-extrabold bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full">
                       {link.badge}
                     </span>
                   )}

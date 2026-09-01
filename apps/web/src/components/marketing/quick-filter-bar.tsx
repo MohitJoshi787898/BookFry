@@ -43,7 +43,7 @@ export function QuickFilterBar() {
 
   return (
     <div className="w-full bg-background/95 backdrop-blur-md border-b border-border/80 py-2.5 px-3 sm:px-6 lg:px-8 transition-colors font-sans shadow-2xs">
-      <div className="mx-auto max-w-7xl flex items-center justify-between gap-3">
+      <div className="w-full flex items-center justify-between gap-3">
         {/* Desktop Filter Pills */}
         <div className="hidden sm:flex items-center space-x-3 overflow-x-auto no-scrollbar">
           <span className="text-xs font-extrabold uppercase tracking-wider text-text-muted shrink-0 mr-1 flex items-center gap-1">

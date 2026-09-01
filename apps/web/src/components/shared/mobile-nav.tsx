@@ -28,7 +28,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-header border-t border-border/80 shadow-2xl transition-all duration-300"
+      className="md:hidden fixed bottom-3 left-3 right-3 z-50 rounded-2xl glass-header border border-border/80 shadow-2xl transition-all duration-300"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-center justify-around max-w-lg mx-auto relative px-1 pt-1 pb-2">
@@ -70,7 +70,7 @@ export function MobileNav() {
                 whileTap={{ scale: 0.85 }}
                 className={`relative flex items-center justify-center p-1.5 rounded-xl transition-all duration-200 ${
                   isActive
-                    ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary'
+                    ? 'bg-secondary/15 text-secondary'
                     : 'text-muted-foreground group-hover:text-foreground'
                 }`}
               >
@@ -81,16 +81,16 @@ export function MobileNav() {
                 />
 
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 bg-secondary text-secondary-foreground text-[10px] font-black rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 bg-secondary text-secondary-foreground text-xs font-black rounded-full flex items-center justify-center shadow-sm">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </motion.div>
 
               <span
-                className={`text-[11px] tracking-tight leading-none mt-0.5 transition-all duration-200 ${
+                className={`text-xs tracking-tight leading-none mt-1 transition-all duration-200 ${
                   isActive
-                    ? 'font-extrabold text-primary dark:text-primary'
+                    ? 'font-extrabold text-secondary'
                     : 'font-medium text-muted-foreground group-hover:text-foreground'
                 }`}
               >
@@ -100,7 +100,7 @@ export function MobileNav() {
               {isActive && (
                 <motion.div
                   layoutId="activeTabIndicator"
-                  className="absolute bottom-0 w-4 h-0.5 bg-primary dark:bg-primary rounded-full"
+                  className="absolute bottom-0 w-5 h-0.5 bg-secondary rounded-full"
                   transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
               )}

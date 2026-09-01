@@ -50,7 +50,7 @@ export function ProfileNav({ activeSection, onSelectSection, onLogout }: Profile
                 onClick={() => onSelectSection(s.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all shadow-sm active:scale-95 ${
                   isActive
-                    ? "bg-[#1A3B5C] text-white shadow-md shadow-[#1A3B5C]/20 border border-[#1A3B5C]"
+                    ? "bg-primary text-primary-foreground shadow-md border border-primary"
                     : "bg-card text-muted-foreground border border-border/80 hover:text-foreground"
                 }`}
               >
@@ -92,7 +92,7 @@ export function ProfileNav({ activeSection, onSelectSection, onLogout }: Profile
                 onClick={() => onSelectSection(s.id)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all duration-150 w-full text-left active:scale-98 ${
                   isActive
-                    ? "bg-[#1A3B5C] text-white shadow-md shadow-[#1A3B5C]/20"
+                  ? "bg-primary text-primary-foreground shadow-md"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >

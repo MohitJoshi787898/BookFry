@@ -6,8 +6,8 @@ import { Store, ArrowRight, Zap, ShieldCheck } from 'lucide-react';
 
 export function FooterSellCTA() {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A3B5C] via-[#15304B] to-[#F26522] text-white p-6 sm:p-8 shadow-2xl border border-white/10 font-sans">
-      <div className="absolute top-0 right-0 -translate-y-10 translate-x-10 w-80 h-80 bg-[#F26522]/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="dark-section relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-secondary text-white p-6 sm:p-8 shadow-2xl border border-white/10 font-sans">
+      <div className="absolute top-0 right-0 -translate-y-10 translate-x-10 w-80 h-80 bg-secondary/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 translate-y-10 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
@@ -37,7 +37,7 @@ export function FooterSellCTA() {
           </div>
           <Link
             href="/sell"
-            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 shadow-xl shadow-[#F26522]/30 text-center"
+            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 shadow-xl text-center"
           >
             <span>Start Selling Now</span>
             <ArrowRight className="h-4 w-4" />

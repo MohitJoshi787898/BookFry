@@ -63,7 +63,7 @@ export function CategoryGridSkeleton({ count = 6 }: SkeletonGridProps) {
 
 export function BookDetailsSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+    <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 space-y-12">
       {/* Breadcrumb Skeleton */}
       <div className="h-4 w-64 bg-background-subtle rounded animate-pulse" />
 
@@ -119,7 +119,7 @@ export function BookDetailsSkeleton() {
 
 export function CartSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 space-y-8">
       <div className="h-8 w-48 bg-background-subtle rounded animate-pulse" />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -164,7 +164,7 @@ export function CartSkeleton() {
 
 export function SellerDashboardSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 space-y-8">
       <div className="h-8 w-64 bg-background-subtle rounded animate-pulse" />
 
       {/* Stat Cards */}

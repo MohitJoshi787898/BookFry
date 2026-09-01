@@ -30,6 +30,22 @@ export interface IBookListingDocument extends Document {
   updatedAt: Date;
 }
 
+const PointSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+      default: 'Point',
+    },
+    coordinates: {
+      type: [Number], // [lng, lat]
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
 const BookListingSchema = new Schema<IBookListingDocument>(
   {
     catalogId: {
@@ -57,15 +73,9 @@ const BookListingSchema = new Schema<IBookListingDocument>(
     pincode: { type: String, trim: true },
     campusName: { type: String, trim: true },
     location: {
-      type: {
-        type: String,
-        enum: ['Point'],
-        default: 'Point',
-      },
-      coordinates: {
-        type: [Number], // [lng, lat]
-        default: undefined,
-      },
+      type: PointSchema,
+      default: undefined,
+      required: false,
     },
     status: {
       type: String,

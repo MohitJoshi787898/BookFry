@@ -109,7 +109,7 @@ export function Select({
           disabled={disabled || loading}
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'w-full bg-card text-text-primary border border-border text-sm rounded-lg min-h-[42px] px-3.5 py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary flex items-center justify-between text-left disabled:opacity-50 disabled:bg-muted font-medium',
+            'w-full bg-card text-text-primary border border-border/80 text-sm rounded-lg min-h-[48px] sm:min-h-[44px] px-3.5 py-2.5 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary flex items-center justify-between text-left disabled:opacity-50 disabled:bg-muted font-medium',
             isOpen ? 'ring-2 ring-secondary/30 border-secondary' : '',
             error ? 'border-danger focus:ring-danger/30 focus:border-danger' : '',
             className

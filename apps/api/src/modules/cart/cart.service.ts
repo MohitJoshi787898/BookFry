@@ -215,5 +215,65 @@ export class CartService {
       updatedAt: doc.updatedAt.toISOString(),
     };
   }
+
+  async getCartSummary(userId: string): Promise<{
+    items: Array<CartItem & { isAvailable: boolean; currentPrice: number; priceChanged: boolean }>;
+    subtotal: number;
+    shippingFee: number;
+    tax: number;
+    total: number;
+    warnings: string[];
+  }> {
+    const cart = await this.getOrCreateCart(userId);
+    const enrichedItems: Array<CartItem & { isAvailable: boolean; currentPrice: number; priceChanged: boolean }> = [];
+    const warnings: string[] = [];
+    let subtotal = 0;
+
+    for (const item of cart.items) {
+      let listing = await this.listingRepository.findById(item.listingId);
+      if (!listing) {
+        const activeListings = await this.listingRepository.findByCatalogId(item.listingId);
+        if (activeListings && activeListings.length > 0) {
+          listing = activeListings[0];
+        }
+      }
+
+      const isAvailable = Boolean(listing && listing.status === 'active' && listing.stock >= item.quantity);
+      const currentPrice = listing?.price ?? item.priceSnapshot ?? 0;
+      const priceChanged = Boolean(item.priceSnapshot && listing && listing.price !== item.priceSnapshot);
+
+      if (!isAvailable) {
+        const title = (item.listingDetail?.catalog as any)?.title || 'A book in your cart';
+        warnings.push(`"${title}" is currently out of stock or unavailable.`);
+      } else if (priceChanged) {
+        const title = (item.listingDetail?.catalog as any)?.title || 'A book in your cart';
+        warnings.push(`Price for "${title}" changed from ₹${item.priceSnapshot} to ₹${currentPrice}.`);
+      }
+
+      if (isAvailable) {
+        subtotal += currentPrice * item.quantity;
+      }
+
+      enrichedItems.push({
+        ...item,
+        isAvailable,
+        currentPrice,
+        priceChanged,
+      });
+    }
+
+    const shippingFee = subtotal > 499 || subtotal === 0 ? 0 : 49;
+    const tax = parseFloat((subtotal * 0.08).toFixed(2));
+    const total = parseFloat((subtotal + shippingFee + tax).toFixed(2));
+
+    return {
+      items: enrichedItems,
+      subtotal,
+      shippingFee,
+      tax,
+      total,
+      warnings,
+    };
+  }
 }
 export default CartService;

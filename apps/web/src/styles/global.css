@@ -18,22 +18,27 @@
     --primary: 210 56% 23%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Fiery Orange (#F26522) */
-    --secondary: 20 89% 54%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary: Warm Amber Orange (#FF9F2D) */
+    --secondary: 33 100% 59%;
+    --secondary-foreground: 221 32% 12%;
 
-    /* Accent: Warm Sun Gold (#FF9900) */
-    --accent: 36 100% 50%;
-    --accent-foreground: 210 60% 10%;
+    /* Accent: Bright Orange (#FFB347) */
+    --accent: 36 100% 64%;
+    --accent-foreground: 221 32% 12%;
 
     --muted: 28 40% 98%;
     --muted-foreground: 210 15% 45%;
 
     --border: 0 0% 93%;
     --input: 0 0% 93%;
-    --ring: 210 56% 23%;
+    --ring: 33 100% 59%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
+    --surface-sunken: 220 27% 96%;
+    --surface-raised: 0 0% 100%;
+    --surface-interactive: 218 35% 97%;
+    --border-subtle: 218 24% 90%;
+    --shadow-color: 218 28% 18%;
 
     --success: 142 71% 36%;
     --success-foreground: 0 0% 100%;
@@ -57,24 +62,26 @@
     --color-text-muted: #8e8e8e;
     --color-brand: #1a3b5c;
     --color-brand-hover: #0b1e36;
-    --color-accent: #f26522;
+    --color-accent: #ff9f2d;
     --color-success: #1e8e5a;
     --color-warning: #d97706;
     --color-danger: #dc2626;
     --color-info: #2563eb;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
-    --radius-2xl: 24px;
-    --radius-3xl: 32px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-2xl: 28px;
+    --radius-3xl: 36px;
     /* Elevation shadow system */
-    --shadow-2xs: 0 1px 2px rgba(26, 59, 92, 0.03);
-    --shadow-sm: 0 1px 3px rgba(26, 59, 92, 0.05), 0 1px 2px rgba(26, 59, 92, 0.04);
-    --shadow-md: 0 4px 12px rgba(26, 59, 92, 0.07), 0 2px 4px rgba(26, 59, 92, 0.04);
-    --shadow-lg: 0 12px 32px rgba(26, 59, 92, 0.09), 0 4px 8px rgba(26, 59, 92, 0.05);
-    --shadow-xl: 0 20px 48px rgba(26, 59, 92, 0.12), 0 8px 16px rgba(26, 59, 92, 0.06);
-    --shadow-2xl: 0 32px 64px rgba(26, 59, 92, 0.16), 0 12px 24px rgba(26, 59, 92, 0.08);
+    --shadow-2xs: 0 1px 2px rgba(21, 27, 41, 0.04);
+    --shadow-sm: 0 1px 3px rgba(21, 27, 41, 0.06), 0 1px 2px rgba(21, 27, 41, 0.04);
+    --shadow-md: 0 4px 14px rgba(21, 27, 41, 0.08), 0 2px 4px rgba(21, 27, 41, 0.04);
+    --shadow-lg: 0 12px 36px rgba(21, 27, 41, 0.12), 0 4px 8px rgba(21, 27, 41, 0.06);
+    --shadow-xl: 0 20px 52px rgba(21, 27, 41, 0.16), 0 8px 18px rgba(21, 27, 41, 0.08);
+    --shadow-2xl: 0 32px 72px rgba(21, 27, 41, 0.22), 0 12px 28px rgba(21, 27, 41, 0.10);
+    --glow-amber: 0 0 35px rgba(255, 159, 45, 0.22);
+    --glow-amber-lg: 0 0 65px rgba(255, 159, 45, 0.35);
     /* Transition system */
     --transition-fast: 150ms cubic-bezier(0.2, 0, 0, 1);
     --transition-base: 220ms cubic-bezier(0.2, 0, 0, 1);
@@ -85,31 +92,36 @@
   }
 
   .dark {
-    /* Premium Slate Dark Theme */
-    --background: 220 40% 8%;
-    --foreground: 210 20% 98%;
+    /* Premium Deep Navy / Charcoal Dark Theme (#151B29, #1D2535, #242E40) */
+    --background: 221 32% 12%;
+    --foreground: 210 40% 98%;
 
-    --card: 220 40% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 219 29% 16%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 220 40% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 219 29% 16%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 210 55% 48%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 221 32% 12%;
+    --surface-sunken: 221 32% 10%;
+    --surface-raised: 219 29% 16%;
+    --surface-interactive: 218 28% 20%;
+    --border-subtle: 218 25% 25%;
+    --shadow-color: 220 45% 4%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 20 89% 54%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 33 100% 59%;
+    --secondary-foreground: 221 32% 12%;
 
-    --accent: 36 100% 50%;
-    --accent-foreground: 210 60% 10%;
+    --accent: 36 100% 64%;
+    --accent-foreground: 221 32% 12%;
 
-    --muted: 220 40% 10%;
-    --muted-foreground: 210 15% 65%;
+    --muted: 218 28% 20%;
+    --muted-foreground: 218 16% 73%;
 
-    --border: 220 30% 16%;
-    --input: 220 30% 16%;
-    --ring: 210 55% 48%;
+    --border: 218 25% 22%;
+    --input: 218 25% 22%;
+    --ring: 33 100% 59%;
 
     --success: 142 71% 45%;
     --warning: 38 92% 55%;
@@ -117,16 +129,17 @@
     --info: 217 91% 65%;
 
     /* Legacy Token Aliases (Dark) */
-    --color-bg: #0b1320;
-    --color-bg-subtle: #0f1826;
-    --color-surface: #121c2c;
-    --color-border: #1a283d;
+    --color-bg: #151b29;
+    --color-bg-subtle: #192130;
+    --color-surface: #1d2535;
+    --color-card-elevated: #242e40;
+    --color-border: rgba(255, 255, 255, 0.08);
     --color-text-primary: #f8fafc;
-    --color-text-secondary: #94a3b8;
-    --color-text-muted: #64748b;
-    --color-brand: #2a5a8c;
-    --color-brand-hover: #1a3b5c;
-    --color-accent: #f26522;
+    --color-text-secondary: #aeb7c6;
+    --color-text-muted: #7d8798;
+    --color-brand: #ff9f2d;
+    --color-brand-hover: #e97918;
+    --color-accent: #ff9f2d;
     --font-serif: var(--font-sans);
     --font-mono: var(--font-sans);
   }
@@ -151,6 +164,16 @@
     transition:
       background-color 0.2s ease,
       color 0.2s ease;
+    min-width: 320px;
+    overflow-x: clip;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1,
@@ -268,7 +291,7 @@
 
   /* Mobile Safe Area — clears fixed bottom nav (64px) + device home indicator */
   .pb-mobile-nav {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   /* Elevation surface tiers using token system */
@@ -283,4 +306,75 @@
   .tap-scale:active {
     transform: scale(0.96);
   }
+
+  .app-surface {
+    background-color: hsl(var(--surface-raised));
+    border: 1px solid hsl(var(--border-subtle));
+    box-shadow: 0 1px 2px hsl(var(--shadow-color) / 0.14), 0 12px 32px hsl(var(--shadow-color) / 0.08);
+  }
+
+  .app-surface-interactive {
+    background-color: hsl(var(--surface-raised));
+    border: 1px solid hsl(var(--border-subtle));
+    transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
+  }
+
+  .app-surface-interactive:hover {
+    background-color: hsl(var(--surface-interactive));
+    border-color: hsl(var(--ring) / 0.38);
+    box-shadow: 0 12px 32px hsl(var(--shadow-color) / 0.14);
+  }
+
+  @media (max-width: 767px) {
+    body { font-size: 16px; padding-bottom: env(safe-area-inset-bottom, 0px); }
+    input, select, textarea { border-radius: var(--radius-md); }
+    .app-surface, .app-surface-interactive { border-radius: var(--radius-lg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ================================================================
+   * DARK SECTION — Force a permanent dark context for brand sections
+   * (hero, footer, CTAs) that should always appear dark regardless
+   * of the user's light/dark theme preference.
+   * Usage: Add className="dark-section" to the outer wrapper element.
+   * All children can then use standard Tailwind dark: variants or
+   * the CSS variables defined here.
+   * ================================================================ */
+  .dark-section {
+    --background: 221 32% 12%;
+    --foreground: 210 40% 98%;
+    --card: 219 29% 16%;
+    --card-foreground: 210 40% 98%;
+    --muted: 218 28% 20%;
+    --muted-foreground: 218 16% 73%;
+    --border: 218 25% 22%;
+    --input: 218 25% 22%;
+    color: hsl(210 40% 98%);
+  }
+
+  /* Condition badge color helpers — theme-safe semantic classes */
+  .condition-new {
+    @apply bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400;
+  }
+  .condition-like-new {
+    @apply bg-cyan-500/15 text-cyan-700 border-cyan-500/30 dark:text-cyan-400;
+  }
+  .condition-good {
+    @apply bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-400;
+  }
+  .condition-fair {
+    @apply bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400;
+  }
+  .condition-acceptable {
+    @apply bg-orange-500/15 text-secondary border-secondary/30;
+  }
 }
+

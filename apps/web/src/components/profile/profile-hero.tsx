@@ -46,10 +46,10 @@ export function ProfileHero({
     : "Campus Member";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A3B5C] via-[#142F4A] to-[#0F2338] text-white p-5 sm:p-8 lg:p-10 shadow-2xl mb-8 border border-white/10">
+    <div className="dark-section relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-white p-5 sm:p-8 lg:p-10 shadow-2xl mb-8 border border-border">
       {/* Background Radial Glow */}
-      <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#F26522]/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-[#FF9900]/15 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-secondary/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-secondary/15 blur-3xl" />
 
       {/* Decorative Grid Pattern */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
@@ -58,13 +58,13 @@ export function ProfileHero({
         {/* Top Badge & Edit Profile CTA */}
         <div className="flex items-center justify-between gap-3">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-bold text-amber-300 border border-amber-400/20 shadow-sm">
-            <Sparkles className="h-3.5 w-3.5 text-[#FF9900]" />
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
             <span>BookFry Verified Campus Member</span>
           </div>
 
           <button
             onClick={onEditProfileClick}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl bg-[#F26522] hover:bg-[#D64E0F] text-xs font-bold text-white transition-all shadow-md shadow-[#F26522]/25 active:scale-95"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl bg-secondary hover:bg-secondary/90 text-xs font-bold text-secondary-foreground transition-all shadow-md active:scale-95"
           >
             <Edit3 className="h-4 w-4" />
             <span>Edit Profile</span>
@@ -85,14 +85,14 @@ export function ProfileHero({
                   unoptimized={avatarPreview.startsWith("data:")}
                 />
               ) : (
-                <div className="w-full h-full bg-[#F26522]/20 text-[#F26522] flex items-center justify-center font-black text-3xl font-serif">
+                <div className="w-full h-full bg-secondary/20 text-secondary flex items-center justify-center font-black text-3xl font-serif">
                   {profile?.name?.charAt(0) || "?"}
                 </div>
               )}
             </div>
 
             {/* Camera trigger */}
-            <label className="absolute -bottom-1 -right-1 w-9 h-9 rounded-2xl bg-[#F26522] text-white flex items-center justify-center cursor-pointer shadow-lg hover:scale-105 transition-all border-2 border-slate-900 active:scale-95">
+            <label className="absolute -bottom-1 -right-1 w-9 h-9 rounded-2xl bg-secondary text-secondary-foreground flex items-center justify-center cursor-pointer shadow-lg hover:scale-105 transition-all border-2 border-background active:scale-95">
               {isUploadingAvatar ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -126,7 +126,7 @@ export function ProfileHero({
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-1 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-[#F26522]" />
+                <Calendar className="h-3.5 w-3.5 text-secondary" />
                 Member since {formattedDate}
               </span>
               <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
@@ -141,7 +141,7 @@ export function ProfileHero({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-1">
           <div className="rounded-2xl bg-white/5 border border-white/10 p-3.5 sm:p-4 backdrop-blur-md">
             <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
-              <ShoppingBag className="h-3.5 w-3.5 text-[#F26522]" />
+              <ShoppingBag className="h-3.5 w-3.5 text-secondary" />
               <span>Total Orders</span>
             </div>
             <p className="font-mono text-lg sm:text-2xl font-black text-white">
@@ -161,7 +161,7 @@ export function ProfileHero({
 
           <div className="rounded-2xl bg-white/5 border border-white/10 p-3.5 sm:p-4 backdrop-blur-md">
             <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
-              <MapPin className="h-3.5 w-3.5 text-[#FF9900]" />
+              <MapPin className="h-3.5 w-3.5 text-amber-300" />
               <span>Addresses</span>
             </div>
             <p className="font-mono text-lg sm:text-2xl font-black text-white">

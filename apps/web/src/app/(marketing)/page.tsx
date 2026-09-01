@@ -1,4 +1,4 @@
-import React from "react";
+import React, { cache } from "react";
 import { Metadata } from "next";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
@@ -9,7 +9,10 @@ import {
 import { OrganizationJsonLd, WebsiteJsonLd } from "@/components/seo/json-ld";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://bookfry.onrender.com/api/v1";
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:5000/api/v1"
+    : "https://bookfry.onrender.com/api/v1");
 
 export interface LandingPageResponse {
   seo?: {
@@ -29,19 +32,20 @@ export interface LandingPageResponse {
   sections: SectionData[];
 }
 
-async function getLandingData(): Promise<LandingPageResponse | null> {
+const getLandingData = cache(async (): Promise<LandingPageResponse | null> => {
   try {
     const res = await fetch(`${API_BASE_URL}/landing`, {
       next: { tags: ["landing-page"], revalidate: 60 },
+      signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) return null;
     const json = await res.json();
     return json.data || null;
-  } catch (error) {
-    console.error("Failed to fetch SSR landing page data:", error);
+  } catch {
+    // Graceful fallback to default landing sections when API is offline or cold-starting
     return null;
   }
-}
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const data = await getLandingData();

@@ -11,6 +11,7 @@ const controller = new CartController();
 router.use(requireAuth);
 
 router.get('/', asyncHandler(controller.get));
+router.get('/summary', asyncHandler(controller.getSummary));
 router.post('/items', validate({ body: addToCartSchema }), asyncHandler(controller.addItem));
 router.patch(
   '/items/:listingId',

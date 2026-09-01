@@ -6,7 +6,7 @@ import { Search, Tag, Heart, Package, Store } from 'lucide-react';
 
 const QUICK_APP_ACTIONS = [
   { label: 'Browse Books', href: '/books', icon: Search, color: 'text-blue-500 bg-blue-500/10' },
-  { label: 'Sell Books', href: '/sell', icon: Store, color: 'text-[#F26522] bg-[#F26522]/10' },
+  { label: 'Sell Books', href: '/sell', icon: Store, color: 'text-secondary bg-secondary/10' },
   { label: 'Deals & Offers', href: '/books?deals=true', icon: Tag, color: 'text-amber-500 bg-amber-500/10' },
   { label: 'My Orders', href: '/account/orders', icon: Package, color: 'text-emerald-500 bg-emerald-500/10' },
   { label: 'Wishlist', href: '/account/wishlist', icon: Heart, color: 'text-rose-500 bg-rose-500/10' },

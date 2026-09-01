@@ -25,7 +25,7 @@ export interface SellerOffer {
 
 interface SellerOffersListProps {
   catalogBook: Book;
-  offers: SellerOffer[];
+  offers?: SellerOffer[];
 }
 
 export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListProps) {

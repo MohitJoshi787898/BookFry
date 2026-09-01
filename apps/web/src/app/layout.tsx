@@ -1,7 +1,9 @@
 import "./globals.css";
+import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { OrganizationJsonLd, WebsiteJsonLd } from "@/components/seo/json-ld";
 
 const sans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -11,16 +13,30 @@ const sans = Plus_Jakarta_Sans({
   adjustFontFallback: true,
 });
 
-export const metadata = {
+export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://bookfry.in"
+  ),
   title: "BookFry — Buy & Sell Books",
   description:
     "India's book marketplace. Buy & sell new and pre-owned books with ease.",
+  keywords: [
+    "buy books india",
+    "sell used books",
+    "second hand books",
+    "book marketplace india",
+    "cheap textbooks",
+    "BookFry",
+  ],
+  robots: { index: true, follow: true },
+  alternates: { canonical: "https://bookfry.in" },
   openGraph: {
     title: "BookFry • India's Book Marketplace",
     description:
       "Empowering students with affordable education and circular book sharing.",
     type: "website",
     siteName: "BookFry",
+    url: "https://bookfry.in",
   },
   twitter: {
     card: "summary_large_image",
@@ -41,12 +57,12 @@ export default function RootLayout({
       className={`${sans.variable}`}
       suppressHydrationWarning
     >
-      <head>
+      <head suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                if (localStorage.theme === 'dark' || !('theme' in localStorage)) {
                   document.documentElement.classList.add('dark')
                 } else {
                   document.documentElement.classList.remove('dark')
@@ -67,6 +83,8 @@ export default function RootLayout({
           Skip to main content
         </a>
         <Providers>
+          <OrganizationJsonLd />
+          <WebsiteJsonLd />
           <div id="main-content" className="flex-grow flex flex-col">
             {children}
           </div>

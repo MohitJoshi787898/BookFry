@@ -20,10 +20,10 @@ export function EarningsCalculatorCard({
   const netEarnings = Math.max(0, validPrice - platformFee);
 
   return (
-    <div className="rounded-3xl border border-[#F26522]/30 bg-gradient-to-br from-[#1A3B5C]/10 via-[#F26522]/5 to-card p-6 shadow-xl space-y-4 font-sans backdrop-blur-md">
+    <div className="rounded-3xl border border-secondary/30 bg-gradient-to-br from-primary/10 via-secondary/5 to-card p-6 shadow-xl space-y-4 font-sans backdrop-blur-md">
       <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div className="flex items-center space-x-3">
-          <div className="p-2.5 bg-[#F26522] text-white rounded-2xl shadow-sm">
+          <div className="p-2.5 bg-secondary text-secondary-foreground rounded-2xl shadow-sm">
             <Wallet className="h-5 w-5" />
           </div>
           <div>
@@ -63,7 +63,7 @@ export function EarningsCalculatorCard({
       <div className="pt-4 border-t border-border/60 flex justify-between items-center">
         <div>
           <span className="text-xs text-muted-foreground block font-bold uppercase tracking-wider">You Will Receive:</span>
-          <span className="text-3xl font-black font-mono text-[#F26522]">₹{netEarnings.toFixed(2)}</span>
+          <span className="text-3xl font-black font-mono text-secondary">₹{netEarnings.toFixed(2)}</span>
         </div>
         <div className="text-right text-[11px] text-muted-foreground max-w-[150px] leading-relaxed font-medium">
           Direct instant payout to your UPI or Bank Account.
@@ -71,7 +71,7 @@ export function EarningsCalculatorCard({
       </div>
 
       <div className="flex items-center space-x-1.5 text-[11px] text-muted-foreground pt-1 border-t border-border/40 font-medium">
-        <ShieldCheck className="h-4 w-4 text-[#F26522]" />
+        <ShieldCheck className="h-4 w-4 text-secondary" />
         <span>Guaranteed payment protection backed by BookFry Escrow</span>
       </div>
     </div>

@@ -37,7 +37,7 @@ export default function ContactPage() {
     <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
 
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16">
+      <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12 sm:py-16 space-y-16">
         
         {/* Page Header */}
         <SectionHeader
@@ -83,7 +83,7 @@ export default function ContactPage() {
             </Link>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <FaqAccordion items={faqItems} />
           </div>
         </section>

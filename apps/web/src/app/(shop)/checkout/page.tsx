@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -287,7 +288,7 @@ export default function CheckoutPage() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8">
         {/* Progress indicator */}
         <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-text-muted mb-8 justify-center">
           <span
@@ -316,52 +317,63 @@ export default function CheckoutPage() {
         </div>
 
         {step === "success" && createdOrder ? (
-          <div className="max-w-2xl mx-auto border border-border bg-surface rounded-md p-8 text-center space-y-6 shadow-sm animate-scale">
-            <div className="h-16 w-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-10 w-10" />
+          <div className="max-w-2xl mx-auto border border-border/80 bg-card rounded-3xl p-8 sm:p-10 text-center space-y-6 shadow-lg animate-scale font-sans">
+            <div className="relative w-28 h-28 mx-auto">
+              <Image
+                src="/assets/bookfry/bookfry-fox-reading.webp"
+                alt="BookFry Fox Celebrating"
+                fill
+                sizes="112px"
+                className="object-contain drop-shadow-md"
+                priority
+              />
             </div>
+
             <div className="space-y-2">
-              <h1 className="font-serif text-3xl font-bold text-text-primary">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-wider">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Payment Confirmed &amp; Order Placed</span>
+              </div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-black text-foreground">
                 Thank you for your order!
               </h1>
-              <p className="text-sm text-text-secondary font-sans">
+              <p className="text-sm text-muted-foreground">
                 Your order{" "}
-                <span className="font-mono font-bold text-text-primary">
+                <span className="font-mono font-extrabold text-secondary">
                   {createdOrder.orderNumber}
                 </span>{" "}
-                has been placed successfully.
+                has been placed successfully. Peer escrow payment is secured.
               </p>
             </div>
 
-            <div className="border-t border-border pt-6 text-left space-y-4 font-sans">
-              <h3 className="font-sans font-bold text-text-primary text-sm">
-                Shipping details
+            <div className="border-t border-border/80 pt-6 text-left space-y-3">
+              <h3 className="font-black text-foreground text-xs uppercase tracking-wider">
+                Shipping Details
               </h3>
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                 {shippingData?.street}
                 <br />
-                {shippingData?.city}, {shippingData?.state}{" "}
-                {shippingData?.zipCode}
+                {shippingData?.city}, {shippingData?.state} {shippingData?.zipCode}
                 <br />
                 {shippingData?.country}
               </p>
             </div>
 
-            <div className="border-t border-border pt-6 flex justify-between text-sm font-bold text-text-primary font-sans">
+            <div className="border-t border-border/80 pt-4 flex justify-between text-sm font-bold text-foreground">
               <span>Total Paid</span>
-              <span>₹{total.toFixed(2)}</span>
+              <span className="font-mono font-black text-lg text-secondary">₹{total.toFixed(2)}</span>
             </div>
 
-            <div className="pt-6 flex flex-col sm:flex-row gap-4 font-sans">
+            <div className="pt-4 flex flex-col sm:flex-row gap-3">
               <Link
                 href="/account/orders"
-                className="w-full sm:w-1/2 py-2.5 border border-border text-text-primary rounded hover:bg-background-subtle text-sm font-semibold transition-colors"
+                className="w-full sm:w-1/2 py-3 border border-border/80 text-foreground rounded-2xl hover:bg-muted font-bold text-xs uppercase tracking-wider transition-colors text-center"
               >
                 Track Order
               </Link>
               <Link
                 href="/books"
-                className="w-full sm:w-1/2 py-2.5 bg-brand text-white rounded hover:bg-brand-hover text-sm font-semibold transition-all"
+                className="w-full sm:w-1/2 py-3 bg-secondary hover:bg-secondary/90 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-md shadow-secondary/20 transition-all active:scale-95 text-center"
               >
                 Continue Shopping
               </Link>

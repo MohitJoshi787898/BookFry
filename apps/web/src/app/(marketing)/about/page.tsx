@@ -68,7 +68,7 @@ export default function AboutPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           </div>
           
-          <div className="relative max-w-4xl mx-auto px-4 text-center space-y-4 z-10 animate-fade-in">
+          <div className="relative max-w-3xl mx-auto text-center space-y-4 z-10 animate-fade-in">
             <span className="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-50 dark:bg-secondary-950/40 px-3 py-1 rounded-full inline-block">
               Our Vision
             </span>
@@ -83,7 +83,7 @@ export default function AboutPage() {
 
         {/* Our Story Narrative Alternating Blocks */}
         <section className="py-16 sm:py-24 font-sans bg-surface border-b border-border">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16 sm:space-y-24">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 space-y-16 sm:space-y-24">
             
             <SectionHeader
               title="Why BookFry Exists"
@@ -148,7 +148,7 @@ export default function AboutPage() {
 
         {/* By the Numbers Stats Row */}
         <section className="py-16 bg-muted/30 border-b border-border">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {stats.map((stat, idx) => (
                 <StatCard key={idx} number={stat.number} label={stat.label} />
@@ -162,7 +162,7 @@ export default function AboutPage() {
 
         {/* Values Grid */}
         <section className="py-16 sm:py-24 bg-surface border-b border-border">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
             <SectionHeader
               title="What Governs Us"
               subtitle="Our core values guide how we build technology, support communities, and preserve the environment."

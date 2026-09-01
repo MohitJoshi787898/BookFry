@@ -90,7 +90,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               value={value}
               onChange={onChange}
               className={cn(
-                'w-full bg-card text-text-primary border border-border text-sm rounded-lg min-h-[42px] py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium placeholder:text-text-muted',
+                'w-full bg-card text-text-primary border border-border/80 text-sm rounded-lg min-h-[48px] sm:min-h-[44px] py-2.5 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium placeholder:text-text-muted',
                 leftIcon ? 'pl-10' : 'pl-3.5',
                 hasRightContent ? 'pr-10' : 'pr-3.5',
                 error ? 'border-danger focus:ring-danger/30 focus:border-danger' : '',

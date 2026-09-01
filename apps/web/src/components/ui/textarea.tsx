@@ -75,7 +75,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           onChange={onChange}
           disabled={disabled}
           className={cn(
-            'w-full bg-card text-text-primary border border-border text-sm rounded-lg p-3 transition-all focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium resize-y placeholder:text-text-muted',
+            'w-full bg-card text-text-primary border border-border/80 text-sm rounded-lg min-h-[112px] p-3 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary disabled:opacity-50 disabled:bg-muted font-medium resize-y placeholder:text-text-muted',
             error ? 'border-danger focus:ring-danger/30 focus:border-danger' : '',
             className
           )}

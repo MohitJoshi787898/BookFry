@@ -73,7 +73,7 @@ export function ProfileAddresses({
         {!showAddressForm && (
           <button
             onClick={() => setShowAddressForm(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F26522] hover:bg-[#D64E0F] text-white font-bold rounded-2xl text-xs transition-all shadow-md shadow-[#F26522]/20 active:scale-95"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-2xl text-xs transition-all shadow-md active:scale-95"
           >
             <Plus className="h-4 w-4" />
             <span>Add New Address</span>

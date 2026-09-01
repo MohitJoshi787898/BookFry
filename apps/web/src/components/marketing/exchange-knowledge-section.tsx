@@ -89,134 +89,120 @@ export function ExchangeKnowledgeSection({
   return (
     <section
       aria-label="Exchange Knowledge & Give Books a Second Life"
-      className="py-12 sm:py-16 lg:py-20 relative bg-[#FAF8F5] dark:bg-background border-b border-border/60 font-sans transition-colors duration-200 overflow-hidden"
+      className="py-14 sm:py-18 lg:py-24 relative bg-[#151B29] border-b border-white/10 font-sans text-[#F8FAFC] transition-colors duration-200 overflow-hidden"
     >
-      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 transition-all space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 space-y-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          
+          {/* Left Column: Campus Book Exchange Illustration + Benefit Badges */}
           <div className="lg:col-span-5 space-y-6">
             <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4 }}
-              className="relative rounded-t-[140px] rounded-b-3xl overflow-hidden shadow-xl border border-border/50 bg-card aspect-[4/3.4] group"
+              className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#1D2535] aspect-[4/3.4] group"
             >
               <Image
                 src="/images/book-exchange-students-removebg-preview.png"
-                alt="Indian university students exchanging a pre-owned textbook on campus"
+                alt="Students exchanging pre-owned textbooks on campus"
                 fill
-                priority
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 45vw, 650px"
-                className="object-cover object-center group-hover:scale-103 transition-transform duration-500 ease-out"
+                className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
               />
 
-              <div className="absolute bottom-4 left-4 h-12 w-12 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-lg">
+              <div className="absolute bottom-4 left-4 h-12 w-12 rounded-2xl bg-[#151B29]/90 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-xl backdrop-blur-md">
                 <Leaf className="h-6 w-6 stroke-[2.2]" />
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3.5 rounded-2xl bg-card border border-border/60 shadow-xs font-sans">
+            {/* Quick stats panel */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 p-4 rounded-2xl bg-[#1D2535] border border-white/10 shadow-md font-sans">
               <div className="flex items-center space-x-2.5">
-                <div className="h-9 w-9 rounded-full bg-[#EBF7EE] text-emerald-600 flex items-center justify-center shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
                   <IndianRupee className="h-4.5 w-4.5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <span className="text-xs font-black text-foreground block leading-tight">
-                    {savePercentText}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-medium block">
-                    {savePercentSubtext}
-                  </span>
+                  <span className="text-xs font-black text-[#F8FAFC] block leading-tight">{savePercentText}</span>
+                  <span className="text-[10px] text-[#7D8798] font-medium block">{savePercentSubtext}</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2.5 border-x border-border/50 px-2 sm:px-3">
-                <div className="h-9 w-9 rounded-full bg-[#FFF5EB] text-[#F26522] flex items-center justify-center shrink-0">
+              <div className="flex items-center space-x-2.5 border-x border-white/10 px-2 sm:px-3">
+                <div className="h-9 w-9 rounded-xl bg-[#FF9F2D]/15 text-[#FF9F2D] flex items-center justify-center shrink-0 border border-[#FF9F2D]/20">
                   <Coins className="h-4.5 w-4.5 stroke-[2.2]" />
                 </div>
                 <div>
-                  <span className="text-xs font-black text-foreground block leading-tight">
-                    {earnPercentText}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-medium block">
-                    {earnPercentSubtext}
-                  </span>
+                  <span className="text-xs font-black text-[#F8FAFC] block leading-tight">{earnPercentText}</span>
+                  <span className="text-[10px] text-[#7D8798] font-medium block">{earnPercentSubtext}</span>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2.5">
-                <div className="h-9 w-9 rounded-full bg-[#EEF4FF] text-blue-600 flex items-center justify-center shrink-0">
+                <div className="h-9 w-9 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
                   <Globe className="h-4.5 w-4.5 stroke-[2.2]" />
                 </div>
                 <div>
-                  <span className="text-xs font-black text-foreground block leading-tight">
-                    {ecoText}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-medium block">
-                    {ecoSubtext}
-                  </span>
+                  <span className="text-xs font-black text-[#F8FAFC] block leading-tight">{ecoText}</span>
+                  <span className="text-[10px] text-[#7D8798] font-medium block">{ecoSubtext}</span>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Right Column: Editorial Steps & Action Buttons */}
           <div className="lg:col-span-7 space-y-7">
             <div className="space-y-3">
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#FFEFE6] dark:bg-[#F26522]/15 text-[#F26522] border border-[#FFD9C7] dark:border-[#F26522]/30 text-xs font-black uppercase tracking-wider">
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#FF9F2D]/15 text-[#FF9F2D] border border-[#FF9F2D]/30 text-xs font-black uppercase tracking-wider">
                 <Users className="h-4 w-4" />
                 <span>{eyebrow}</span>
               </div>
 
-              <h2 className="font-sans text-3xl sm:text-4xl lg:text-[44px] font-black text-foreground tracking-tight leading-[1.15]">
+              <h2 className="font-sans text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-[#F8FAFC] tracking-tight leading-[1.12]">
                 {title}
-                <span className="inline-block ml-2 text-emerald-500 text-2xl">
-                  🌿
-                </span>
               </h2>
 
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl font-medium">
+              <p className="text-xs sm:text-sm text-[#AEB7C6] leading-relaxed max-w-2xl font-medium">
                 {subtitle}
               </p>
             </div>
 
-            <div className="relative pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
-                {stepList.map((step, idx) => {
-                  const Icon = ICONS[idx % ICONS.length];
-                  return (
-                    <div
-                      key={idx}
-                      className="p-5 rounded-2xl bg-card border border-border/70 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
-                    >
-                      <div className="space-y-3">
-                        <div className="h-11 w-11 rounded-2xl bg-[#FFF2EB] dark:bg-orange-950/40 text-[#F26522] flex items-center justify-center">
-                          <Icon className="h-5 w-5 stroke-[2.2]" />
-                        </div>
-
-                        <div className="space-y-1">
-                          <span className="font-sans text-xs font-black text-[#F26522]">
-                            {step.stepNumber || `0${idx + 1}`}
-                          </span>
-                          <h3 className="font-sans text-sm font-black text-foreground">
-                            {step.title}
-                          </h3>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
-                            {step.description}
-                          </p>
-                        </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {stepList.map((step, idx) => {
+                const Icon = ICONS[idx % ICONS.length];
+                return (
+                  <div
+                    key={idx}
+                    className="p-5 rounded-2xl bg-[#1D2535] border border-white/10 shadow-lg flex flex-col justify-between space-y-4 hover:border-[#FF9F2D]/40 transition-all"
+                  >
+                    <div className="space-y-3">
+                      <div className="h-11 w-11 rounded-2xl bg-[#FF9F2D]/15 border border-[#FF9F2D]/30 text-[#FF9F2D] flex items-center justify-center">
+                        <Icon className="h-5 w-5 stroke-[2.2]" />
                       </div>
 
-                      {step.badge && (
-                        <div>
-                          <span className="inline-block px-2.5 py-1 rounded-full bg-[#FFF2EB] dark:bg-orange-950/50 text-[#F26522] border border-[#FFD9C7] text-[10px] font-black uppercase tracking-wider">
-                            {step.badge}
-                          </span>
-                        </div>
-                      )}
+                      <div className="space-y-1">
+                        <span className="font-sans text-xs font-black text-[#FF9F2D]">
+                          {step.stepNumber || `0${idx + 1}`}
+                        </span>
+                        <h3 className="font-sans text-sm font-bold text-[#F8FAFC]">
+                          {step.title}
+                        </h3>
+                        <p className="text-[11px] text-[#AEB7C6] leading-relaxed font-medium">
+                          {step.description}
+                        </p>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {step.badge && (
+                      <div>
+                        <span className="inline-block px-2.5 py-1 rounded-full bg-[#151B29] text-[#FF9F2D] border border-[#FF9F2D]/30 text-[10px] font-black uppercase tracking-wider">
+                          {step.badge}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
@@ -228,7 +214,7 @@ export function ExchangeKnowledgeSection({
                     useAuthModalStore.getState().openModal("login", "/sell");
                   }
                 }}
-                className="px-8 py-3.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md shadow-[#F26522]/20 flex items-center justify-center space-x-2.5 active:scale-95 text-center"
+                className="px-8 py-3.5 bg-gradient-to-r from-[#FF9F2D] to-[#E97918] hover:from-[#FFB347] hover:to-[#FF9F2D] text-[#151B29] font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-[0_4px_20px_rgba(255,159,45,0.35)] flex items-center justify-center space-x-2.5 active:scale-95 text-center"
               >
                 <BookOpen className="h-4.5 w-4.5" />
                 <span>{primaryCtaLabel}</span>
@@ -237,9 +223,9 @@ export function ExchangeKnowledgeSection({
 
               <Link
                 href={secondaryCtaUrl}
-                className="px-8 py-3.5 bg-card hover:bg-muted text-foreground border border-border/80 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 text-center active:scale-95 shadow-2xs"
+                className="px-8 py-3.5 bg-[#1D2535] hover:bg-[#242E40] text-[#F8FAFC] border border-white/10 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 text-center active:scale-95 shadow-sm"
               >
-                <Search className="h-4 w-4 text-muted-foreground" />
+                <Search className="h-4 w-4 text-[#FF9F2D]" />
                 <span>{secondaryCtaLabel}</span>
               </Link>
             </div>

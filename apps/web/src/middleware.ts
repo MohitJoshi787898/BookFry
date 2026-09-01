@@ -10,6 +10,7 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register');
   const isProtectedRoute =
     pathname.startsWith('/seller') ||
+    pathname.startsWith('/vendor') ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/account') ||
     pathname.startsWith('/checkout');
@@ -32,6 +33,7 @@ export const config = {
     '/login',
     '/register',
     '/seller/:path*',
+    '/vendor/:path*',
     '/admin/:path*',
     '/account/:path*',
     '/checkout',

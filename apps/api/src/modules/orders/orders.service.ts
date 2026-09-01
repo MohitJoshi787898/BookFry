@@ -3,7 +3,11 @@ import { CartRepository } from '../cart/cart.repository';
 import { ListingRepository } from '../books/listing.repository';
 import { CatalogRepository } from '../books/catalog.repository';
 import { TransactionModel } from '../../models/transaction.model';
+import { BookListingModel } from '../../models/book-listing.model';
+import { OrderModel } from '../../models/order.model';
 import { NotificationsService } from '../notifications/notifications.service';
+import { sseManager } from '../notifications/sse.manager';
+import { getCourierProvider } from './logistics/courier-provider.factory';
 import { EmailService } from '../../services/email.service';
 import { UserModel } from '../../models/user.model';
 import { NotFoundError, ValidationError, UnauthorizedError } from '../../utils/AppError';
@@ -99,7 +103,7 @@ export class OrdersService {
     }
 
     const orderItems: any[] = [];
-    const decrementedListings: Array<{ listing: any; quantity: number }> = [];
+    const decrementedListingIds: Array<{ listingId: string; quantity: number }> = [];
     let subtotal = 0;
 
     try {
@@ -110,6 +114,7 @@ export class OrdersService {
           ? (item as any).bookId.toString()
           : item.listingId?.toString() ?? '';
 
+        // Pre-fetch listing for validation (ownership check, populate catalogId)
         const listing = await this.listingRepository.findById(listingIdStr);
         if (!listing || listing.status !== 'active') {
           throw new NotFoundError(`Book listing is no longer available`);
@@ -121,18 +126,38 @@ export class OrdersService {
           throw new ValidationError(`You cannot purchase your own listed book.`);
         }
 
-        if (listing.stock < item.quantity) {
+        // Atomic stock decrement — prevents oversell race condition.
+        // If stock < quantity, the filter won't match and updatedListing will be null.
+        const updatedListing = await BookListingModel.findOneAndUpdate(
+          {
+            _id: listing._id,
+            status: 'active',
+            stock: { $gte: item.quantity },
+          },
+          [
+            {
+              $set: {
+                stock: { $subtract: ['$stock', item.quantity] },
+                status: {
+                  $cond: {
+                    if: { $lte: [{ $subtract: ['$stock', item.quantity] }, 0] },
+                    then: 'sold',
+                    else: '$status',
+                  },
+                },
+              },
+            },
+          ],
+          { new: true }
+        );
+
+        if (!updatedListing) {
           throw new ValidationError(
-            `Insufficient stock for "${catalogDoc?.title || 'this book'}". Only ${listing.stock} left.`
+            `Insufficient stock for "${catalogDoc?.title || 'this book'}". The last unit may have just been purchased.`
           );
         }
 
-        listing.stock -= item.quantity;
-        if (listing.stock === 0) {
-          listing.status = 'sold';
-        }
-        await listing.save();
-        decrementedListings.push({ listing, quantity: item.quantity });
+        decrementedListingIds.push({ listingId: listing._id.toString(), quantity: item.quantity });
 
         const price = listing.price;
         subtotal += price * item.quantity;
@@ -148,14 +173,20 @@ export class OrdersService {
         });
       }
     } catch (err) {
-      // Rollback any stocks decremented before failure
-      for (const { listing, quantity } of decrementedListings) {
+      // Rollback any atomically-decremented stocks before the point of failure
+      for (const { listingId, quantity } of decrementedListingIds) {
         try {
-          listing.stock += quantity;
-          if (listing.status === 'sold') {
-            listing.status = 'active';
-          }
-          await listing.save();
+          await BookListingModel.findOneAndUpdate(
+            { _id: listingId },
+            [
+              {
+                $set: {
+                  stock: { $add: ['$stock', quantity] },
+                  status: { $cond: { if: { $eq: ['$status', 'sold'] }, then: 'active', else: '$status' } },
+                },
+              },
+            ]
+          );
         } catch (rollbackErr) {
           console.error('[Stock Rollback Error]:', rollbackErr);
         }
@@ -940,6 +971,188 @@ export class OrdersService {
         { orderId: order._id.toString() }
       );
     }
+  }
+
+  async generateSubOrderAwb(
+    orderId: string,
+    subOrderId: string,
+    userId: string,
+    roles: string[]
+  ): Promise<{ order: Order; awbCode: string; trackingUrl: string; courierName: string }> {
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    const isAdmin = roles.includes('admin');
+    const subOrder = (order.subOrders || []).find(
+      (s: any) => s._id?.toString() === subOrderId || s.subOrderNumber === subOrderId
+    );
+
+    if (!subOrder) {
+      throw new NotFoundError('Package / sub-order not found in this order');
+    }
+
+    const isSeller = subOrder.sellerId.toString() === userId;
+    if (!isAdmin && !isSeller) {
+      throw new UnauthorizedError('Not authorized to book courier dispatch for this package');
+    }
+
+    const sellerUser = await UserModel.findById(subOrder.sellerId);
+    const buyerUser = await UserModel.findById(order.buyerId);
+
+    const courierProvider = getCourierProvider();
+    const shipmentResult = await courierProvider.createShipment({
+      orderId: order._id.toString(),
+      subOrderNumber: subOrder.subOrderNumber,
+      orderDate: order.createdAt,
+      pickupLocation: {
+        name: sellerUser?.sellerProfile?.storeName || sellerUser?.name || 'BookFry Seller Hub',
+        email: sellerUser?.email || 'seller@bookfry.in',
+        phone: sellerUser?.phone || '+919876543210',
+        address: sellerUser?.addresses?.[0]?.street || 'Marketplace Hub Sector 62',
+        city: sellerUser?.addresses?.[0]?.city || 'Noida',
+        state: sellerUser?.addresses?.[0]?.state || 'Uttar Pradesh',
+        pincode: sellerUser?.addresses?.[0]?.zipCode || '201301',
+        country: 'India',
+      },
+      deliveryAddress: {
+        name: buyerUser?.name || 'Customer',
+        email: buyerUser?.email || 'buyer@bookfry.in',
+        phone: buyerUser?.phone || '+919876543210',
+        address: order.shippingAddress.street,
+        city: order.shippingAddress.city,
+        state: order.shippingAddress.state,
+        pincode: order.shippingAddress.zipCode,
+        country: order.shippingAddress.country || 'India',
+      },
+      items: subOrder.items.map((it: any) => ({
+        name: it.title,
+        units: it.quantity,
+        sellingPrice: it.price,
+      })),
+      paymentMethod: order.paymentStatus === 'paid' ? 'Prepaid' : 'COD',
+      subTotal: subOrder.total,
+    });
+
+    // Update subOrder with AWB details and transition to 'shipped'
+    if (!subOrder.shippingDetails) {
+      subOrder.shippingDetails = {};
+    }
+    subOrder.shippingDetails.carrier = shipmentResult.courierName;
+    subOrder.shippingDetails.trackingNumber = shipmentResult.awbCode;
+    subOrder.shippingDetails.trackingUrl = shipmentResult.trackingUrl;
+    subOrder.shippingDetails.shippedAt = new Date();
+    subOrder.shippingDetails.estimatedDelivery = shipmentResult.estimatedDeliveryDate;
+
+    subOrder.status = 'shipped';
+    subOrder.timeline.push({
+      status: 'shipped',
+      note: `Shipment booked with ${shipmentResult.courierName}. AWB: ${shipmentResult.awbCode}`,
+      timestamp: new Date(),
+    });
+
+    const allStatuses = order.subOrders.map((s: any) => s.status);
+    if (allStatuses.every((s: string) => s === 'shipped' || s === 'delivered')) {
+      order.status = 'shipped';
+    }
+
+    await order.save();
+
+    // Broadcast SSE update to buyer
+    try {
+      sseManager.broadcastToUser(order.buyerId.toString(), 'order:updated', {
+        orderId: order._id.toString(),
+        subOrderId: subOrder._id?.toString() || subOrder.subOrderNumber,
+        newStatus: 'shipped',
+        awbCode: shipmentResult.awbCode,
+        courierName: shipmentResult.courierName,
+        trackingUrl: shipmentResult.trackingUrl,
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    return {
+      order: this.mapToDTO(order),
+      awbCode: shipmentResult.awbCode,
+      trackingUrl: shipmentResult.trackingUrl,
+      courierName: shipmentResult.courierName,
+    };
+  }
+
+  async processCourierWebhook(payload: any): Promise<{ processed: boolean; subOrderNumber?: string }> {
+    const awb = payload?.awb || payload?.awb_code || payload?.awbNumber;
+    const current_status = payload?.current_status || payload?.status || '';
+    const delivered_at = payload?.delivered_at || payload?.deliveredDate;
+
+    if (!awb) {
+      return { processed: false };
+    }
+
+    const order = await OrderModel.findOne({
+      'subOrders.shippingDetails.trackingNumber': awb,
+    });
+
+    if (!order) {
+      return { processed: false };
+    }
+
+    const subOrder = (order.subOrders || []).find(
+      (s: any) => s.shippingDetails?.trackingNumber === awb
+    );
+
+    if (!subOrder) {
+      return { processed: false };
+    }
+
+    const normalizedStatus = (current_status || '').toUpperCase();
+    let newStatus: OrderStatus | null = null;
+    let note = `Courier status update: ${current_status}`;
+
+    if (normalizedStatus.includes('DELIVERED')) {
+      newStatus = 'delivered';
+      if (!subOrder.shippingDetails) {
+        subOrder.shippingDetails = {};
+      }
+      subOrder.shippingDetails.deliveredAt = delivered_at ? new Date(delivered_at) : new Date();
+      note = 'Package successfully delivered by courier.';
+    } else if (normalizedStatus.includes('OUT_FOR_DELIVERY') || normalizedStatus.includes('OUT FOR DELIVERY')) {
+      note = 'Package is out for delivery today.';
+    } else if (normalizedStatus.includes('IN_TRANSIT') || normalizedStatus.includes('IN TRANSIT')) {
+      note = 'Package is in transit between logistics hubs.';
+    }
+
+    if (newStatus && subOrder.status !== newStatus) {
+      subOrder.status = newStatus;
+    }
+
+    subOrder.timeline.push({
+      status: subOrder.status,
+      note,
+      timestamp: new Date(),
+    });
+
+    const allStatuses = order.subOrders.map((s: any) => s.status);
+    if (allStatuses.every((s: string) => s === 'delivered')) {
+      order.status = 'delivered';
+    }
+
+    await order.save();
+
+    // Broadcast SSE to buyer
+    try {
+      sseManager.broadcastToUser(order.buyerId.toString(), 'order:updated', {
+        orderId: order._id.toString(),
+        subOrderId: subOrder._id?.toString() || subOrder.subOrderNumber,
+        newStatus: subOrder.status,
+        note,
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    return { processed: true, subOrderNumber: subOrder.subOrderNumber };
   }
 
   mapToDTO(doc: any): Order {

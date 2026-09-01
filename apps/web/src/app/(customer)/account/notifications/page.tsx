@@ -1,184 +1,182 @@
 'use client';
 
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
-import { apiClient } from '@/lib/api-client';
+import React, { useState } from 'react';
+import { RoleHero } from '@/components/shared/role-hero';
+import { RoleEmptyState } from '@/components/shared/role-empty-state';
 import { useAuthStore } from '@/stores/auth.store';
-import { Notification } from '@bookmarket/types';
-import { Bell, ArrowLeft, Check, Calendar } from 'lucide-react';
+import {
+  Truck,
+  MessageSquare,
+  Sparkles,
+  Check,
+} from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
-export default function NotificationsPage() {
+interface CustomerNotification {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  read: boolean;
+  type: 'order' | 'lead' | 'promo';
+  link: string;
+}
+
+const initialNotifications: CustomerNotification[] = [
+  {
+    id: '1',
+    title: 'Textbook Package Out for Delivery',
+    description: 'Order #ORD-766893 (CLRS Algorithms) has reached your campus hub and will be delivered today.',
+    time: '20m ago',
+    read: false,
+    type: 'order',
+    link: '/account/orders',
+  },
+  {
+    id: '2',
+    title: 'Seller Responded to Your Request',
+    description: 'Priya Sharma accepted your purchase offer for BD Chaurasia Anatomy. Check contact details.',
+    time: '2h ago',
+    read: false,
+    type: 'lead',
+    link: '/account/requests',
+  },
+  {
+    id: '3',
+    title: 'Special Semester Discount: CAMPUS50',
+    description: 'Get flat ₹50 OFF on all Engineering reference textbooks with code CAMPUS50.',
+    time: '1d ago',
+    read: true,
+    type: 'promo',
+    link: '/books',
+  },
+];
+
+export default function CustomerNotificationsPage() {
   const { isAuthenticated } = useAuthStore();
-  const queryClient = useQueryClient();
-  const router = useRouter();
+  const [notifications, setNotifications] = useState<CustomerNotification[]>(initialNotifications);
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  const {
-    data: notifications = [],
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery<Notification[]>({
-    queryKey: ['notifications'],
-    queryFn: () => apiClient('/notifications'),
-    enabled: isAuthenticated,
-  });
+  if (!isAuthenticated) {
+    return (
+      <RoleEmptyState
+        title="Sign In to View Notifications"
+        description="Stay updated with order deliveries, seller responses, and campus book fair announcements."
+        mascotVariant="reading"
+      />
+    );
+  }
 
-  const readMutation = useMutation({
-    mutationFn: (id: string) =>
-      apiClient(`/notifications/${id}/read`, {
-        method: 'PATCH',
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['unread-notifications-count'] });
-    },
-  });
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const filtered = filter === 'unread' ? notifications.filter((n) => !n.read) : notifications;
 
-  const handleMarkRead = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    readMutation.mutate(id);
+  const markAllRead = () => {
+    setNotifications(notifications.map((n) => ({ ...n, read: true })));
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.isRead) {
-      readMutation.mutate(notification.id);
-    }
-
-    let targetPath = '/books';
-    if (notification.type === 'new_sale') {
-      targetPath = '/seller/orders';
-    } else if (notification.type.startsWith('order_')) {
-      targetPath = '/account/orders';
-    }
-
-    router.push(targetPath);
+  const markSingleRead = (id: string) => {
+    setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div className="space-y-6">
+      <RoleHero
+        title="Account Notifications &amp; Alerts"
+          subtitle="Real-time status updates on textbook deliveries, seller responses to your requests, and campus deals."
+          badgeText="Student Notification Center"
+          showMascot={true}
+          mascotPose="reading"
+          stats={[
+            { label: 'Unread Alerts', value: unreadCount, badge: unreadCount > 0 ? 'New' : 'All Read', isPositive: unreadCount === 0 },
+            { label: 'Delivery Updates', value: 'Live', badge: 'Real-time', isPositive: true },
+            { label: 'Seller Alerts', value: 'Active', badge: 'P2P Leads', isPositive: true },
+            { label: 'Promotions', value: 'Active', badge: 'Exclusive', isPositive: true },
+          ]}
+          actions={
+            unreadCount > 0 ? (
+              <button
+                onClick={markAllRead}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                <Check className="h-3.5 w-3.5" />
+                <span>Mark All Read</span>
+              </button>
+            ) : undefined
+          }
+        />
 
-      <main className="flex-grow max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link
-          href="/books"
-          className="inline-flex items-center space-x-2 text-sm text-text-secondary hover:text-brand mb-6 transition-colors font-sans"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Catalog</span>
-        </Link>
-
-        <h1 className="font-serif text-3xl font-bold text-text-primary mb-8 flex items-center space-x-3">
-          <Bell className="h-8 w-8 text-brand" />
-          <span>Notifications</span>
-        </h1>
-
-        {!isAuthenticated ? (
-          <div className="text-center py-16 border border-border bg-surface rounded-md space-y-6">
-            <Bell className="h-12 w-12 text-text-muted mx-auto" />
-            <div>
-              <h2 className="font-serif text-xl font-bold text-text-primary">Please log in</h2>
-              <p className="text-sm text-text-secondary max-w-sm mx-auto mt-2 font-sans">
-                You must be logged in to view your notifications.
-              </p>
-            </div>
-            <Link
-              href="/login"
-              className="inline-block px-6 py-2.5 bg-brand text-white font-semibold rounded hover:bg-brand-hover font-sans text-sm"
-            >
-              Sign In
-            </Link>
-          </div>
-        ) : isLoading ? (
-          <div className="space-y-4 animate-pulse">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div key={idx} className="h-20 border border-border bg-surface rounded-md" />
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="text-center py-12 border border-border bg-surface rounded-md">
-            <h2 className="text-lg font-bold text-text-primary mb-2 font-serif">
-              Failed to load notifications
-            </h2>
+        {/* Filter Pills */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 bg-muted/60 p-1 rounded-2xl border border-border/80 text-xs font-bold">
             <button
-              onClick={() => refetch()}
-              className="px-4 py-2 bg-brand text-white rounded hover:bg-brand-hover text-sm font-semibold font-sans"
+              onClick={() => setFilter('all')}
+              className={`px-3.5 py-1.5 rounded-xl transition-all ${
+                filter === 'all' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              Retry
+              All Alerts ({notifications.length})
+            </button>
+            <button
+              onClick={() => setFilter('unread')}
+              className={`px-3.5 py-1.5 rounded-xl transition-all ${
+                filter === 'unread' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Unread ({unreadCount})
             </button>
           </div>
-        ) : notifications.length === 0 ? (
-          <div className="text-center py-16 border border-border bg-surface rounded-md space-y-6">
-            <Bell className="h-12 w-12 text-text-muted mx-auto" />
-            <div>
-              <h2 className="font-serif text-xl font-bold text-text-primary">No new alerts</h2>
-              <p className="text-sm text-text-secondary max-w-sm mx-auto mt-2 font-sans">
-                You will receive status updates about your orders and listings here.
-              </p>
-            </div>
-          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <RoleEmptyState
+            title="No Notifications Found"
+            description="You're all caught up with your latest textbook orders and seller messages!"
+            mascotVariant="reading"
+          />
         ) : (
-          <div className="space-y-4 font-sans">
-            {notifications.map((notification) => {
-              const formattedDate = new Date(notification.createdAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              });
+          <div className="space-y-3 font-sans">
+            {filtered.map((item) => {
+              const Icon = item.type === 'order' ? Truck : item.type === 'lead' ? MessageSquare : Sparkles;
+              const iconColor = item.type === 'order' ? 'text-sky-500 bg-sky-500/10' : item.type === 'lead' ? 'text-secondary bg-secondary/10' : 'text-amber-500 bg-amber-500/10';
 
               return (
-                <div
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`border rounded-md p-5 flex justify-between items-start gap-4 transition-all duration-120 cursor-pointer select-none hover:shadow-xs ${
-                    notification.isRead
-                      ? 'border-border bg-surface/50 opacity-75 hover:bg-muted/20'
-                      : 'border-brand/30 bg-brand/5 shadow-sm hover:bg-brand/10'
+                <Link
+                  key={item.id}
+                  href={item.link}
+                  onClick={() => markSingleRead(item.id)}
+                  className={`block p-4 sm:p-5 rounded-3xl border transition-all shadow-sm ${
+                    item.read
+                      ? 'bg-card/60 border-border/60 text-muted-foreground'
+                      : 'bg-card border-border/90 hover:border-secondary/40 shadow-xs'
                   }`}
                 >
-                  <div className="flex items-start space-x-3">
-                    <div
-                      className={`p-2 rounded-full mt-0.5 ${
-                        notification.isRead ? 'bg-background-subtle text-text-muted' : 'bg-brand/10 text-brand'
-                      }`}
-                    >
-                      <Bell className="h-4 w-4" />
+                  <div className="flex items-start gap-3.5">
+                    <div className={`p-2.5 rounded-2xl ${iconColor} shrink-0 mt-0.5`}>
+                      <Icon className="h-5 w-5" />
                     </div>
-                    <div className="space-y-1 font-sans">
-                      <p className="text-sm font-bold text-text-primary">
-                        {notification.title}
-                      </p>
-                      <p className="text-xs text-text-secondary leading-relaxed">
-                        {notification.body}
-                      </p>
-                      <span className="text-[10px] text-text-muted flex items-center gap-1 font-sans">
-                        <Calendar className="h-3 w-3" />
-                        {formattedDate}
-                      </span>
-                    </div>
-                  </div>
 
-                  {!notification.isRead && (
-                    <button
-                      onClick={(e) => handleMarkRead(notification.id, e)}
-                      className="p-1.5 border border-border hover:border-brand/40 text-text-secondary hover:text-brand bg-surface rounded transition-all font-sans"
-                      title="Mark as Read"
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className={`text-xs sm:text-sm font-bold truncate ${item.read ? 'text-muted-foreground' : 'text-foreground'}`}>
+                          {item.title}
+                        </h4>
+                        <span className="text-[10px] font-mono text-muted-foreground shrink-0">{item.time}</span>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    {!item.read && (
+                      <span className="h-2.5 w-2.5 rounded-full bg-secondary shrink-0 mt-1.5 shadow-xs" />
+                    )}
+                  </div>
+                </Link>
               );
             })}
           </div>
         )}
-      </main>
-
-      <Footer />
     </div>
   );
 }

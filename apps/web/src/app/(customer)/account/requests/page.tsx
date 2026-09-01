@@ -1,148 +1,178 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
+import { RoleHero } from '@/components/shared/role-hero';
+import { RoleFilterBar } from '@/components/shared/role-filter-bar';
+import { RoleEmptyState } from '@/components/shared/role-empty-state';
+import { UsedRequestDetailModal } from '@/components/admin/used-request-detail-modal';
 import { apiClient } from '@/lib/api-client';
+import { useAuthStore } from '@/stores/auth.store';
 import { UsedBookRequest } from '@bookmarket/types';
-import { MessageSquare, XCircle, ArrowLeft, Store } from 'lucide-react';
-import Link from 'next/link';
+import { Eye, Clock } from 'lucide-react';
 
-const STATUS_COLORS: Record<string, string> = {
-  requested: 'bg-info/10 text-info border-info/20',
-  seller_notified: 'bg-info/10 text-info border-info/20',
-  seller_contacted_buyer: 'bg-brand/10 text-brand border-brand/20',
-  accepted: 'bg-success/10 text-success border-success/20',
-  in_discussion: 'bg-warning/10 text-warning border-warning/20',
-  completed: 'bg-success/10 text-success border-success/20',
-  declined: 'bg-danger/10 text-danger border-danger/20',
-  cancelled: 'bg-danger/10 text-danger border-danger/20',
-  expired: 'bg-muted text-text-muted border-border',
+const STATUS_LABELS: Record<string, string> = {
+  requested: 'Request Sent',
+  seller_notified: 'Seller Notified',
+  seller_contacted_buyer: 'Seller Contacted You',
+  accepted: 'Offer Accepted',
+  in_discussion: 'In Discussion',
+  completed: 'Deal Closed',
+  declined: 'Declined',
+  cancelled: 'Cancelled',
 };
 
-export default function BuyerUsedRequestsPage() {
-  const { data: requests = [], isLoading, isError } = useQuery<UsedBookRequest[]>({
-    queryKey: ['buyer-used-requests'],
+const STATUS_COLORS: Record<string, string> = {
+  requested: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',
+  seller_notified: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30',
+  seller_contacted_buyer: 'bg-primary/10 text-primary border-primary/20',
+  accepted: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+  in_discussion: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+  completed: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+  declined: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30',
+  cancelled: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30',
+};
+
+export default function CustomerRequestsPage() {
+  const { isAuthenticated } = useAuthStore();
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRequest, setSelectedRequest] = useState<UsedBookRequest | null>(null);
+
+  const { data: requests = [], isError, refetch } = useQuery<UsedBookRequest[]>({
+    queryKey: ['buyer-used-requests', statusFilter],
     queryFn: async () => {
-      const res = await apiClient<{ success: boolean; data: UsedBookRequest[] }>('/used-book-requests/buyer');
-      return res.data || [];
+      try {
+        const url = statusFilter ? `/used-book-requests/admin?status=${statusFilter}` : '/used-book-requests/admin';
+        const res = await apiClient<{ success: boolean; data: UsedBookRequest[] }>(url);
+        return res.data || [];
+      } catch {
+        return [];
+      }
     },
+    enabled: isAuthenticated,
   });
 
+  if (!isAuthenticated) {
+    return (
+      <RoleEmptyState
+        title="Sign In to Track Used Book Inquiries"
+        description="Log in to view seller responses and negotiation updates."
+        mascotVariant="reading"
+      />
+    );
+  }
+
+  const rawRequests = requests || [];
+  const filteredRequests = rawRequests.filter((r) => {
+    const matchesStatus = !statusFilter || r.status === statusFilter;
+    const matchesSearch =
+      !searchQuery.trim() ||
+      r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.requestNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const filterChips = [
+    { id: '', label: 'All Requests', count: rawRequests.length },
+    { id: 'requested', label: 'Awaiting Seller', count: rawRequests.filter((r) => r.status === 'requested' || r.status === 'seller_notified').length },
+    { id: 'in_discussion', label: 'In Discussion', count: rawRequests.filter((r) => r.status === 'in_discussion' || r.status === 'seller_contacted_buyer').length },
+    { id: 'completed', label: 'Deals Completed', count: rawRequests.filter((r) => r.status === 'completed' || r.status === 'accepted').length },
+  ];
+
   return (
-    <div className="flex flex-col min-h-screen bg-background font-sans">
-      <Navbar />
+    <div className="space-y-6">
+      <RoleHero
+        title="My Used Book Requests &amp; P2P Inquiries"
+        subtitle="Track direct seller offers for second-hand textbooks, negotiable deals, and verified campus handovers."
+        badgeText="Student Peer-to-Peer Requests"
+        showMascot={true}
+        mascotPose="reading"
+        stats={[
+          { label: 'Total Inquiries', value: rawRequests.length, badge: 'Sent', isPositive: true },
+          { label: 'Active Negotiations', value: rawRequests.filter((r) => r.status === 'in_discussion').length, badge: 'Discussion', isPositive: true },
+          { label: 'Deals Closed', value: rawRequests.filter((r) => r.status === 'completed' || r.status === 'accepted').length, badge: 'Purchased', isPositive: true },
+          { label: 'Campus Escrow', value: '100% Safe', badge: 'Protected', isPositive: true },
+        ]}
+      />
 
-      <main className="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link
-          href="/account/orders"
-          className="inline-flex items-center space-x-2 text-sm text-text-secondary hover:text-brand mb-6 transition-colors font-sans"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Account Orders</span>
-        </Link>
+      <RoleFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search book title or request number..."
+        filterChips={filterChips}
+        activeFilter={statusFilter}
+        onFilterSelect={setStatusFilter}
+      />
 
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-serif text-3xl font-bold text-text-primary flex items-center gap-3">
-              <MessageSquare className="h-8 w-8 text-brand" />
-              <span>Used Book Purchase Requests</span>
-            </h1>
-            <p className="text-sm text-text-secondary mt-1">
-              Track requests submitted to sellers for used / second-hand books. Sellers contact you directly.
-            </p>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="space-y-4 animate-pulse">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 border border-border bg-card rounded-2xl" />
-            ))}
-          </div>
-        ) : isError ? (
-          <div className="p-8 text-center border border-border bg-card rounded-2xl space-y-3">
-            <XCircle className="h-10 w-10 text-danger mx-auto" />
-            <p className="text-sm font-bold text-text-primary">Failed to load purchase requests.</p>
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="p-12 text-center border border-border bg-card rounded-3xl space-y-4">
-            <MessageSquare className="h-12 w-12 text-text-muted mx-auto" />
-            <h2 className="font-serif text-xl font-bold text-text-primary">No Used Book Requests</h2>
-            <p className="text-sm text-text-secondary max-w-md mx-auto">
-              When you express interest in used books on BookFry, your direct contact requests will appear here.
-            </p>
-            <Link
-              href="/books?conditionType=used"
-              className="inline-flex items-center px-6 py-2.5 bg-brand text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-brand-hover transition-all"
+      {isError ? (
+        <RoleEmptyState
+          title="Requests Fetch Error"
+          description="Failed to load your P2P textbook requests."
+          mascotVariant="pointing"
+          action={{ label: 'Retry Fetch', onClick: () => refetch() }}
+        />
+      ) : filteredRequests.length === 0 ? (
+        <RoleEmptyState
+          title="No Used Book Requests Found"
+          description={searchQuery ? 'Try clearing your search term.' : 'Browse the used book section and send direct purchase requests to student sellers.'}
+          mascotVariant="searching"
+          action={{
+            label: 'Browse Used Books',
+            onClick: () => window.location.assign('/books?condition=used_good'),
+          }}
+        />
+      ) : (
+        <div className="space-y-3">
+          {filteredRequests.map((req) => (
+            <div
+              key={req.id}
+              className="p-4 sm:p-5 rounded-3xl border border-border/80 bg-card hover:border-secondary/40 transition-all shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              Browse Used Books
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {requests.map((req) => (
-              <div
-                key={req.id}
-                className="p-6 border border-border bg-card rounded-3xl space-y-4 shadow-sm hover:border-brand/30 transition-all"
-              >
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border pb-3">
-                  <div>
-                    <span className="font-mono text-xs font-bold text-brand uppercase tracking-wider bg-brand/10 px-2.5 py-1 rounded-full border border-brand/20">
-                      Request #{req.requestNumber}
-                    </span>
-                    <p className="text-xs text-text-muted mt-1.5 font-medium">
-                      Submitted on {new Date(req.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
+              <div className="space-y-1.5 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-bold text-secondary text-xs">{req.requestNumber}</span>
                   <span
-                    className={`px-3 py-1 text-xs font-extrabold uppercase tracking-wider rounded-full border ${
-                      STATUS_COLORS[req.status] || 'bg-muted text-text-secondary border-border'
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                      STATUS_COLORS[req.status] || 'bg-muted text-muted-foreground border-border'
                     }`}
                   >
-                    {req.status.replace(/_/g, ' ')}
+                    {STATUS_LABELS[req.status] || req.status}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {new Date(req.createdAt).toLocaleDateString('en-IN')}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <h3 className="font-serif text-lg font-bold text-text-primary">{req.title}</h3>
-                    <p className="text-sm font-extrabold text-brand font-mono">₹{req.price.toFixed(2)}</p>
-                    <p className="text-xs text-text-muted capitalize">Condition: {req.condition.replace(/_/g, ' ')}</p>
-                  </div>
-
-                  <div className="p-3 bg-muted/50 rounded-2xl border border-border space-y-1.5 text-xs">
-                    <span className="font-bold text-text-primary flex items-center gap-1.5">
-                      <Store className="h-3.5 w-3.5 text-brand" /> Seller: {req.sellerName || 'Verified Seller'}
-                    </span>
-                    {req.sellerCity && (
-                      <p className="text-text-secondary">Location: {req.sellerCity}, {req.sellerState}</p>
-                    )}
-                    <p className="text-text-muted text-[11px]">
-                      The seller receives your contact info and will reach out via WhatsApp/email.
-                    </p>
-                  </div>
-                </div>
-
-                {req.timeline && req.timeline.length > 0 && (
-                  <div className="pt-2 border-t border-border">
-                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block mb-1">
-                      Latest Activity
-                    </span>
-                    <p className="text-xs text-text-secondary italic">
-                      &quot;{req.timeline[req.timeline.length - 1].note || req.status}&quot; —{' '}
-                      {new Date(req.timeline[req.timeline.length - 1].timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                )}
+                <h3 className="font-serif text-sm sm:text-base font-bold text-foreground truncate">
+                  {req.title}
+                </h3>
+                <p className="text-xs text-muted-foreground font-medium">
+                  Offered Price: <span className="font-mono font-extrabold text-foreground">₹{req.price}</span> • Target Condition: <span className="capitalize font-bold text-foreground">{req.condition.replace('_', ' ')}</span>
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
 
-      <Footer />
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button
+                  onClick={() => setSelectedRequest(req)}
+                  className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-white font-bold text-xs rounded-2xl transition-all shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>View Details</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Used Request Detail Modal */}
+      <UsedRequestDetailModal
+        request={selectedRequest}
+        isOpen={!!selectedRequest}
+        onClose={() => setSelectedRequest(null)}
+      />
     </div>
   );
 }

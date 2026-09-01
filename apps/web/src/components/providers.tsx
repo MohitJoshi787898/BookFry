@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
+import { useLiveEvents } from '@/hooks/use-live-events';
+
+function LiveEventsSubscriber() {
+  useLiveEvents();
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -42,6 +48,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <LiveEventsSubscriber />
       {children}
     </QueryClientProvider>
   );

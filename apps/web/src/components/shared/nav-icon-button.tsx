@@ -36,13 +36,13 @@ export function NavIconButton({
       <span className="relative">
         <Icon className="h-5 w-5" aria-hidden="true" />
         {typeof badgeCount === "number" && badgeCount > 0 && (
-          <span className="absolute -right-2 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-background bg-secondary text-[9px] font-extrabold text-secondary-foreground shadow-xs">
+          <span className="absolute -right-2 -top-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full border border-background bg-secondary text-[10px] font-extrabold text-secondary-foreground shadow-xs">
             {badgeCount > 99 ? "99+" : badgeCount}
           </span>
         )}
       </span>
       {showLabel && (
-        <span className="mt-1 text-[10px] font-bold text-text-secondary">
+        <span className="mt-1 text-xs font-bold text-text-secondary">
           {label}
         </span>
       )}

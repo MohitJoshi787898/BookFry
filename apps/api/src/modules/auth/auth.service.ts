@@ -67,7 +67,7 @@ export class AuthService {
       const isValid = await this.usersService.verifyRefreshToken(user, refreshToken);
       if (!isValid) {
         await this.usersService.updateRefreshToken(user._id.toString(), null);
-        throw new UnauthorizedError('Invalid or expired refresh token');
+        throw new UnauthorizedError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN');
       }
 
       const accessToken = this.generateAccessToken(user);
@@ -76,8 +76,11 @@ export class AuthService {
       await this.usersService.updateRefreshToken(user._id.toString(), newRefreshToken);
 
       return { accessToken, newRefreshToken, user };
-    } catch (error) {
-      throw new UnauthorizedError('Invalid or expired refresh token');
+    } catch (error: any) {
+      if (error instanceof UnauthorizedError) {
+        throw error;
+      }
+      throw new UnauthorizedError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN');
     }
   }
 

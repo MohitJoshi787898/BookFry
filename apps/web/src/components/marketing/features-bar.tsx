@@ -58,7 +58,7 @@ export function FeaturesBar({
       aria-label={title}
       className="relative py-8 bg-background-subtle border-y border-border/80 overflow-hidden"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4 font-sans">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 space-y-4 font-sans">
         {subtitle && (
           <div className="text-center">
             <h2 className="text-sm sm:text-base font-extrabold text-text-primary">{title}</h2>

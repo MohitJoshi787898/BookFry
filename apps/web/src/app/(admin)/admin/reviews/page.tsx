@@ -4,14 +4,17 @@ import React, { useState } from 'react';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminDataTable, Column } from '@/components/admin/admin-data-table';
+import { AdminFilterBar } from '@/components/admin/admin-filter-bar';
+import { AdminEmptyState } from '@/components/admin/admin-empty-state';
 import { useAuthStore } from '@/stores/auth.store';
-import { Star, ShieldAlert, Trash2, Eye, Pencil, Check } from 'lucide-react';
+import { Star, Eye, Pencil, Trash2, MessageSquare, Flag, CheckCircle2 } from 'lucide-react';
 import {
-  AdminDialog,
+  AdminModal,
   AdminDetailRow,
   AdminStatBadge,
-} from '@/components/admin/admin-dialog';
-import { AdminDangerDialog } from '@/components/admin/admin-danger-dialog';
+  AdminDetailSection,
+} from '@/components/admin/admin-modal';
+import { AdminDangerModal } from '@/components/admin/admin-danger-modal';
 
 interface BookReview {
   id: string;
@@ -58,8 +61,9 @@ export default function AdminReviewsPage() {
   const isAdmin = currentUser?.roles.includes('admin');
 
   const [reviews, setReviews] = useState<BookReview[]>(mockReviews);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
-  // Modals state
   const [selectedReview, setSelectedReview] = useState<BookReview | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -73,13 +77,11 @@ export default function AdminReviewsPage() {
   if (!isAdmin) {
     return (
       <AdminLayout>
-        <div className="text-center py-16 border border-border/80 bg-card rounded-3xl font-sans space-y-4 shadow-xl my-8">
-          <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
-          <h2 className="font-serif text-2xl font-bold text-foreground">Access Restricted</h2>
-          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-            You must have Administrative privileges to manage customer book reviews and ratings.
-          </p>
-        </div>
+        <AdminEmptyState
+          title="Access Restricted"
+          description="Super Administrator role required to moderate student reviews."
+          mascotVariant="reading"
+        />
       </AdminLayout>
     );
   }
@@ -98,51 +100,74 @@ export default function AdminReviewsPage() {
     setSelectedReview(null);
   };
 
-  const handleDeleteReview = (id: string) => {
-    setReviews(reviews.filter((r) => r.id !== id));
+  const handleDelete = () => {
+    if (!selectedReview) return;
+    setReviews(reviews.filter((r) => r.id !== selectedReview.id));
     setDeleteModalOpen(false);
     setSelectedReview(null);
   };
 
-  const approvedCount = reviews.filter((r) => r.status === 'approved').length;
-  const flaggedCount = reviews.filter((r) => r.status === 'flagged').length;
-  const avgRating = reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : '5.0';
+  const handleQuickStatus = (review: BookReview, newStatus: 'approved' | 'flagged') => {
+    setReviews(
+      reviews.map((r) =>
+        r.id === review.id ? { ...r, status: newStatus } : r
+      )
+    );
+  };
+
+  const filteredReviews = reviews.filter((r) => {
+    const matchesSearch =
+      !searchQuery.trim() ||
+      r.bookTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.reviewerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.comment.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = !statusFilter || r.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filterChips = [
+    { id: '', label: 'All Reviews', count: reviews.length },
+    { id: 'approved', label: 'Approved Feedback', count: reviews.filter((r) => r.status === 'approved').length },
+    { id: 'flagged', label: 'Flagged for Review', count: reviews.filter((r) => r.status === 'flagged').length },
+  ];
 
   const columns: Column<BookReview>[] = [
     {
-      header: 'Book & Reviewer',
+      header: 'Textbook & Reviewer',
       cell: (r) => (
         <div className="font-sans">
-          <p className="font-bold text-foreground text-xs sm:text-sm">{r.bookTitle}</p>
-          <p className="text-[11px] text-muted-foreground font-medium">by {r.reviewerName} • {r.createdAt}</p>
+          <p className="font-bold text-foreground line-clamp-1">{r.bookTitle}</p>
+          <p className="text-[11px] text-muted-foreground font-medium">
+            Student: <span className="font-semibold text-foreground">{r.reviewerName}</span>
+          </p>
         </div>
       ),
     },
     {
-      header: 'Rating',
+      header: 'Student Rating',
       cell: (r) => (
-        <div className="flex items-center space-x-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star
-              key={i}
-              className={`h-3.5 w-3.5 ${i < r.rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/30'}`}
-            />
-          ))}
+        <div className="flex items-center gap-1 text-amber-500 font-bold text-xs">
+          <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+          <span>{r.rating}.0 / 5.0</span>
         </div>
       ),
     },
     {
-      header: 'Review Comment',
-      cell: (r) => <p className="text-xs text-muted-foreground line-clamp-2 max-w-sm font-medium">{r.comment}</p>,
+      header: 'Commentary Snippet',
+      cell: (r) => (
+        <p className="text-xs text-muted-foreground font-sans line-clamp-1 max-w-sm">
+          &quot;{r.comment}&quot;
+        </p>
+      ),
     },
     {
       header: 'Status',
       cell: (r) => (
         <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
             r.status === 'approved'
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+              : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
           }`}
         >
           {r.status}
@@ -153,45 +178,48 @@ export default function AdminReviewsPage() {
       header: 'Actions',
       className: 'text-right',
       cell: (r) => (
-        <div className="flex items-center justify-end space-x-2 font-sans">
-          {/* View Details */}
+        <div className="flex items-center justify-end space-x-1.5 font-sans">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedReview(r);
-              setViewModalOpen(true);
-            }}
-            className="p-2 rounded-xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-all active:scale-95 shadow-xs"
-            title="View Details"
+            onClick={() => { setSelectedReview(r); setViewModalOpen(true); }}
+            className="p-1.5 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+            title="View Full Review"
           >
-            <Eye className="h-4 w-4" />
+            <Eye className="h-3.5 w-3.5" />
           </button>
-
-          {/* Edit Review */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               setSelectedReview(r);
               setEditForm({ rating: r.rating, comment: r.comment, status: r.status });
               setEditModalOpen(true);
             }}
-            className="p-2 rounded-xl border border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-secondary transition-all active:scale-95 shadow-xs"
-            title="Edit Review"
+            className="p-1.5 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-secondary transition-all cursor-pointer"
+            title="Edit / Moderate"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-3.5 w-3.5" />
           </button>
-
-          {/* Soft Delete */}
+          {r.status === 'flagged' ? (
+            <button
+              onClick={() => handleQuickStatus(r, 'approved')}
+              className="p-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all cursor-pointer"
+              title="Approve Review"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <button
+              onClick={() => handleQuickStatus(r, 'flagged')}
+              className="p-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white transition-all cursor-pointer"
+              title="Flag Review"
+            >
+              <Flag className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedReview(r);
-              setDeleteModalOpen(true);
-            }}
-            className="p-2 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95 shadow-xs"
-            title="Soft Delete / Remove Review"
+            onClick={() => { setSelectedReview(r); setDeleteModalOpen(true); }}
+            className="p-1.5 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
+            title="Delete Review"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       ),
@@ -200,164 +228,126 @@ export default function AdminReviewsPage() {
 
   return (
     <AdminLayout>
-      {/* Brand Hero Section Header */}
       <AdminHero
-        title="Book Reviews & Content Moderation"
-        subtitle="Moderate student book reviews, verify buyer ratings, and purge spam comments across BookFry."
-        badgeText="Community Trust & Safety"
+        title="Student Reviews & Feedback"
+        subtitle="Ensure authentic peer book ratings, moderate reported feedback, and maintain trusted campus testimonials."
+        badgeText="Community Trust"
         stats={[
-          { label: "Total Reviews", value: reviews.length, badge: "Buyer Feedback", isPositive: true },
-          { label: "Approved Reviews", value: approvedCount, badge: "Live Storefront", isPositive: true },
-          { label: "Flagged / Spam", value: flaggedCount, badge: "Moderation Queue", isPositive: false },
-          { label: "Average Score", value: `${avgRating} ★`, badge: "Platform Average", isPositive: true },
+          { label: 'Total Reviews', value: reviews.length, badge: 'Ratings', isPositive: true },
+          { label: 'Approved Feedback', value: reviews.filter((r) => r.status === 'approved').length, badge: 'Live', isPositive: true },
+          { label: 'Flagged for Review', value: reviews.filter((r) => r.status === 'flagged').length, badge: 'Queue', isPositive: false },
         ]}
       />
 
-      <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-xl font-sans">
-        <AdminDataTable
-          title="Student Book Reviews"
-          subtitle="Verified customer feedback stream across India"
-          data={reviews}
-          columns={columns}
-          searchField="bookTitle"
-          searchPlaceholder="Search title or reviewer..."
-        />
-      </div>
+      <AdminFilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search textbook title, reviewer name, or keywords..."
+        filterChips={filterChips}
+        activeFilter={statusFilter}
+        onFilterSelect={setStatusFilter}
+      />
+
+      <AdminDataTable
+        title="Verified Student Book Reviews"
+        subtitle="Peer feedback submitted after confirmed orders"
+        data={filteredReviews}
+        columns={columns}
+        searchField="bookTitle"
+        searchPlaceholder="Search review title..."
+      />
 
       {/* VIEW REVIEW DETAILS MODAL */}
       {selectedReview && (
-        <AdminDialog
+        <AdminModal
           isOpen={viewModalOpen}
-          onClose={() => {
-            setViewModalOpen(false);
-            setSelectedReview(null);
-          }}
+          onClose={() => { setViewModalOpen(false); setSelectedReview(null); }}
           size="md"
-          title={`Review for ${selectedReview.bookTitle}`}
-          subtitle={`By ${selectedReview.reviewerName} • ${selectedReview.createdAt}`}
-          icon={<Star className="h-5 w-5 text-amber-500 fill-amber-500" />}
+          title={selectedReview.bookTitle}
+          subtitle={`Reviewed by ${selectedReview.reviewerName}`}
+          icon={<MessageSquare className="h-5 w-5 text-secondary" />}
           badge={
             <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${
                 selectedReview.status === 'approved'
-                  ? 'bg-success/10 text-success border border-success/20'
-                  : 'bg-warning/10 text-warning border border-warning/20'
+                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                  : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
               }`}
             >
               {selectedReview.status}
             </span>
           }
-          headerActions={
-            <button
-              onClick={() => {
-                setViewModalOpen(false);
-                setEditForm({
-                  rating: selectedReview.rating,
-                  comment: selectedReview.comment,
-                  status: selectedReview.status,
-                });
-                setEditModalOpen(true);
-              }}
-              className="p-1.5 text-text-muted hover:text-secondary hover:bg-muted rounded-xl transition-all flex items-center gap-1 text-xs font-bold mr-2"
-              title="Edit Review"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
-          }
           footer={
-            <div className="flex items-center justify-between w-full">
-              <p className="text-xs text-text-muted">
-                Rating: <span className="font-bold text-amber-500">{selectedReview.rating} / 5 Stars</span>
-              </p>
+            <div className="flex items-center justify-end w-full">
               <button
-                onClick={() => {
-                  setViewModalOpen(false);
-                  setSelectedReview(null);
-                }}
-                className="px-5 py-2 bg-secondary text-secondary-foreground text-xs font-bold rounded-xl hover:bg-secondary/90 shadow-xs"
+                onClick={() => { setViewModalOpen(false); setSelectedReview(null); }}
+                className="px-5 py-2.5 bg-secondary text-white text-xs font-extrabold uppercase tracking-wider rounded-2xl hover:bg-secondary/90 shadow-md shadow-secondary/20 cursor-pointer"
               >
-                Close Summary
+                Close
               </button>
             </div>
           }
         >
-          <div className="space-y-5">
-            {/* Stat Badges */}
+          <div className="space-y-4 font-sans">
             <div className="grid grid-cols-2 gap-3">
               <AdminStatBadge
-                label="Customer Rating"
-                value={`${selectedReview.rating} / 5 Stars`}
-                variant="default"
+                label="Student Rating"
+                value={`${selectedReview.rating}.0 / 5.0`}
+                variant="warning"
               />
               <AdminStatBadge
-                label="Moderation State"
-                value={selectedReview.status.toUpperCase()}
-                variant={selectedReview.status === 'approved' ? 'success' : 'warning'}
+                label="Trust Score"
+                value="Verified Buyer"
+                variant="success"
               />
             </div>
 
-            {/* Information Rows */}
-            <div className="p-4 bg-muted/30 border border-border rounded-2xl space-y-2">
-              <AdminDetailRow label="Target Book" value={selectedReview.bookTitle} />
-              <AdminDetailRow label="Reviewer Name" value={selectedReview.reviewerName} />
-              <AdminDetailRow label="Submission Date" value={selectedReview.createdAt} />
-              <AdminDetailRow label="Review ID" value={selectedReview.id} copyable />
-            </div>
-
-            {/* Comment Body */}
-            <div>
-              <p className="font-bold text-text-muted uppercase text-[11px] tracking-wider mb-1.5">
-                Review Feedback & Commentary
-              </p>
-              <div className="p-4 bg-background border border-border rounded-2xl text-text-primary italic leading-relaxed text-xs">
-                &quot;{selectedReview.comment}&quot;
+            <AdminDetailSection title="Review Content" icon={<MessageSquare className="h-4 w-4" />}>
+              <div className="p-4 bg-muted/30 border border-border/80 rounded-2xl space-y-2">
+                <p className="text-xs text-foreground leading-relaxed font-medium bg-card p-3 rounded-xl border border-border/70">
+                  &quot;{selectedReview.comment}&quot;
+                </p>
+                <div className="pt-2">
+                  <AdminDetailRow label="Review Date" value={selectedReview.createdAt} />
+                  <AdminDetailRow label="Reviewer Name" value={selectedReview.reviewerName} />
+                </div>
               </div>
-            </div>
+            </AdminDetailSection>
           </div>
-        </AdminDialog>
+        </AdminModal>
       )}
 
-      {/* EDIT REVIEW FORM MODAL */}
+      {/* EDIT / MODERATE REVIEW MODAL */}
       {selectedReview && (
-        <AdminDialog
+        <AdminModal
           isOpen={editModalOpen}
-          onClose={() => {
-            setEditModalOpen(false);
-            setSelectedReview(null);
-          }}
+          onClose={() => { setEditModalOpen(false); setSelectedReview(null); }}
           size="md"
-          title="Edit Customer Review"
-          subtitle={`Adjusting moderation status or comment text`}
+          title="Moderate Review Entry"
+          subtitle={`Adjust feedback for ${selectedReview.bookTitle}`}
           icon={<Pencil className="h-5 w-5 text-secondary" />}
           footer={
             <div className="flex items-center justify-end gap-3 w-full">
               <button
                 type="button"
-                onClick={() => {
-                  setEditModalOpen(false);
-                  setSelectedReview(null);
-                }}
-                className="px-4 py-2 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
+                onClick={() => { setEditModalOpen(false); setSelectedReview(null); }}
+                className="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground rounded-xl cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 form="edit-review-form"
-                className="px-5 py-2 bg-secondary text-secondary-foreground font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5"
+                className="px-5 py-2.5 bg-secondary text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider hover:bg-secondary/90 shadow-md shadow-secondary/20 cursor-pointer"
               >
-                <Check className="h-3.5 w-3.5" />
-                <span>Save Changes</span>
+                Save Review
               </button>
             </div>
           }
         >
-          <form id="edit-review-form" onSubmit={handleSaveEdit} className="space-y-4 text-xs">
+          <form id="edit-review-form" onSubmit={handleSaveEdit} className="space-y-4 text-xs font-sans">
             <div>
-              <label className="block text-xs font-bold text-text-primary mb-1.5">
-                Star Rating (1 to 5 Stars) <span className="text-danger">*</span>
-              </label>
+              <label className="block text-xs font-bold text-foreground mb-1.5">Rating (1 to 5 Stars) *</label>
               <input
                 type="number"
                 min={1}
@@ -365,62 +355,50 @@ export default function AdminReviewsPage() {
                 required
                 value={editForm.rating}
                 onChange={(e) => setEditForm({ ...editForm, rating: Number(e.target.value) })}
-                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs font-mono focus:ring-2 focus:ring-secondary/40 outline-none"
+                className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs font-mono focus:ring-2 focus:ring-secondary/40 outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-text-primary mb-1.5">
-                Commentary & Feedback <span className="text-danger">*</span>
-              </label>
+              <label className="block text-xs font-bold text-foreground mb-1.5">Review Comment *</label>
               <textarea
-                rows={4}
+                rows={3}
                 required
                 value={editForm.comment}
                 onChange={(e) => setEditForm({ ...editForm, comment: e.target.value })}
-                className="w-full p-3 border border-border rounded-xl bg-background text-text-primary text-xs leading-relaxed focus:ring-2 focus:ring-secondary/40 outline-none"
+                className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs focus:ring-2 focus:ring-secondary/40 outline-none resize-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-text-primary mb-1.5">
-                Moderation Status
-              </label>
+              <label className="block text-xs font-bold text-foreground mb-1.5">Moderation Status *</label>
               <select
                 value={editForm.status}
                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'approved' | 'flagged' })}
-                className="w-full p-2.5 border border-border rounded-xl bg-background text-text-primary text-xs focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
+                className="w-full p-3 border border-border/80 rounded-2xl bg-background text-foreground text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
               >
-                <option value="approved">Approved (Publicly Displayed on Marketplace)</option>
-                <option value="flagged">Flagged (Hidden Pending Review)</option>
+                <option value="approved">Approved &amp; Visible on Storefront</option>
+                <option value="flagged">Flagged / Hidden for Inspection</option>
               </select>
             </div>
           </form>
-        </AdminDialog>
+        </AdminModal>
       )}
 
-      {/* DELETE REVIEW DANGER DIALOG */}
+      {/* DELETE DANGER MODAL */}
       {selectedReview && (
-        <AdminDangerDialog
+        <AdminDangerModal
           isOpen={deleteModalOpen}
-          onClose={() => {
-            setDeleteModalOpen(false);
-            setSelectedReview(null);
-          }}
-          onConfirm={() => handleDeleteReview(selectedReview.id)}
+          onClose={() => { setDeleteModalOpen(false); setSelectedReview(null); }}
+          onConfirm={handleDelete}
           title="Confirm Delete Review"
-          entityName={`Review by ${selectedReview.reviewerName}`}
-          description={
-            <span>
-              Are you sure you want to remove this review for{' '}
-              <strong>{selectedReview.bookTitle}</strong>?
-            </span>
-          }
+          entityName={`Review on "${selectedReview.bookTitle}"`}
+          description={<span>Are you sure you want to permanently delete this student review by <strong>{selectedReview.reviewerName}</strong>?</span>}
           impacts={[
-            'The review will be permanently deleted from the marketplace storefront.',
-            "The book's aggregate rating will be automatically recalculated.",
+            'The review score will be removed from the book average rating calculation.',
+            'This action cannot be undone.',
           ]}
-          confirmText="Delete Review"
+          confirmText="Delete Review Entry"
         />
       )}
     </AdminLayout>
