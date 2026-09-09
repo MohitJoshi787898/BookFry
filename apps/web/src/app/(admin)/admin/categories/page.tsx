@@ -16,6 +16,9 @@ import {
 } from '@/components/admin/admin-modal';
 import { AdminDangerModal } from '@/components/admin/admin-danger-modal';
 import Link from 'next/link';
+import { toast } from '@/stores/toast.store';
+import { normalizeApiError } from '@/lib/error-normalizer';
+
 
 export default function AdminCategoriesPage() {
   const { user: currentUser } = useAuthStore();
@@ -55,9 +58,16 @@ export default function AdminCategoriesPage() {
       setParentId('');
       setErrorMsg(null);
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Category created successfully.', {
+        title: 'Category Added',
+      });
     },
-    onError: (err: { message?: string }) => {
-      setErrorMsg(err.message || 'Failed to create category');
+    onError: (err: unknown) => {
+      const normalized = normalizeApiError(err);
+      setErrorMsg(normalized.message);
+      toast.error(normalized.message, {
+        title: normalized.title || 'Could Not Create Category',
+      });
     },
   });
 
@@ -71,6 +81,15 @@ export default function AdminCategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setEditModalOpen(false);
       setSelectedCat(null);
+      toast.success('Category updated successfully.', {
+        title: 'Category Updated',
+      });
+    },
+    onError: (err: unknown) => {
+      const normalized = normalizeApiError(err);
+      toast.error(normalized.message, {
+        title: normalized.title || 'Update Failed',
+      });
     },
   });
 
@@ -83,6 +102,15 @@ export default function AdminCategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       setDeleteModalOpen(false);
       setSelectedCat(null);
+      toast.success('Category has been deleted.', {
+        title: 'Category Deleted',
+      });
+    },
+    onError: (err: unknown) => {
+      const normalized = normalizeApiError(err);
+      toast.error(normalized.message, {
+        title: normalized.title || 'Delete Failed',
+      });
     },
   });
 

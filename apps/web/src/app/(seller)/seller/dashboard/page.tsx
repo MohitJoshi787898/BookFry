@@ -6,6 +6,7 @@ import { SellerLayout } from '@/components/seller/seller-layout';
 import { RoleHero } from '@/components/shared/role-hero';
 import { RoleStatCard } from '@/components/shared/role-stat-card';
 import { RoleEmptyState } from '@/components/shared/role-empty-state';
+import { SellerStatusBanner } from '@/components/seller/seller-status-banner';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
@@ -84,6 +85,13 @@ export default function SellerDashboardPage() {
 
   return (
     <SellerLayout>
+      {/* Onboarding & Verification Status Banner — shows correct state, never hardcoded */}
+      <SellerStatusBanner
+        onboardingStatus={user?.sellerOnboardingStatus}
+        verificationStatus={user?.sellerVerificationStatus}
+        rejectionReason={user?.sellerVerificationRejectionReason}
+      />
+
       {/* Personalized Hero Banner with Mascot */}
       <RoleHero
         title={`Welcome back, ${user?.name?.split(' ')[0] || 'Seller'}!`}

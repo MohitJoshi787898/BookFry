@@ -11,6 +11,8 @@ function LiveEventsSubscriber() {
   return null;
 }
 
+import { BookFryToastContainer } from '@/components/ui/bookfry-toast-container';
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -50,6 +52,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <LiveEventsSubscriber />
       {children}
+      <BookFryToastContainer />
     </QueryClientProvider>
   );
 }
+

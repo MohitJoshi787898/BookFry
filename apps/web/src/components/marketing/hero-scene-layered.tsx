@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import {
   motion,
   useMotionValue,
@@ -24,6 +24,10 @@ export function HeroSceneLayered({
   heroRef,
 }: HeroSceneLayeredProps) {
   const reduced = useReducedMotion();
+
+  // Hydration guard — prevents SSR/CSR mismatch for motion values
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => { setHasMounted(true); }, []);
 
   // Layer 1-2: Background Glow Parallax (4-8px)
   const bgXRaw = useMotionValue(0);
@@ -117,7 +121,7 @@ export function HeroSceneLayered({
     <div className="relative flex flex-col items-center justify-center w-full max-w-[480px] lg:max-w-[560px] mx-auto select-none">
       {/* ── LAYER 1: Deep Radial Ambient Glow ──────────────────────────────── */}
       <motion.div
-        style={reduced ? {} : { x: bgX, y: bgY }}
+        style={!hasMounted || reduced ? {} : { x: bgX, y: bgY }}
         aria-hidden="true"
         className="pointer-events-none absolute -inset-8 z-0 opacity-85"
       >
@@ -125,13 +129,18 @@ export function HeroSceneLayered({
         <img
           src="/assets/bookfry/01_background_glow.png"
           alt=""
+          loading="eager"
+          fetchPriority="high"
           className="h-full w-full object-contain"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
         />
       </motion.div>
 
       {/* ── LAYER 2: Secondary Golden Aura ─────────────────────────────────── */}
       <motion.div
-        style={reduced ? {} : { x: bgX, y: bgY }}
+        style={!hasMounted || reduced ? {} : { x: bgX, y: bgY }}
         aria-hidden="true"
         className="pointer-events-none absolute top-12 left-8 w-64 h-64 rounded-full bg-[#FFB347]/20 blur-2xl"
       />
@@ -140,43 +149,52 @@ export function HeroSceneLayered({
       <div className="relative w-full aspect-square max-h-[440px] sm:max-h-[500px]">
         {/* Layer 3A: Potted Plant on the Left */}
         <motion.div
-          style={reduced ? {} : { x: midX, y: midY }}
-          initial={{ opacity: 0, scale: 0.8, x: -30 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
+          style={!hasMounted || reduced ? {} : { x: midX, y: midY }}
           className="absolute -left-2 sm:left-0 bottom-6 sm:bottom-10 w-24 sm:w-32 md:w-36 z-10 drop-shadow-xl"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/bookfry/05_potted_plant.png"
             alt="Reading corner plant"
+            loading="lazy"
             draggable={false}
-            className="w-full h-auto object-contain"
+            className="w-full h-auto object-contain transition-opacity duration-500 opacity-0"
+            onLoad={(e) => {
+              (e.currentTarget as HTMLImageElement).style.opacity = "1";
+            }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
         </motion.div>
 
         {/* Layer 3B: Large Stack of Hardcover Books in Center */}
         <motion.div
-          style={reduced ? {} : { x: midX, y: midY }}
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
+          style={!hasMounted || reduced ? {} : { x: midX, y: midY }}
           className="absolute left-1/2 -translate-x-1/2 bottom-0 w-60 sm:w-72 md:w-80 z-15 drop-shadow-2xl"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/bookfry/03_book_stack_large.png"
             alt="Stack of colorful textbooks"
+            loading="eager"
+            fetchPriority="high"
             draggable={false}
-            className="w-full h-auto object-contain"
+            className="w-full h-auto object-contain transition-opacity duration-500 opacity-0"
+            onLoad={(e) => {
+              (e.currentTarget as HTMLImageElement).style.opacity = "1";
+            }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
         </motion.div>
 
         {/* Layer 3C: Main Fox Mascot sitting on top of books with spring float & eye tracking */}
         <motion.div
-          animate={reduced ? {} : { y: [0, -10, 0] }}
+          animate={!hasMounted || reduced ? {} : { y: [0, -10, 0] }}
           transition={
-            reduced
+            !hasMounted || reduced
               ? {}
               : {
                   duration: 3.4,
@@ -189,7 +207,7 @@ export function HeroSceneLayered({
         >
           <motion.div
             style={
-              reduced
+              !hasMounted || reduced
                 ? {}
                 : {
                     x: foxX,
@@ -199,27 +217,36 @@ export function HeroSceneLayered({
                     transformPerspective: 1000,
                   }
             }
-            initial={{ opacity: 0, scale: 0.85, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="relative"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/assets/bookfry/02_fox_reading.png"
               alt="BookFry Mascot Fox reading"
+              loading="eager"
+              fetchPriority="high"
               draggable={false}
-              className="w-full h-auto object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)]"
+              className="w-full h-auto object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] transition-opacity duration-500 opacity-0"
+              onLoad={(e) => {
+                (e.currentTarget as HTMLImageElement).style.opacity = "1";
+              }}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
             />
           </motion.div>
         </motion.div>
 
         {/* Layer 3D: Floating Open Books on the Right */}
         <motion.div
-          style={reduced ? {} : { x: foxX, y: foxY }}
-          animate={reduced ? {} : { y: [0, -12, 0], rotate: [-2, 2, -2] }}
+          style={!hasMounted || reduced ? {} : { x: foxX, y: foxY }}
+          animate={
+            !hasMounted || reduced
+              ? {}
+              : { y: [0, -12, 0], rotate: [-2, 2, -2] }
+          }
           transition={
-            reduced
+            !hasMounted || reduced
               ? {}
               : { duration: 4.2, repeat: Infinity, ease: "easeInOut" }
           }
@@ -229,29 +256,41 @@ export function HeroSceneLayered({
           <img
             src="/assets/bookfry/06_floating_open_book.png"
             alt="Floating magical books"
+            loading="lazy"
             draggable={false}
-            className="w-full h-auto object-contain opacity-95"
+            className="w-full h-auto object-contain opacity-0 transition-opacity duration-500"
+            onLoad={(e) => {
+              (e.currentTarget as HTMLImageElement).style.opacity = "0.95";
+            }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
         </motion.div>
 
         {/* Layer 3E: Separate mug, particles, and foliage keep the scene dimensional. */}
         <motion.div
-          style={reduced ? {} : { x: foxX, y: foxY }}
+          style={!hasMounted || reduced ? {} : { x: foxX, y: foxY }}
           className="absolute right-8 sm:right-12 bottom-2 w-14 sm:w-16 z-30 drop-shadow-lg"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/bookfry/08_mug.png"
             alt="Warm reading mug"
+            loading="lazy"
             draggable={false}
-            className="w-full h-auto object-contain"
+            className="w-full h-auto object-contain opacity-0 transition-opacity duration-500"
+            onLoad={(e) => {
+              (e.currentTarget as HTMLImageElement).style.opacity = "1";
+            }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
         </motion.div>
 
-
-
         <motion.div
-          style={reduced ? {} : { x: midX, y: midY }}
+          style={!hasMounted || reduced ? {} : { x: midX, y: midY }}
           aria-hidden="true"
           className="pointer-events-none absolute -right-5 bottom-0 w-24 sm:w-32 z-10 opacity-90"
         >
@@ -259,7 +298,14 @@ export function HeroSceneLayered({
           <img
             src="/assets/bookfry/11_foliage.png"
             alt=""
-            className="w-full h-auto object-contain"
+            loading="lazy"
+            className="w-full h-auto object-contain opacity-0 transition-opacity duration-500"
+            onLoad={(e) => {
+              (e.currentTarget as HTMLImageElement).style.opacity = "1";
+            }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
         </motion.div>
       </div>

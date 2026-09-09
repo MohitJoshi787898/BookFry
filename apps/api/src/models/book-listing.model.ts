@@ -12,6 +12,8 @@ export interface IBookListingDocument extends Document {
   catalogId: mongoose.Types.ObjectId;
   sellerId: mongoose.Types.ObjectId;
   condition: BookCondition;
+  conditionNotes?: string;
+  images?: Array<{ url: string; publicId: string }>;
   price: number;
   discountPrice?: number;
   stock: number;
@@ -65,6 +67,11 @@ const BookListingSchema = new Schema<IBookListingDocument>(
       enum: ['new', 'like_new', 'good', 'fair'],
       required: true,
     },
+    conditionNotes: { type: String, trim: true },
+    images: {
+      type: [{ url: String, publicId: String }],
+      default: [],
+    },
     price: { type: Number, required: true, min: 0 },
     discountPrice: { type: Number, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 1 },
@@ -101,6 +108,7 @@ const BookListingSchema = new Schema<IBookListingDocument>(
  * A seller cannot list the same ISBN twice — they update their existing listing instead.
  */
 BookListingSchema.index({ catalogId: 1, sellerId: 1 }, { unique: true });
+BookListingSchema.index({ catalogId: 1, status: 1, price: 1 });
 BookListingSchema.index({ status: 1, price: 1 });
 BookListingSchema.index({ location: '2dsphere' });
 BookListingSchema.index({ city: 1, status: 1, price: 1 });

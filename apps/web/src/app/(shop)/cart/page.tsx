@@ -12,6 +12,9 @@ import { Navbar } from '@/components/shared/navbar';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Check, Package, Truck, MessageCircle } from 'lucide-react';
+import { toast } from '@/stores/toast.store';
+import { normalizeApiError } from '@/lib/error-normalizer';
+
 
 import { CartHeroHeader } from '@/components/cart/cart-hero-header';
 import { CartItemCard } from '@/components/cart/cart-item-card';
@@ -185,8 +188,10 @@ export default function CartPage() {
       setIsCheckoutModalOpen(true);
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'Checkout failed. Please try again.';
-      alert(msg);
+      const normalized = normalizeApiError(err);
+      toast.error(normalized.message, {
+        title: normalized.title || 'Checkout Failed',
+      });
     },
   });
 
@@ -210,18 +215,32 @@ export default function CartPage() {
       if (res?.valid && res.coupon) {
         setAppliedCoupon(res.coupon.code);
         setValidatedDiscountAmount(res.coupon.discountAmount);
+        toast.success(`Coupon "${res.coupon.code}" applied! You saved ₹${res.coupon.discountAmount}.`, {
+          title: 'Coupon Applied',
+        });
       }
     } catch {
       if (cleanCode === 'BOOKFRYNEW') {
         setAppliedCoupon('BOOKFRYNEW');
-        setValidatedDiscountAmount(parseFloat((subtotal * 0.1).toFixed(2)));
+        const disc = parseFloat((subtotal * 0.1).toFixed(2));
+        setValidatedDiscountAmount(disc);
+        toast.success(`Welcome promo active! 10% discount applied (₹${disc}).`, {
+          title: 'Promo Applied',
+        });
       } else if (cleanCode === 'FESTIVE20') {
         setAppliedCoupon('FESTIVE20');
-        setValidatedDiscountAmount(parseFloat((subtotal * 0.2).toFixed(2)));
+        const disc = parseFloat((subtotal * 0.2).toFixed(2));
+        setValidatedDiscountAmount(disc);
+        toast.success(`Festive discount active! 20% discount applied (₹${disc}).`, {
+          title: 'Promo Applied',
+        });
       } else {
         setCouponError('Invalid coupon code.');
         setAppliedCoupon(null);
         setValidatedDiscountAmount(0);
+        toast.warning('The promo code entered is invalid or has expired.', {
+          title: 'Invalid Coupon',
+        });
       }
     }
   };
@@ -242,7 +261,9 @@ export default function CartPage() {
     const summary = items.map((i) => `${i.bookDetail?.title || 'Book'} x ${i.quantity}`).join('\n');
     if (navigator.clipboard) {
       navigator.clipboard.writeText(`My BookFry Vault Cart:\n${summary}`);
-      alert('Cart details copied to clipboard!');
+      toast.success('Your cart items have been copied to your clipboard.', {
+        title: 'Cart Shared',
+      });
     }
   };
 

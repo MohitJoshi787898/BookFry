@@ -17,6 +17,14 @@ export class PaymentsController {
       throw new NotFoundError('Order not found');
     }
 
+    // Security check: only the buyer of the order or an admin can generate payment intent
+    const requestingUserId = req.user?.id;
+    const isAdmin = req.user?.roles?.includes('admin');
+    if (requestingUserId && order.buyerId.toString() !== requestingUserId && !isAdmin) {
+      res.status(403).json(ApiResponse.error('FORBIDDEN', 'Not authorized to create payment intent for this order'));
+      return;
+    }
+
     const provider = getPaymentProvider();
     const result = await provider.createPaymentIntent(
       order.total,
@@ -45,6 +53,18 @@ export class PaymentsController {
       const order = session ? await orderQuery.session(session) : await orderQuery;
       if (!order) {
         throw new NotFoundError('Order not found');
+      }
+
+      // Security check: only the buyer of the order or an admin can verify payment
+      const requestingUserId = req.user?.id;
+      const isAdmin = req.user?.roles?.includes('admin');
+      if (requestingUserId && order.buyerId.toString() !== requestingUserId && !isAdmin) {
+        if (session) {
+          await session.abortTransaction();
+          session.endSession();
+        }
+        res.status(403).json(ApiResponse.error('FORBIDDEN', 'Not authorized to verify payment for this order'));
+        return;
       }
 
       // If order is already paid, return early to prevent double-processing

@@ -29,6 +29,9 @@ export interface ISellerProfile {
   };
 }
 
+export type SellerOnboardingStatus = 'incomplete' | 'complete';
+export type SellerVerificationStatus = 'not_submitted' | 'pending' | 'approved' | 'rejected';
+
 export interface IUserDocument extends Document {
   name: string;
   email: string;
@@ -40,6 +43,11 @@ export interface IUserDocument extends Document {
   isBanned: boolean;
   addresses: IAddress[];
   sellerProfile: ISellerProfile | null;
+  // Seller onboarding & verification state machine
+  sellerOnboardingStatus?: SellerOnboardingStatus;
+  sellerVerificationStatus?: SellerVerificationStatus;
+  sellerVerificationSubmittedAt?: Date;
+  sellerVerificationRejectionReason?: string;
   fcmTokens?: string[];
   refreshTokenHash?: string | null;
   createdAt: Date;
@@ -94,7 +102,14 @@ const SellerProfileSchema = new Schema<ISellerProfile>({
 const UserSchema = new Schema<IUserDocument>(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      lowercase: true,
+      trim: true,
+    },
     passwordHash: { type: String, required: true },
     roles: {
       type: [String],
@@ -107,6 +122,20 @@ const UserSchema = new Schema<IUserDocument>(
     isBanned: { type: Boolean, default: false },
     addresses: [AddressSchema],
     sellerProfile: { type: SellerProfileSchema, default: null },
+    // Seller onboarding & verification state machine.
+    // Only set when user has the 'seller' role.
+    sellerOnboardingStatus: {
+      type: String,
+      enum: ['incomplete', 'complete'],
+      default: undefined,
+    },
+    sellerVerificationStatus: {
+      type: String,
+      enum: ['not_submitted', 'pending', 'approved', 'rejected'],
+      default: undefined,
+    },
+    sellerVerificationSubmittedAt: { type: Date },
+    sellerVerificationRejectionReason: { type: String },
     fcmTokens: { type: [String], default: [] },
     refreshTokenHash: { type: String, default: null },
   },

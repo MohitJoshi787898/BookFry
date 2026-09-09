@@ -10,6 +10,7 @@ import { useCartStore } from '@/stores/cart.store';
 import { Book } from '@bookmarket/types';
 import { ShoppingBag, Trash2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from '@/stores/toast.store';
 
 export default function CustomerWishlistPage() {
   const { isAuthenticated } = useAuthStore();
@@ -31,6 +32,12 @@ export default function CustomerWishlistPage() {
       apiClient(`/wishlist/${bookId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buyer-wishlist'] });
+      toast.success('Book removed from your saved list.', {
+        title: 'Wishlist Updated',
+      });
+    },
+    onError: () => {
+      toast.error('Could not remove book from wishlist. Please try again.');
     },
   });
 
@@ -121,6 +128,10 @@ export default function CustomerWishlistPage() {
                     onClick={() => {
                       addItem(isAuthenticated, book);
                       removeMutation.mutate(book.id);
+                      toast.success(`"${book.title}" moved to your cart.`, {
+                        title: 'Moved to Cart',
+                        action: { label: 'View Cart', href: '/cart' },
+                      });
                     }}
                     className="flex-1 py-2.5 bg-secondary hover:bg-secondary/90 text-white font-bold text-xs rounded-2xl transition-all shadow-xs flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
                   >

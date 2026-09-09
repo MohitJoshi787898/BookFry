@@ -67,6 +67,30 @@ const nextConfig: NextConfig = {
         port: "5005",
         pathname: "/**",
       },
+      // Unsplash (marketing / placeholder images)
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
+      // placehold.co (placeholder images used in dev/fallbacks)
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+        pathname: "/**",
+      },
+      // via.placeholder.com (legacy placeholder images)
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com",
+        pathname: "/**",
+      },
+      // Google Books API thumbnails
+      {
+        protocol: "https",
+        hostname: "books.google.com",
+        pathname: "/**",
+      },
     ],
   },
 };

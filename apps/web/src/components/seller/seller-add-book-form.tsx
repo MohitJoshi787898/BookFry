@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Loader2, X, Sparkles } from 'lucide-react';
 import { Category } from '@bookmarket/types';
+import { toast } from '@/stores/toast.store';
+
 
 interface SellerAddBookFormProps {
   categories: Category[];
@@ -36,7 +38,9 @@ export function SellerAddBookForm({
 
   const handleFetchIsbn = async () => {
     if (!isbn || isbn.length < 10) {
-      alert('Please enter a 10 or 13 digit ISBN.');
+      toast.warning('Please enter a valid 10 or 13 digit ISBN number.', {
+        title: 'ISBN Required',
+      });
       return;
     }
     setIsFetchingIsbn(true);
@@ -52,12 +56,19 @@ export function SellerAddBookForm({
         setTitle(bookData.title || '');
         if (bookData.authors?.[0]) setAuthor(bookData.authors[0].name || '');
         if (bookData.publishers?.[0]) setPublisher(bookData.publishers[0].name || '');
+        toast.success(`Retrieved metadata for "${bookData.title || 'Book'}"`, {
+          title: 'Book Found',
+        });
       } else {
-        alert('No book records found for this ISBN. You can fill details manually.');
+        toast.info('No records found for this ISBN. You can fill in the details manually.', {
+          title: 'Manual Entry',
+        });
       }
     } catch (err) {
       console.error('ISBN Fetch error:', err);
-      alert('Could not connect to book metadata server.');
+      toast.warning('Could not connect to book metadata server. Please enter details manually.', {
+        title: 'Network Issue',
+      });
     } finally {
       setIsFetchingIsbn(false);
     }
@@ -81,7 +92,9 @@ export function SellerAddBookForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !author || !category || !price) {
-      alert('Please fill in Title, Author, Category, and Price.');
+      toast.warning('Please complete Title, Author, Category, and Price before submitting.', {
+        title: 'Required Information',
+      });
       return;
     }
 

@@ -14,9 +14,10 @@ export const sellBookSchema = z
     publisher: z.string().optional(),
     edition: z.string().optional(),
     category: z.string().min(1, 'Please select a book type / category'),
-    condition: z.enum(['excellent', 'good', 'fair', 'poor'], {
+    condition: z.enum(['new', 'like_new', 'good', 'fair'], {
       required_error: 'Please select book condition',
     }),
+    conditionNotes: z.string().max(500, 'Notes must be within 500 characters').optional(),
     images: z
       .array(z.any())
       .min(1, 'Please upload at least 1 image of your book')

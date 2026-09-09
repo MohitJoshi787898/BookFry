@@ -3,8 +3,6 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
@@ -23,24 +21,20 @@ import { BookDetailMobileStickyBar } from '@/components/shop/book-detail-mobile-
 
 function BookDetailSkeleton() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Navbar />
-      <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 animate-pulse space-y-8">
-        <div className="h-4 w-48 bg-muted rounded-full" />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-4 aspect-[3/4] bg-card border border-border rounded-3xl" />
-          <div className="lg:col-span-5 space-y-4">
-            <div className="h-8 w-3/4 bg-card border border-border rounded-2xl" />
-            <div className="h-4 w-1/2 bg-card border border-border rounded-full" />
-            <div className="h-20 w-full bg-card border border-border rounded-2xl" />
-          </div>
-          <div className="lg:col-span-3">
-            <div className="h-80 w-full bg-card border border-border rounded-3xl" />
-          </div>
+    <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 animate-pulse space-y-8">
+      <div className="h-4 w-48 bg-muted rounded-full" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-4 aspect-[3/4] bg-card border border-border rounded-3xl" />
+        <div className="lg:col-span-5 space-y-4">
+          <div className="h-8 w-3/4 bg-card border border-border rounded-2xl" />
+          <div className="h-4 w-1/2 bg-card border border-border rounded-full" />
+          <div className="h-20 w-full bg-card border border-border rounded-2xl" />
         </div>
-      </main>
-      <Footer />
-    </div>
+        <div className="lg:col-span-3">
+          <div className="h-80 w-full bg-card border border-border rounded-3xl" />
+        </div>
+      </div>
+    </main>
   );
 }
 
@@ -103,18 +97,14 @@ export default function BookDetailPage() {
 
   if (isError || !book) {
     return (
-      <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
-        <Navbar />
-        <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12">
-          <RoleEmptyState
-            title="Book Not Found"
-            description="The requested textbook listing might have been moved, sold out, or expired."
-            mascotVariant="pointing"
-            action={{ label: 'Explore Books', href: '/books' }}
-          />
-        </main>
-        <Footer />
-      </div>
+      <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12">
+        <RoleEmptyState
+          title="Book Not Found"
+          description="The requested textbook listing might have been moved, sold out, or expired."
+          mascotVariant="pointing"
+          action={{ label: 'Explore Books', href: '/books' }}
+        />
+      </main>
     );
   }
 
@@ -123,9 +113,7 @@ export default function BookDetailPage() {
   const canonicalUrl = `/books/${book.slug || book.id}`;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
-      <Navbar />
-
+    <>
       {/* SEO Schema Injection */}
       <BookJsonLd book={book} url={canonicalUrl} />
       <BreadcrumbJsonLd
@@ -170,7 +158,7 @@ export default function BookDetailPage() {
 
         {/* P2P Seller Offers Section */}
         <div className="pt-8 border-t border-border/80">
-          <SellerOffersList catalogBook={book} />
+          <SellerOffersList catalogBook={book} offers={book.listings || []} />
         </div>
 
         {/* Related Books Carousel */}
@@ -185,7 +173,7 @@ export default function BookDetailPage() {
         )}
       </main>
 
-      {/* Mobile Sticky Buy Dock */}
+      {/* Mobile Sticky Buy Dock — fixed-positioned, no footer conflict */}
       <BookDetailMobileStickyBar
         book={book}
         inCartCount={inCartCount}
@@ -195,8 +183,7 @@ export default function BookDetailPage() {
           router.push('/cart');
         }}
       />
-
-      <Footer />
-    </div>
+    </>
   );
 }
+

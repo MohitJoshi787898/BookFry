@@ -2,8 +2,6 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShieldCheck, Heart, Leaf, IndianRupee, ArrowRight } from 'lucide-react';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { SectionHeader } from '@/components/shared/section-header';
 import { Button } from '@/components/shared/button';
 import { StatCard } from '@/components/shared/stat-card';
@@ -51,11 +49,8 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Navbar />
-
-      <main className="flex-grow">
-        {/* Warm Cozy Hero Section */}
+    <main className="flex-grow">
+      {/* Warm Cozy Hero Section */}
         <section className="relative h-[420px] w-full overflow-hidden flex items-center justify-center font-sans">
           <div className="absolute inset-0">
             <Image
@@ -206,9 +201,6 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
-      </main>
-
-      <Footer />
-    </div>
+    </main>
   );
 }

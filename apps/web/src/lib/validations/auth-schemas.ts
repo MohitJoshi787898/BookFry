@@ -26,6 +26,8 @@ export const signupSchema = z
     state: z.string().optional(),
     zipCode: z.string().optional(),
     bio: z.string().optional(),
+    collegeName: z.string().optional(),
+    courseYear: z.string().optional(),
     agreeTerms: z.literal(true, {
       errorMap: () => ({ message: 'You must accept the terms and privacy policy to continue' }),
     }),

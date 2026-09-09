@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { UsersController } from './users.controller';
 import { requireAuth } from '../../middlewares/auth.middleware';
+import { requireRoles } from '../../middlewares/rbac.middleware';
 import { uploadSingle } from '../../middlewares/upload.middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
 
@@ -23,5 +24,13 @@ router.delete('/addresses/:id', asyncHandler(controller.deleteAddress));
 router.get('/reverse-geocode', asyncHandler(controller.reverseGeocode));
 router.post('/checkout-intent', asyncHandler(controller.checkoutIntent));
 router.patch('/seller-payout', asyncHandler(controller.updateSellerPayout));
+
+// Seller onboarding & verification routes
+router.patch('/seller-profile', asyncHandler(controller.updateSellerProfile));
+router.post(
+  '/seller-verification',
+  requireRoles(['seller', 'admin']),
+  asyncHandler(controller.submitSellerVerification)
+);
 
 export default router;

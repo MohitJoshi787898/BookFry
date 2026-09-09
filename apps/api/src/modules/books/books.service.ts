@@ -71,11 +71,15 @@ export class BooksService {
         sellerPincode: l.pincode || sellerObj?.addresses?.[0]?.zipCode || undefined,
         campusName: l.campusName,
         condition: l.condition,
+        conditionNotes: l.conditionNotes,
+        images: (l.images && l.images.length > 0) ? l.images : (catalog.images || []),
         price: l.price,
         discountPrice: l.discountPrice,
         stock: l.stock,
         status: l.status,
+        catalogId: catalog._id.toString(),
         createdAt: l.createdAt.toISOString(),
+        updatedAt: (l.updatedAt || l.createdAt).toISOString(),
       };
     });
 
@@ -106,11 +110,15 @@ export class BooksService {
         sellerPincode: l.pincode || sellerObj?.addresses?.[0]?.zipCode || undefined,
         campusName: l.campusName,
         condition: l.condition,
+        conditionNotes: l.conditionNotes,
+        images: (l.images && l.images.length > 0) ? l.images : (catalog.images || []),
         price: l.price,
         discountPrice: l.discountPrice,
         stock: l.stock,
         status: l.status,
+        catalogId: catalog._id.toString(),
         createdAt: l.createdAt.toISOString(),
+        updatedAt: (l.updatedAt || l.createdAt).toISOString(),
       };
     });
   }
@@ -261,6 +269,7 @@ export class BooksService {
       description: string;
       category: string;
       condition: BookCondition;
+      conditionNotes?: string;
       price: number;
       discountPrice?: number;
       stock: number;
@@ -289,12 +298,17 @@ export class BooksService {
     const slug = this.generateSlug(data.title, data.isbn);
 
     // 1. Find or create canonical catalog entry by ISBN (deduplication!)
+    const catalogDescription =
+      data.description && data.description.trim().length >= 10
+        ? data.description.trim()
+        : `${data.title} by ${data.author}. Available on the BookFry marketplace.`;
+
     const { doc: catalog } = await this.catalogRepository.findOrCreate({
       title: data.title,
       slug,
       author: data.author,
       isbn: data.isbn.trim(),
-      description: data.description,
+      description: catalogDescription,
       category: new mongoose.Types.ObjectId(data.category),
       images: data.images || [],
       tags: data.tags || [],
@@ -337,6 +351,8 @@ export class BooksService {
       existingListing.price = data.price;
       existingListing.discountPrice = data.discountPrice;
       existingListing.condition = data.condition;
+      if (data.conditionNotes) existingListing.conditionNotes = data.conditionNotes;
+      if (data.images && data.images.length > 0) existingListing.images = data.images;
       existingListing.stock = data.stock;
       existingListing.status = 'pending';
       existingListing.rejectionReason = '';
@@ -360,6 +376,8 @@ export class BooksService {
       catalogId: catalog._id as mongoose.Types.ObjectId,
       sellerId: new mongoose.Types.ObjectId(sellerId),
       condition: data.condition,
+      conditionNotes: data.conditionNotes || (data.description ? data.description : undefined),
+      images: data.images || [],
       price: data.price,
       discountPrice: data.discountPrice,
       stock: data.stock,
@@ -393,6 +411,7 @@ export class BooksService {
       description: string;
       category: string;
       condition: BookCondition;
+      conditionNotes: string;
       price: number;
       discountPrice: number;
       stock: number;
@@ -426,6 +445,8 @@ export class BooksService {
     if (data.price !== undefined) updateData.price = data.price;
     if (data.discountPrice !== undefined) updateData.discountPrice = data.discountPrice;
     if (data.condition) updateData.condition = data.condition;
+    if (data.conditionNotes !== undefined) updateData.conditionNotes = data.conditionNotes;
+    if (data.images && data.images.length > 0) updateData.images = data.images;
     if (data.stock !== undefined) updateData.stock = data.stock;
     if (data.status) updateData.status = data.status;
     if (data.city !== undefined) updateData.city = data.city;
@@ -491,9 +512,10 @@ export class BooksService {
       description: catalog.description,
       category: categoryId,
       condition: listing ? listing.condition : ('good' as BookCondition),
+      conditionNotes: listing ? listing.conditionNotes : undefined,
       price: listing ? listing.price : 0,
       discountPrice: listing ? listing.discountPrice : undefined,
-      images: catalog.images || [],
+      images: (listing?.images && listing.images.length > 0) ? listing.images : (catalog.images || []),
       stock: listing ? listing.stock : 0,
       sellerId: listing ? listing.sellerId.toString() : '',
       sellerCity: listing ? listing.city : undefined,

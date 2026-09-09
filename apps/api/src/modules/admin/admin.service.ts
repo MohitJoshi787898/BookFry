@@ -479,6 +479,44 @@ export class AdminService {
     return doc;
   }
 
+  /**
+   * Admin: approve or reject a seller's verification request.
+   * This is the ONLY pathway that can set sellerVerificationStatus to 'approved'.
+   */
+  async updateSellerVerificationStatus(
+    userId: string,
+    action: 'approved' | 'rejected',
+    rejectionReason?: string
+  ) {
+    const user = await UserModel.findById(userId);
+    if (!user) throw new NotFoundError('User not found');
+
+    if (!user.roles.includes('seller')) {
+      throw new ValidationError('This user does not have a seller role');
+    }
+
+    if (action === 'rejected' && !rejectionReason?.trim()) {
+      throw new ValidationError('A rejection reason is required when rejecting a seller');
+    }
+
+    user.sellerVerificationStatus = action;
+    if (action === 'rejected') {
+      user.sellerVerificationRejectionReason = rejectionReason;
+    } else {
+      user.sellerVerificationRejectionReason = undefined;
+    }
+
+    await user.save();
+
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      sellerVerificationStatus: user.sellerVerificationStatus,
+      sellerVerificationRejectionReason: user.sellerVerificationRejectionReason,
+    };
+  }
+
   async softDeleteSupportTicket(id: string) {
     const doc = await ContactModel.findById(id);
     if (!doc) throw new NotFoundError('Support ticket not found');
@@ -489,3 +527,4 @@ export class AdminService {
 }
 
 export default AdminService;
+

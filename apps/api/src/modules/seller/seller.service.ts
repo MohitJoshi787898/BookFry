@@ -175,6 +175,8 @@ export class SellerService {
       stock: b.stock,
       status: b.status,
       condition: b.condition,
+      conditionNotes: b.conditionNotes,
+      images: (b.images && b.images.length > 0) ? b.images : (b.catalog.images || []),
       sellerId: b.sellerId.toString(),
       category: b.catalog.category ? b.catalog.category.toString() : 'Uncategorized',
       rejectionReason: b.rejectionReason,

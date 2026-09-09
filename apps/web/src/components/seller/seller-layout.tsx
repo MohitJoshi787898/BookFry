@@ -23,6 +23,8 @@ export function SellerLayout({ children }: SellerLayoutProps) {
         user={user}
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed(!collapsed)}
+        sellerOnboardingStatus={user?.sellerOnboardingStatus}
+        sellerVerificationStatus={user?.sellerVerificationStatus}
       />
 
       {/* Main Content Area */}

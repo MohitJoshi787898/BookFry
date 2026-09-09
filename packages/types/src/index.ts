@@ -1,5 +1,18 @@
 export type UserRole = 'customer' | 'seller' | 'admin';
 
+/** Tracks how far a seller has completed their profile onboarding. */
+export type SellerOnboardingStatus = 'incomplete' | 'complete';
+
+/**
+ * Tracks the admin verification lifecycle for a seller.
+ * IMPORTANT: This is entirely separate from email verification (isEmailVerified).
+ * - not_submitted: seller has not yet requested verification
+ * - pending: seller submitted a verification request, awaiting admin review
+ * - approved: admin approved — seller is marketplace-active
+ * - rejected: admin rejected — seller must fix and resubmit
+ */
+export type SellerVerificationStatus = 'not_submitted' | 'pending' | 'approved' | 'rejected';
+
 export interface GeoPoint {
   type: 'Point';
   coordinates: [number, number]; // [longitude, latitude]
@@ -50,6 +63,12 @@ export interface User {
   isBanned: boolean;
   addresses: Address[];
   sellerProfile: SellerProfile | null;
+  /** Only present when user has seller role. Tracks profile completion state. */
+  sellerOnboardingStatus?: SellerOnboardingStatus;
+  /** Only present when user has seller role. Tracks admin verification state. */
+  sellerVerificationStatus?: SellerVerificationStatus;
+  sellerVerificationSubmittedAt?: string;
+  sellerVerificationRejectionReason?: string;
   fcmTokens?: string[];
   createdAt: string;
   updatedAt: string;
@@ -72,7 +91,7 @@ export interface ApiResponse<T = any> {
 }
 
 export interface AuthResponseData {
-  user: Omit<User, 'createdAt' | 'updatedAt' | 'addresses'>;
+  user: User;
   accessToken: string;
 }
 
@@ -199,6 +218,8 @@ export interface Book {
   moderationHistory?: ModerationHistoryItem[];
   lowestPrice?: number;
   listingCount?: number;
+  listings?: BookListing[];
+  conditionNotes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -244,6 +265,8 @@ export interface BookListing {
   /** Populated when fetching for buyer view */
   catalog?: BookCatalog;
   condition: BookCondition;
+  conditionNotes?: string;
+  images?: BookImage[];
   price: number;
   discountPrice?: number;
   stock: number;

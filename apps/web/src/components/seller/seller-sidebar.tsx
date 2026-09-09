@@ -18,7 +18,6 @@ import {
   ChevronRight,
   Sparkles,
   ArrowRight,
-  Activity,
 } from 'lucide-react';
 
 export interface SellerSidebarProps {
@@ -26,6 +25,8 @@ export interface SellerSidebarProps {
   totalListings?: number;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  sellerOnboardingStatus?: string;
+  sellerVerificationStatus?: string;
 }
 
 interface NavItem {
@@ -156,7 +157,27 @@ function SidebarItem({
 export function SellerSidebar({
   collapsed = false,
   onToggleCollapse,
+  sellerOnboardingStatus,
+  sellerVerificationStatus,
 }: SellerSidebarProps) {
+  // Compute the sidebar status label from real state — never hardcoded
+  const statusConfig = (() => {
+    if (sellerOnboardingStatus === 'incomplete') {
+      return { label: 'Profile Incomplete', color: 'text-danger', dotColor: 'bg-danger' };
+    }
+    if (sellerVerificationStatus === 'pending') {
+      return { label: 'Under Review', color: 'text-amber-600 dark:text-amber-400', dotColor: 'bg-amber-500' };
+    }
+    if (sellerVerificationStatus === 'rejected') {
+      return { label: 'Action Required', color: 'text-danger', dotColor: 'bg-danger' };
+    }
+    if (sellerVerificationStatus === 'approved') {
+      return { label: 'Verified Seller', color: 'text-emerald-600 dark:text-emerald-400', dotColor: 'bg-emerald-500' };
+    }
+    // not_submitted or undefined
+    return { label: 'Verification Pending', color: 'text-muted-foreground', dotColor: 'bg-muted-foreground' };
+  })();
+
   return (
     <aside
       className={`hidden md:flex flex-col border-r border-border/80 bg-gradient-to-b from-card via-card to-muted/80 backdrop-blur-lg transition-all duration-300 ease-out z-30 ${
@@ -254,12 +275,14 @@ export function SellerSidebar({
           {!collapsed && <SellerQuickActionsCard />}
         </div>
 
-        {/* Footer Storefront Toggle link & Telemetry */}
+        {/* Footer — dynamic seller status (never hardcoded) */}
         <div className="border-t border-border/80 bg-background/40 px-2.5 py-3">
           {!collapsed && (
-            <div className="mb-2 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/8 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
-              <Activity className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
-              Seller Verified & Active
+            <div className="mb-2 flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-2">
+              <span className={`h-2 w-2 rounded-full shrink-0 ${statusConfig.dotColor}`} />
+              <span className={`text-[10px] font-bold uppercase tracking-[0.14em] ${statusConfig.color}`}>
+                {statusConfig.label}
+              </span>
             </div>
           )}
 
@@ -283,3 +306,4 @@ export function SellerSidebar({
 }
 
 export default SellerSidebar;
+

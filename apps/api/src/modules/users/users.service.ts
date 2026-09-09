@@ -5,7 +5,7 @@ import { UserModel, IUserDocument } from '../../models/user.model';
 import { CartModel } from '../../models/cart.model';
 import { NominatimGeocodingProvider } from './geocoding.provider';
 import { NotificationsService } from '../notifications/notifications.service';
-import { ConflictError, NotFoundError, ValidationError } from '../../utils/AppError';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../utils/AppError';
 import { User, UserRole } from '@bookmarket/types';
 
 export class UsersService {
@@ -64,16 +64,40 @@ export class UsersService {
         ]
       : [];
 
+    const finalRoles: UserRole[] =
+      data.email.toLowerCase() === 'admin@bookfry.com'
+        ? ['customer', 'seller', 'admin']
+        : data.roles || ['customer'];
+
+    // Determine onboarding completeness for sellers:
+    // If the seller completed all required store & payout details during registration,
+    // mark onboarding as complete immediately so they go straight to their functional dashboard.
+    const isSellerRole = finalRoles.includes('seller');
+    const hasRequiredSellerDetails =
+      !!data.phone && !!data.upiId && !!(data.storeName || sellerProfile?.storeName);
+
+    const sellerOnboardingStatus = isSellerRole
+      ? hasRequiredSellerDetails
+        ? ('complete' as const)
+        : ('incomplete' as const)
+      : undefined;
+
+    const sellerVerificationStatus = isSellerRole
+      ? ('not_submitted' as const)
+      : undefined;
+
     const userDoc = await this.usersRepository.create({
       name: data.name,
       email: data.email,
       passwordHash,
-      roles: data.email.toLowerCase() === 'admin@bookfry.com' ? ['customer', 'seller', 'admin'] : (data.roles || ['customer']),
+      roles: finalRoles,
       phone: data.phone,
       isEmailVerified: false,
       isBanned: false,
       addresses: addresses as any,
       sellerProfile: sellerProfile as any,
+      sellerOnboardingStatus,
+      sellerVerificationStatus,
     });
 
     return userDoc;
@@ -133,6 +157,11 @@ export class UsersService {
             payoutDetails: user.sellerProfile.payoutDetails,
           }
         : null,
+      // Seller onboarding & verification state — only present for sellers
+      sellerOnboardingStatus: user.sellerOnboardingStatus,
+      sellerVerificationStatus: user.sellerVerificationStatus,
+      sellerVerificationSubmittedAt: user.sellerVerificationSubmittedAt?.toISOString(),
+      sellerVerificationRejectionReason: user.sellerVerificationRejectionReason,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     };
@@ -146,6 +175,119 @@ export class UsersService {
     if (data.name !== undefined) user.name = data.name;
     if (data.phone !== undefined) user.phone = data.phone;
     if (data.avatarUrl !== undefined) user.avatarUrl = data.avatarUrl;
+    await user.save();
+    return user;
+  }
+
+  /**
+   * Update the seller's profile (onboarding completion step).
+   * This is called from PATCH /users/me/seller-profile.
+   * Determines onboarding completeness based on required seller fields.
+   */
+  async updateSellerProfile(
+    userId: string,
+    data: {
+      storeName?: string;
+      bio?: string;
+      phone?: string;
+      upiId?: string;
+      collegeName?: string;
+      courseYear?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+      street?: string;
+    }
+  ): Promise<IUserDocument> {
+    const user = await this.getUserById(userId);
+
+    // Ensure user has seller role
+    if (!user.roles.includes('seller')) {
+      user.roles = [...user.roles, 'seller'] as UserRole[];
+      // Initialize verification status if not set
+      if (!user.sellerVerificationStatus) {
+        user.sellerVerificationStatus = 'not_submitted';
+      }
+    }
+
+    // Update basic profile fields
+    if (data.phone !== undefined) user.phone = data.phone;
+
+    // Build or update sellerProfile
+    const existingProfile = user.sellerProfile;
+    user.sellerProfile = {
+      storeName: data.storeName || existingProfile?.storeName || `${user.name}'s Books`,
+      bio: data.bio ?? existingProfile?.bio ?? '',
+      rating: existingProfile?.rating ?? 5.0,
+      totalSales: existingProfile?.totalSales ?? 0,
+      payoutDetails: {
+        ...existingProfile?.payoutDetails,
+        ...(data.upiId ? { upiId: data.upiId } : {}),
+      },
+    };
+
+    // Update address if location data provided
+    if (data.street && data.city && data.state && data.zipCode) {
+      const defaultAddr = user.addresses.find((a: any) => a.isDefault);
+      if (defaultAddr) {
+        (defaultAddr as any).street = data.street;
+        (defaultAddr as any).city = data.city;
+        (defaultAddr as any).state = data.state;
+        (defaultAddr as any).zipCode = data.zipCode;
+      } else {
+        user.addresses.push({
+          street: data.street,
+          city: data.city,
+          state: data.state,
+          zipCode: data.zipCode,
+          country: 'India',
+          isDefault: true,
+        } as any);
+      }
+    }
+
+    // Determine onboarding completeness:
+    // Required: storeName, phone, upiId
+    const hasStoreName = !!(user.sellerProfile?.storeName);
+    const hasPhone = !!(user.phone);
+    const hasUpi = !!(user.sellerProfile?.payoutDetails?.upiId);
+
+    user.sellerOnboardingStatus = hasStoreName && hasPhone && hasUpi ? 'complete' : 'incomplete';
+
+    await user.save();
+    return user;
+  }
+
+  /**
+   * Submit a seller verification request.
+   * Sellers cannot approve themselves — this sets status to 'pending' for admin review.
+   * Called from POST /users/me/seller-verification.
+   */
+  async submitSellerVerification(userId: string): Promise<IUserDocument> {
+    const user = await this.getUserById(userId);
+
+    if (!user.roles.includes('seller')) {
+      throw new ForbiddenError('Only sellers can submit verification requests');
+    }
+
+    if (user.sellerOnboardingStatus !== 'complete') {
+      throw new ValidationError(
+        'Please complete your seller profile before submitting for verification'
+      );
+    }
+
+    const currentStatus = user.sellerVerificationStatus;
+    if (currentStatus === 'approved') {
+      throw new ValidationError('Your seller account is already verified');
+    }
+    if (currentStatus === 'pending') {
+      throw new ValidationError('Your verification request is already under review');
+    }
+
+    user.sellerVerificationStatus = 'pending';
+    user.sellerVerificationSubmittedAt = new Date();
+    user.sellerVerificationRejectionReason = undefined;
+
     await user.save();
     return user;
   }
@@ -274,7 +416,7 @@ export class UsersService {
       userId,
       'checkout_phase3_placeholder',
       'Checkout Recorded! 📚',
-      `We have saved your cart and address (${targetAddress.street}, ${targetAddress.city}). We'll notify you as soon as Phase 3 checkout goes live.`,
+      `We have saved your cart and address (${targetAddress.street}, ${(targetAddress as any).city}). We'll notify you as soon as Phase 3 checkout goes live.`,
       { addressId }
     );
 

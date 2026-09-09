@@ -52,9 +52,17 @@ export function LoginForm() {
 
       closeModal();
 
+      const isSeller = data.user.roles?.includes('seller');
+      const onboardingIncomplete = data.user.sellerOnboardingStatus === 'incomplete';
+
       if (redirectTo) {
+        // Honor explicit redirect — e.g. from a protected page that triggered login
         router.push(redirectTo);
-      } else if (data.user.roles.includes('seller') && window.location.pathname.startsWith('/seller')) {
+      } else if (isSeller && onboardingIncomplete) {
+        // Seller with incomplete profile must complete onboarding before accessing dashboard
+        router.push('/seller/register');
+      } else if (isSeller) {
+        // Fully onboarded seller — go to their hub
         router.push('/seller/dashboard');
       } else {
         router.refresh();

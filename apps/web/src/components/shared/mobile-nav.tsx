@@ -4,106 +4,121 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Compass, PlusCircle, Heart, User } from 'lucide-react';
+import { Home, Compass, Plus, Heart, User } from 'lucide-react';
 import { useWishlist } from '@/hooks/use-wishlist';
 import { useAuthStore } from '@/stores/auth.store';
+import { useAuthModalStore } from '@/stores/auth-modal.store';
+
+// Routes where sticky mobile action bars are already present and bottom nav must hide to prevent collisions
+const EXCLUDED_PREFIXES = ['/checkout', '/cart', '/sell'];
 
 export function MobileNav() {
   const pathname = usePathname();
   const { count: wishlistCount } = useWishlist();
   const { isAuthenticated } = useAuthStore();
+  const { openModal } = useAuthModalStore();
+
+  // Hide on pages that have their own mobile sticky bottom bars
+  if (
+    EXCLUDED_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+    (pathname.startsWith('/books/') && pathname !== '/books')
+  ) {
+    return null;
+  }
 
   const navItems = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Explore', href: '/books', icon: Compass },
-    { label: 'Sell', href: '/sell', icon: PlusCircle, isHighlight: true },
-    { label: 'Saved', href: '/account/wishlist', icon: Heart, badge: wishlistCount },
+    { label: 'Sell', href: '/sell', icon: Plus, isPrimaryCta: true },
+    { label: 'Saved', href: '/account/wishlist', icon: Heart, badge: wishlistCount, authProtected: true },
     {
-      label: isAuthenticated ? 'Account' : 'Login',
-      href: isAuthenticated ? '/account/profile' : '/account/profile',
+      label: isAuthenticated ? 'Account' : 'Sign In',
+      href: isAuthenticated ? '/account/profile' : '#',
       icon: User,
+      authTrigger: !isAuthenticated,
     },
   ];
 
   return (
     <nav
-      aria-label="Mobile Navigation"
-      className="md:hidden fixed bottom-3 left-3 right-3 z-50 rounded-2xl glass-header border border-border/80 shadow-2xl transition-all duration-300"
+      aria-label="Mobile Bottom Navigation"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-lg border-t border-border/80 shadow-lg select-none"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className="flex items-center justify-around max-w-lg mx-auto relative px-1 pt-1 pb-2">
+      <div className="flex items-center justify-around h-15 max-w-md mx-auto px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =
-            pathname === item.href ||
-            (item.href !== '/' && pathname.startsWith(item.href));
+            item.href !== '#' &&
+            (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
 
-          if (item.isHighlight) {
+          // Sell Center Button
+          if (item.isPrimaryCta) {
             return (
               <Link
-                key={item.href}
-                href={item.href}
-                aria-label="Sell a book"
-                className="relative -top-4 group flex flex-col items-center focus-ring rounded-full"
+                key={item.label}
+                href="/sell"
+                onClick={(e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault();
+                    openModal('login', '/sell');
+                  }
+                }}
+                aria-label="Sell your books"
+                className="relative -top-2 flex flex-col items-center group focus-visible:outline-none"
               >
                 <motion.div
                   whileTap={{ scale: 0.88 }}
-                  whileHover={{ scale: 1.06 }}
-                  className="w-14 h-14 rounded-full bg-secondary text-secondary-foreground shadow-xl flex items-center justify-center border-4 border-background ring-2 ring-secondary/30 transition-all"
+                  className="w-12 h-12 rounded-2xl bg-secondary text-secondary-foreground shadow-md flex items-center justify-center border-2 border-background ring-2 ring-secondary/30 transition-transform"
                 >
-                  <PlusCircle className="h-7 w-7 stroke-[2.5]" />
+                  <Plus className="w-6 h-6 stroke-[3]" />
                 </motion.div>
-                <span className="text-xs font-extrabold text-secondary tracking-tight mt-1 leading-none">
+                <span className="text-[10px] font-black text-secondary tracking-tight mt-0.5 leading-none">
                   Sell
                 </span>
               </Link>
             );
           }
 
+          const handleClick = (e: React.MouseEvent) => {
+            if (item.authTrigger) {
+              e.preventDefault();
+              openModal('login', '/account/profile');
+            } else if (item.authProtected && !isAuthenticated) {
+              e.preventDefault();
+              openModal('login', item.href);
+            }
+          };
+
           return (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
-              className="relative flex flex-col items-center py-1.5 px-3 min-w-[48px] min-h-[48px] justify-center text-center group focus-ring rounded-xl"
+              onClick={handleClick}
+              className="relative flex flex-col items-center justify-center min-w-[56px] h-full py-1 text-center group focus-visible:outline-none"
             >
               <motion.div
                 whileTap={{ scale: 0.85 }}
-                className={`relative flex items-center justify-center p-1.5 rounded-xl transition-all duration-200 ${
-                  isActive
-                    ? 'bg-secondary/15 text-secondary'
-                    : 'text-muted-foreground group-hover:text-foreground'
+                className={`relative flex items-center justify-center w-8 h-8 rounded-xl transition-all ${
+                  isActive ? 'bg-secondary/15 text-secondary' : 'text-muted-foreground group-hover:text-foreground'
                 }`}
               >
-                <Icon
-                  className={`h-5 w-5 transition-all ${
-                    isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'
-                  }`}
-                />
+                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
 
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 bg-secondary text-secondary-foreground text-xs font-black rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1 -right-1 min-w-[15px] h-3.5 px-1 bg-secondary text-secondary-foreground text-[9px] font-black rounded-full flex items-center justify-center border border-background shadow-2xs">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </motion.div>
 
               <span
-                className={`text-xs tracking-tight leading-none mt-1 transition-all duration-200 ${
-                  isActive
-                    ? 'font-extrabold text-secondary'
-                    : 'font-medium text-muted-foreground group-hover:text-foreground'
+                className={`text-[10px] tracking-tight mt-0.5 leading-none transition-colors ${
+                  isActive ? 'font-black text-secondary' : 'font-semibold text-muted-foreground'
                 }`}
               >
                 {item.label}
               </span>
-
-              {isActive && (
-                <motion.div
-                  layoutId="activeTabIndicator"
-                  className="absolute bottom-0 w-5 h-0.5 bg-secondary rounded-full"
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
             </Link>
           );
         })}

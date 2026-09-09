@@ -207,6 +207,31 @@ export class AdminController {
     const result = await this.adminService.softDeleteSupportTicket(id);
     res.status(200).json(ApiResponse.success(result));
   };
+
+  /**
+   * PATCH /admin/users/:id/seller-verification
+   * Admin approves or rejects a seller's verification request.
+   * Body: { action: 'approved' | 'rejected', rejectionReason?: string }
+   */
+  updateSellerVerification = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { action, rejectionReason } = req.body;
+
+    if (!action || !['approved', 'rejected'].includes(action)) {
+      res.status(400).json(
+        ApiResponse.error("action must be 'approved' or 'rejected'", 'VALIDATION_ERROR')
+      );
+      return;
+    }
+
+    const result = await this.adminService.updateSellerVerificationStatus(
+      id,
+      action as 'approved' | 'rejected',
+      rejectionReason
+    );
+    res.status(200).json(ApiResponse.success(result));
+  };
 }
 
 export default AdminController;
+

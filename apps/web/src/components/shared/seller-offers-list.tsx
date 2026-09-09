@@ -9,13 +9,15 @@ import { Book } from '@bookmarket/types';
 export interface SellerOffer {
   id: string; // Listing ID
   sellerId: string;
-  sellerName: string;
+  sellerName?: string;
   sellerCity?: string;
   sellerState?: string;
   sellerPincode?: string;
   campusName?: string;
   distanceKm?: number;
   condition: 'new' | 'like_new' | 'good' | 'fair' | 'acceptable' | string;
+  conditionNotes?: string;
+  images?: Array<{ url: string; publicId?: string }>;
   price: number;
   discountPrice?: number;
   stock: number;
@@ -34,8 +36,8 @@ export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListP
   const [addedListingId, setAddedListingId] = useState<string | null>(null);
   const [isAddingListingId, setIsAddingListingId] = useState<string | null>(null);
 
-  if (!offers || offers.length <= 1) {
-    return null; // Single seller or default buy box is sufficient
+  if (!offers || offers.length === 0) {
+    return null;
   }
 
   const handleAddOfferToCart = async (offer: SellerOffer, e: React.MouseEvent) => {
@@ -138,6 +140,11 @@ export function SellerOffersList({ catalogBook, offers = [] }: SellerOffersListP
                     </span>
                   )}
                 </div>
+                {offer.conditionNotes && (
+                  <p className="text-xs text-muted-foreground italic bg-muted/30 px-2.5 py-1 rounded-md border border-border/50">
+                    &ldquo;{offer.conditionNotes}&rdquo;
+                  </p>
+                )}
               </div>
 
               {/* Price & Action */}

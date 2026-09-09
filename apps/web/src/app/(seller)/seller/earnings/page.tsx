@@ -11,6 +11,9 @@ import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Transaction } from '@bookmarket/types';
 import { IndianRupee, Download, CheckCircle2, Clock, Wallet, CreditCard, Loader2 } from 'lucide-react';
+import { toast } from '@/stores/toast.store';
+import { normalizeApiError } from '@/lib/error-normalizer';
+
 
 export default function SellerEarningsPage() {
   const { isAuthenticated } = useAuthStore();
@@ -40,10 +43,17 @@ export default function SellerEarningsPage() {
       setPayoutSuccess(true);
       setPayoutError('');
       queryClient.invalidateQueries({ queryKey: ['auth-me'] });
+      toast.success('Your settlement account details were saved securely.', {
+        title: 'Payout Details Saved',
+      });
       setTimeout(() => setPayoutSuccess(false), 4000);
     },
-    onError: (err: Error) => {
-      setPayoutError(err.message || 'Failed to save payout details. Please try again.');
+    onError: (err: unknown) => {
+      const normalized = normalizeApiError(err);
+      setPayoutError(normalized.message);
+      toast.error(normalized.message, {
+        title: normalized.title || 'Could Not Save Payout',
+      });
     },
   });
 

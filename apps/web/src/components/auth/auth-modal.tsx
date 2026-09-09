@@ -60,7 +60,7 @@ export function AuthModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: '100%', scale: 0.98 }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="relative w-full sm:max-w-4xl bg-card border-t sm:border border-border/90 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 grid grid-cols-1 lg:grid-cols-12 max-h-[92vh] my-0 sm:my-auto"
+            className="relative w-full sm:max-w-5xl bg-card border-t sm:border border-border/90 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 grid grid-cols-1 lg:grid-cols-12 max-h-[94vh] my-0 sm:my-auto"
             style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             role="dialog"
             aria-modal="true"
@@ -84,7 +84,7 @@ export function AuthModal() {
             </div>
 
             {/* Right Form Area (7 Columns) */}
-            <div className="lg:col-span-7 p-6 sm:p-8 sm:py-10 overflow-y-auto max-h-[85vh] flex flex-col justify-center">
+            <div className="lg:col-span-7 p-6 sm:p-8 sm:py-8 lg:p-9 overflow-y-auto max-h-[88vh] flex flex-col justify-center">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={screen}

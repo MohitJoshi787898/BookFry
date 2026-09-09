@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Book } from '@bookmarket/types';
+import { toast } from '@/stores/toast.store';
+
 import {
   Star,
   BookOpen,
@@ -94,7 +96,9 @@ export function BookDetailInfo({ book }: BookDetailInfoProps) {
                 navigator.share({ title: book.title, url: window.location.href }).catch(() => {});
               } else if (typeof window !== 'undefined') {
                 navigator.clipboard.writeText(window.location.href);
-                alert('Link copied to clipboard!');
+                toast.success('Book link copied to your clipboard.', {
+                  title: 'Link Copied',
+                });
               }
             }}
             className="p-2 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/80 transition-colors cursor-pointer"

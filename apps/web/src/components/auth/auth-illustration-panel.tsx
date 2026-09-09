@@ -11,13 +11,11 @@ interface AuthIllustrationPanelProps {
 export function AuthIllustrationPanel({ screen }: AuthIllustrationPanelProps) {
   const isSellerSignup = screen === 'seller_signup';
   const isSignupFlow = screen === 'signup' || screen === 'verify_email';
-  const illustrationSrc = isSellerSignup
-    ? '/campus_exchange.png'
-    : isSignupFlow
+  const illustrationSrc = isSellerSignup || isSignupFlow
     ? '/create-account.png'
     : '/welcome-back1.png';
   const illustrationAlt = isSellerSignup
-    ? 'BookFry Seller Onboarding'
+    ? 'BookFry Seller Registration'
     : isSignupFlow
     ? 'BookFry Create Account'
     : 'BookFry Welcome Back';

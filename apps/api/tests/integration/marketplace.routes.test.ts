@@ -136,7 +136,7 @@ describe('Marketplace Modules Integration Tests', () => {
       await BookListingModel.findByIdAndUpdate(bookId, { status: 'active' });
     });
 
-    it('POST /api/v1/books should fail for standard Customer role', async () => {
+    it('POST /api/v1/books should auto-promote standard Customer to Seller and create listing', async () => {
       const response = await request(app)
         .post('/api/v1/books')
         .set('Authorization', `Bearer ${customerToken}`)
@@ -151,8 +151,13 @@ describe('Marketplace Modules Integration Tests', () => {
           stock: 2,
         });
 
-      expect(response.status).toBe(403);
-      expect(response.body.success).toBe(false);
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.title).toBe('Another Book');
+
+      // Verify user was auto-promoted to seller
+      const updatedCustomer = await UserModel.findById(customerId);
+      expect(updatedCustomer?.roles).toContain('seller');
     });
 
     it('GET /api/v1/books should retrieve active listings with pagination/filters', async () => {

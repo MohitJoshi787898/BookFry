@@ -21,6 +21,9 @@ import {
 import Link from "next/link";
 import { Order, UsedBookRequest } from "@bookmarket/types";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/stores/toast.store";
+import { normalizeApiError } from "@/lib/error-normalizer";
+
 
 const shippingSchema = z.object({
   street: z.string().min(3, "Street address is required"),
@@ -185,12 +188,15 @@ export default function CheckoutPage() {
 
               clearCart();
               setStep('success');
+              toast.success('Your order has been placed successfully!', {
+                title: 'Payment Successful',
+              });
             } catch (verifyErr: unknown) {
-              const errMsg =
-                verifyErr instanceof Error
-                  ? verifyErr.message
-                  : 'Payment verification failed.';
-              setCheckoutError(errMsg);
+              const normalized = normalizeApiError(verifyErr);
+              setCheckoutError(normalized.message);
+              toast.error(normalized.message, {
+                title: normalized.title || 'Payment Verification Failed',
+              });
             } finally {
               setIsLoading(false);
             }
@@ -231,6 +237,9 @@ export default function CheckoutPage() {
           modal: {
             ondismiss: function () {
               setIsLoading(false);
+              toast.info('Payment window was closed. You can retry when ready.', {
+                title: 'Payment Cancelled',
+              });
             },
           },
         };
@@ -251,14 +260,17 @@ export default function CheckoutPage() {
         clearCart();
         setStep('success');
         setIsLoading(false);
+        toast.success('Your order has been confirmed!', {
+          title: 'Order Placed',
+        });
       }
     } catch (err: unknown) {
-      const errMsg =
-        err instanceof Error
-          ? err.message
-          : 'Checkout failed. Please try again.';
-      setCheckoutError(errMsg);
+      const normalized = normalizeApiError(err);
+      setCheckoutError(normalized.message);
       setIsLoading(false);
+      toast.error(normalized.message, {
+        title: normalized.title || 'Checkout Incomplete',
+      });
     }
   };
 

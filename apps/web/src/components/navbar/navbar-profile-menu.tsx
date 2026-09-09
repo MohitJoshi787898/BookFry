@@ -1,0 +1,273 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Package,
+  Heart,
+  Bell,
+  Store,
+  ShieldAlert,
+  LogOut,
+  ChevronDown,
+  Moon,
+  Sun,
+  HelpCircle,
+  MapPin,
+} from "lucide-react";
+import { useAuthStore } from "@/stores/auth.store";
+import { useAuthModalStore } from "@/stores/auth-modal.store";
+import { apiClient } from "@/lib/api-client";
+
+interface NavbarProfileMenuProps {
+  className?: string;
+  theme?: "light" | "dark";
+  onToggleTheme?: () => void;
+}
+
+export function NavbarProfileMenu({
+  className = "",
+  theme,
+  onToggleTheme,
+}: NavbarProfileMenuProps) {
+  const router = useRouter();
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const { openModal } = useAuthModalStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    setIsOpen(false);
+    try {
+      await apiClient("/auth/logout", { method: "POST" });
+    } catch {
+    } finally {
+      clearAuth();
+      router.push("/");
+      router.refresh();
+    }
+  };
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className={`flex items-center gap-2 shrink-0 ${className}`}>
+        <button
+          type="button"
+          onClick={() => openModal("login")}
+          className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-foreground hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          onClick={() => openModal("signup")}
+          className="px-4 py-2 rounded-xl bg-secondary text-secondary-foreground text-xs font-black shadow-2xs hover:bg-secondary/90 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+        >
+          Join free
+        </button>
+      </div>
+    );
+  }
+
+  const isSeller = user.roles?.includes("seller");
+  const isAdmin = user.roles?.includes("admin");
+  const initial = user.name?.charAt(0).toUpperCase() || "U";
+
+  const roleLabel = isAdmin
+    ? "Administrator"
+    : isSeller
+      ? "Verified seller"
+      : "Student member";
+
+  const buyerLinks = [
+    { label: "Orders & deliveries", href: "/account/orders", icon: Package },
+    { label: "Wishlist", href: "/account/wishlist", icon: Heart },
+    { label: "Notifications", href: "/account/notifications", icon: Bell },
+    { label: "Saved addresses", href: "/account/profile", icon: MapPin },
+  ];
+
+  return (
+    <div ref={menuRef} className={`relative ${className}`}>
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-label="Account menu"
+        className={`group flex items-center gap-2 py-1 pl-1 pr-2 rounded-full border transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary ${
+          isOpen
+            ? "bg-muted border-border"
+            : "bg-transparent hover:bg-muted/60 border-transparent"
+        }`}
+      >
+        <span className="relative flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-[13px] font-bold shrink-0">
+          {initial}
+          <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background" />
+        </span>
+        <span className="hidden sm:block text-xs font-semibold text-foreground max-w-[100px] truncate">
+          {user.name?.split(" ")[0]}
+        </span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Panel */}
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-[280px] rounded-2xl bg-card border border-border shadow-xl overflow-hidden z-50 origin-top-right animate-in fade-in zoom-in-95 duration-150">
+          {/* Identity */}
+          <div className="px-4 pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground text-sm font-bold shrink-0">
+                {initial}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-foreground truncate leading-tight">
+                  {user.name}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+            <p className="mt-2.5 text-[11px] text-muted-foreground">
+              {isAdmin ? (
+                <span className="text-danger font-semibold">{roleLabel}</span>
+              ) : isSeller ? (
+                <span className="text-secondary font-semibold">
+                  {roleLabel}
+                </span>
+              ) : (
+                roleLabel
+              )}
+            </p>
+          </div>
+
+          <div className="h-px bg-border mx-4" />
+
+          {/* Role portals — understated, not colored cards */}
+          {(isSeller || isAdmin) && (
+            <div className="py-1.5">
+              {isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="group flex items-center gap-2.5 pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-danger hover:bg-danger/5 transition-colors"
+                >
+                  <ShieldAlert className="w-4 h-4 text-muted-foreground group-hover:text-danger shrink-0" />
+                  <span className="text-xs font-semibold text-foreground">
+                    Admin control center
+                  </span>
+                </Link>
+              )}
+              {isSeller && (
+                <Link
+                  href="/seller/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="group flex items-center gap-2.5 pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-secondary hover:bg-secondary/5 transition-colors"
+                >
+                  <Store className="w-4 h-4 text-muted-foreground group-hover:text-secondary shrink-0" />
+                  <span className="text-xs font-semibold text-foreground">
+                    Seller hub
+                  </span>
+                </Link>
+              )}
+              <div className="h-px bg-border mx-4 mt-1.5" />
+            </div>
+          )}
+
+          {/* Buyer links */}
+          <div className="py-1.5">
+            {buyerLinks.map(({ label, href, icon: Icon }) => (
+              <Link
+                key={label}
+                href={href}
+                onClick={() => setIsOpen(false)}
+                className="group flex items-center gap-2.5 pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-secondary hover:bg-muted/60 transition-colors"
+              >
+                <Icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                <span className="text-xs font-medium text-foreground">
+                  {label}
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="h-px bg-border mx-4" />
+
+          {/* Support & preferences */}
+          <div className="py-1.5">
+            <Link
+              href="/contact"
+              onClick={() => setIsOpen(false)}
+              className="group flex items-center gap-2.5 pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-secondary hover:bg-muted/60 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+              <span className="text-xs font-medium text-foreground">
+                Help center
+              </span>
+            </Link>
+
+            {onToggleTheme && (
+              <button
+                type="button"
+                onClick={onToggleTheme}
+                className="w-full group flex items-center justify-between pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-secondary hover:bg-muted/60 transition-colors"
+              >
+                <span className="flex items-center gap-2.5">
+                  {theme === "dark" ? (
+                    <Sun className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  )}
+                  <span className="text-xs font-medium text-foreground">
+                    {theme === "dark" ? "Light mode" : "Dark mode"}
+                  </span>
+                </span>
+              </button>
+            )}
+          </div>
+
+          <div className="h-px bg-border mx-4" />
+
+          {/* Sign out */}
+          <div className="py-1.5">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="group w-full flex items-center gap-2.5 pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-danger hover:bg-danger/5 transition-colors"
+            >
+              <LogOut className="w-4 h-4 text-muted-foreground group-hover:text-danger shrink-0" />
+              <span className="text-xs font-medium text-foreground group-hover:text-danger">
+                Sign out
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default NavbarProfileMenu;

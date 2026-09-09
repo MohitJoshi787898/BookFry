@@ -18,7 +18,6 @@ router.get('/:slug/listings', asyncHandler(controller.getListings));
 router.post(
   '/',
   requireAuth,
-  requireRoles(['seller', 'admin']),
   uploadMultiple('images', 5),
   validate({ body: createBookSchema }),
   asyncHandler(controller.create)
@@ -27,12 +26,11 @@ router.post(
 router.patch(
   '/:id',
   requireAuth,
-  requireRoles(['seller', 'admin']),
   uploadMultiple('images', 5),
   validate({ body: updateBookSchema }),
   asyncHandler(controller.update)
 );
 
-router.delete('/:id', requireAuth, requireRoles(['seller', 'admin']), asyncHandler(controller.delete));
+router.delete('/:id', requireAuth, asyncHandler(controller.delete));
 
 export default router;

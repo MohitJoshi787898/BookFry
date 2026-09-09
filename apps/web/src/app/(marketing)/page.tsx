@@ -1,7 +1,5 @@
 import React, { cache } from "react";
 import { Metadata } from "next";
-import { Navbar } from "@/components/shared/navbar";
-import { Footer } from "@/components/shared/footer";
 import {
   SectionRenderer,
   SectionData,
@@ -89,25 +87,15 @@ export default async function LandingPage() {
   const sections = data?.sections || [];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-text-primary transition-colors duration-200">
+    <>
       <OrganizationJsonLd />
       <WebsiteJsonLd />
-
-      {/* Top Announcement Bar from CMS */}
-      {/* {announcement?.enabled && announcement.text && (
-        <AnnouncementBar text={announcement.text} link={announcement.link} />
-      )} */}
-
-      {/* Sticky Header Navigation */}
-      <Navbar />
 
       {/* Main Dynamic Server-Rendered Sections */}
       <main className="flex-grow">
         <SectionRenderer sections={sections} />
       </main>
-
-      {/* Footer with Brand Slogan */}
-      <Footer />
-    </div>
+    </>
   );
 }
+

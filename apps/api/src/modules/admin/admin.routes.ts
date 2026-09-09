@@ -58,4 +58,8 @@ router.patch(
   asyncHandler(controller.resolveReturn)
 );
 
+// Seller verification management — admin approves or rejects
+router.patch('/users/:id/seller-verification', asyncHandler(controller.updateSellerVerification));
+
 export default router;
+

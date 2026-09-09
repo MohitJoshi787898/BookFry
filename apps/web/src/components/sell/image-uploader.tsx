@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Plus } from 'lucide-react';
+import { toast } from '@/stores/toast.store';
+
 
 type UploadableImage = string | File | { url: string };
 
@@ -64,7 +66,9 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
     const filesArray = Array.from(files).slice(0, availableSlots);
     const validFiles = filesArray.filter((file) => {
       if (file.size > 5 * 1024 * 1024) {
-        alert(`File ${file.name} exceeds 5MB limit.`);
+        toast.warning(`File "${file.name}" exceeds the 5MB size limit. Please upload a smaller photo.`, {
+          title: 'Photo Too Large',
+        });
         return false;
       }
       return true;

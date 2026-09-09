@@ -24,6 +24,7 @@ export function AdminMobileNav() {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Listings', href: '/admin/listings', icon: BookOpen },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingBag },
+    { name: 'Requests', href: '/admin/requests', icon: MessageSquare },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Categories', href: '/admin/categories', icon: Layers },
     { name: 'Promotions', href: '/admin/promotions', icon: Tag },

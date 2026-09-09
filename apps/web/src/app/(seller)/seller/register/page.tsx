@@ -1,219 +1,476 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { useAuthModalStore } from '@/stores/auth-modal.store';
 import { apiClient } from '@/lib/api-client';
-import { RoleHero } from '@/components/shared/role-hero';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
-import { ShieldCheck, CheckCircle2, RefreshCw, Sparkles, Building, Phone } from 'lucide-react';
+import { SellerLayout } from '@/components/seller/seller-layout';
+import {
+  Store,
+  Phone,
+  CreditCard,
+  MapPin,
+  Compass,
+  BookOpen,
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useState } from 'react';
+
+const sellerProfileSchema = z.object({
+  storeName: z.string().min(2, 'Store name must be at least 2 characters'),
+  bio: z.string().optional(),
+  phone: z.string().min(10, 'Enter a valid 10-digit phone number'),
+  upiId: z.string().min(3, 'Enter a valid UPI ID'),
+  collegeName: z.string().optional(),
+  courseYear: z.string().optional(),
+  street: z.string().min(3, 'Street address is required'),
+  city: z.string().min(2, 'City is required'),
+  state: z.string().min(2, 'State is required'),
+  zipCode: z.string().min(6, 'Enter a valid 6-digit PIN code').max(6, 'PIN code must be 6 digits'),
+});
+
+type SellerProfileFormData = z.infer<typeof sellerProfileSchema>;
 
 export default function SellerRegisterPage() {
-  const { user } = useAuthStore();
   const router = useRouter();
+  const { isAuthenticated, user, setUser } = useAuthStore();
+  const { openModal } = useAuthModalStore();
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationSuccess, setLocationSuccess] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
-  const [collegeName, setCollegeName] = useState('');
-  const [courseYear, setCourseYear] = useState('');
-  const [phone, setPhone] = useState('');
-  const [upiId, setUpiId] = useState('');
-  const [agreed, setAgreed] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+  } = useForm<SellerProfileFormData>({
+    resolver: zodResolver(sellerProfileSchema),
+    defaultValues: {
+      storeName: user?.sellerProfile?.storeName || '',
+      bio: user?.sellerProfile?.bio || '',
+      phone: user?.phone || '',
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!agreed) return;
+  const handleGPSAutofill = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocating(true);
+    setLocationError(null);
+    setLocationSuccess(false);
 
-    setIsSubmitting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await apiClient<{
+            street?: string;
+            city?: string;
+            state?: string;
+            zipCode?: string;
+            country?: string;
+          }>(`/users/reverse-geocode?lat=${latitude}&lon=${longitude}`);
+
+          if (res) {
+            if (res.city) setValue('city', res.city, { shouldValidate: true });
+            if (res.state) setValue('state', res.state, { shouldValidate: true });
+            if (res.zipCode) setValue('zipCode', res.zipCode, { shouldValidate: true });
+            if (res.street) setValue('street', res.street, { shouldValidate: true });
+            setLocationSuccess(true);
+          }
+        } catch {
+          setLocationError('Could not fetch address details via GPS. Please enter manually.');
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (err) => {
+        setIsLocating(false);
+        setLocationError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location permission denied. You can type your address manually.'
+            : 'GPS location error. Please enter manually.'
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
+
+  // Pre-fill form fields from existing user data
+  useEffect(() => {
+    if (user) {
+      if (user.sellerProfile?.storeName) setValue('storeName', user.sellerProfile.storeName);
+      if (user.sellerProfile?.bio) setValue('bio', user.sellerProfile.bio);
+      if (user.phone) setValue('phone', user.phone);
+      if (user.sellerProfile?.payoutDetails?.upiId) {
+        setValue('upiId', user.sellerProfile.payoutDetails.upiId);
+      }
+      const defaultAddr = user.addresses?.find((a) => a.isDefault) || user.addresses?.[0];
+      if (defaultAddr) {
+        setValue('street', defaultAddr.street || '');
+        setValue('city', defaultAddr.city || '');
+        setValue('state', defaultAddr.state || '');
+        setValue('zipCode', defaultAddr.zipCode || '');
+      }
+    }
+  }, [user, setValue]);
+
+  // If not authenticated, prompt login
+  if (!isAuthenticated) {
+    return (
+      <SellerLayout>
+        <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 font-sans">
+          <Store className="h-12 w-12 text-secondary/50" />
+          <h2 className="font-serif text-xl font-bold text-foreground">
+            Sign In to Complete Your Seller Setup
+          </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xs">
+            You need to be logged in to complete your seller profile.
+          </p>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => openModal('login', '/seller/register')}
+            className="px-5 py-2.5 bg-secondary text-white rounded-2xl text-sm font-bold shadow-md"
+          >
+            Sign In →
+          </motion.button>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  // If seller onboarding is already complete, redirect to dashboard
+  if (user?.sellerOnboardingStatus === 'complete') {
+    router.replace('/seller/dashboard');
+    return null;
+  }
+
+  const onSubmit = async (values: SellerProfileFormData) => {
+    setApiError(null);
     try {
-      // In BookFry API, user profile is updated with seller attributes or role
-      await apiClient('/auth/me', {
+      // PATCH /users/seller-profile — the correct, existing endpoint
+      const updatedUser = await apiClient('/users/seller-profile', {
         method: 'PATCH',
         body: JSON.stringify({
-          phone,
-          collegeName,
-          courseYear,
-          upiId,
-          roles: [...(user?.roles || ['customer']), 'seller'],
+          storeName: values.storeName,
+          bio: values.bio,
+          phone: values.phone,
+          upiId: values.upiId,
+          collegeName: values.collegeName,
+          courseYear: values.courseYear,
+          street: values.street,
+          city: values.city,
+          state: values.state,
+          zipCode: values.zipCode,
         }),
       });
 
-      setIsSuccess(true);
-      setTimeout(() => {
-        router.push('/seller/dashboard');
-      }, 2000);
-    } catch (err) {
-      console.error('Registration failed:', err);
-      // Fallback redirect for existing demo accounts
-      setIsSuccess(true);
+      // Update the auth store with the fresh user profile
+      setUser(updatedUser);
+      setSuccess(true);
+
+      // Brief success display then redirect to dashboard
       setTimeout(() => {
         router.push('/seller/dashboard');
       }, 1500);
-    } finally {
-      setIsSubmitting(false);
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setApiError(error.message || 'Failed to save your seller profile. Please try again.');
     }
   };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
-      <Navbar />
-
-      <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 space-y-8">
-        <RoleHero
-          title="Become a Verified Campus Seller"
-          subtitle="Turn your used semester textbooks, notes, and competitive entrance guides into cash for fellow students across India."
-          badgeText="Student Partner Onboarding"
-          showMascot={true}
-          mascotPose="pointing"
-          stats={[
-            { label: 'Listing Fee', value: '₹0 Free', badge: 'Zero Upfront', isPositive: true },
-            { label: 'Payout Safety', value: '100% Escrow', badge: 'Guaranteed', isPositive: true },
-            { label: 'Campus Reach', value: '500+ Colleges', badge: 'All India', isPositive: true },
-            { label: 'Student Savings', value: '₹1.2Cr+', badge: 'Impact', isPositive: true },
-          ]}
-        />
-
-        {isSuccess ? (
-          <div className="p-8 sm:p-12 text-center rounded-3xl bg-card border border-emerald-500/30 space-y-4 shadow-xl">
-            <div className="h-16 w-16 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8" />
-            </div>
-            <h2 className="font-serif text-2xl font-bold text-foreground">Welcome to BookFry Sellers!</h2>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Your campus seller profile is active. Redirecting you to your seller dashboard...
-            </p>
+  if (success) {
+    return (
+      <SellerLayout>
+        <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 font-sans text-center">
+          <div className="h-14 w-14 rounded-2xl bg-success/15 border border-success/30 flex items-center justify-center">
+            <CheckCircle2 className="h-7 w-7 text-success" />
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Form Card (7 cols) */}
-            <div className="lg:col-span-7 border border-border/80 bg-card rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
-              <div className="border-b border-border/60 pb-3">
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">
-                  Campus Seller Verification
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Takes less than 1 minute to setup your seller store.
-                </p>
-              </div>
+          <h2 className="font-serif text-2xl font-bold text-foreground">
+            Seller Profile Complete! 🎉
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Your store is set up. Redirecting you to your Seller Hub...
+          </p>
+        </div>
+      </SellerLayout>
+    );
+  }
 
-              <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1.5">
-                    College / University Name *
-                  </label>
-                  <div className="relative">
-                    <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      required
-                      value={collegeName}
-                      onChange={(e) => setCollegeName(e.target.value)}
-                      placeholder="e.g. IIT Delhi, Anna University, DU..."
-                      className="w-full pl-10 pr-3.5 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
-                    />
-                  </div>
-                </div>
+  return (
+    <SellerLayout>
+      <div className="max-w-2xl mx-auto space-y-6 font-sans pb-16">
+        {/* Page Header */}
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-[10px] font-extrabold uppercase tracking-wider mb-2">
+            <Store className="h-3 w-3" />
+            <span>Seller Setup</span>
+          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+            Complete Your Seller Profile
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Fill in your store details, UPI ID, and pickup address to start selling on BookFry.
+          </p>
+        </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-foreground mb-1.5">
-                      Course &amp; Semester *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={courseYear}
-                      onChange={(e) => setCourseYear(e.target.value)}
-                      placeholder="e.g. B.Tech CS 3rd Sem"
-                      className="w-full px-3.5 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-foreground mb-1.5">
-                      WhatsApp Phone *
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="9876543210"
-                        className="w-full pl-10 pr-3.5 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground focus:ring-2 focus:ring-secondary/40 outline-none font-medium"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1.5">
-                    UPI ID for Sales Payouts *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="e.g. yourname@okhdfcbank or yourname@paytm"
-                    className="w-full px-3.5 py-2.5 border border-border/80 rounded-2xl bg-background text-foreground font-mono focus:ring-2 focus:ring-secondary/40 outline-none"
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-1">BookFry transfers 100% of your earnings minus 10% fee directly via UPI.</p>
-                </div>
-
-                <label className="flex items-start space-x-2.5 pt-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                    className="h-4 w-4 text-secondary rounded mt-0.5"
-                  />
-                  <span className="text-[11px] text-muted-foreground">
-                    I agree to BookFry Seller Community Guidelines, honest condition descriptions, and prompt order dispatches.
-                  </span>
-                </label>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !agreed}
-                  className="w-full py-3 bg-secondary hover:bg-secondary/90 text-white font-black rounded-2xl transition-all shadow-md shadow-secondary/20 text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 disabled:opacity-60 cursor-pointer"
-                >
-                  {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  <span>{isSubmitting ? 'Verifying Profile...' : 'Complete Seller Registration'}</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Benefits Sidebar (5 cols) */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="border border-border/80 bg-card rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 className="font-serif text-base font-bold text-foreground flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-secondary" />
-                  <span>Why Sell on BookFry?</span>
-                </h3>
-
-                <ul className="space-y-3 text-xs text-muted-foreground">
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Direct Campus Buyers:</strong> Verified students at your college and across India searching for your specific syllabus books.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Escrow Payment Protection:</strong> Buyer payment is held in escrow until delivery is verified. No payment delays or fraud.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Doorstep Pickup Logistics:</strong> Integrated shipping label generation with India Post & DTDC campus pickups.</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+        {apiError && (
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-2xl border border-danger/25 bg-danger/10 p-3 text-xs font-bold text-danger"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{apiError}</span>
           </div>
         )}
-      </main>
 
-      <Footer />
-    </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Store Info */}
+          <section className="border border-border/80 rounded-3xl p-5 sm:p-6 bg-card shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+              <BookOpen className="h-4 w-4 text-secondary" />
+              <h2 className="text-sm font-extrabold text-foreground">Store Information</h2>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                Store Name *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Rahul's Engineering Books"
+                {...register('storeName')}
+                className="w-full h-11 px-3.5 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+              />
+              {errors.storeName && (
+                <p className="text-[10px] font-bold text-danger">{errors.storeName.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                Store Bio / Description
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Tell buyers what kind of books you sell, your college, etc."
+                {...register('bio')}
+                className="w-full px-3.5 py-3 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none resize-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                  College / Institution
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. IIT Delhi"
+                  {...register('collegeName')}
+                  className="w-full h-11 px-3.5 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                  Current Year / Semester
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 3rd Year, Sem 5"
+                  {...register('courseYear')}
+                  className="w-full h-11 px-3.5 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Contact & Payout */}
+          <section className="border border-border/80 rounded-3xl p-5 sm:p-6 bg-card shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-border/60 pb-3">
+              <CreditCard className="h-4 w-4 text-secondary" />
+              <h2 className="text-sm font-extrabold text-foreground">Contact & Instant Payout</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                  Phone Number *
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="tel"
+                    placeholder="10-digit mobile"
+                    {...register('phone')}
+                    className="w-full h-11 pl-10 pr-3 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+                  />
+                </div>
+                {errors.phone && (
+                  <p className="text-[10px] font-bold text-danger">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                  UPI ID * <span className="text-[9px] normal-case">(for instant payouts)</span>
+                </label>
+                <div className="relative">
+                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="yourname@upi"
+                    {...register('upiId')}
+                    className="w-full h-11 pl-10 pr-3 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+                  />
+                </div>
+                {errors.upiId && (
+                  <p className="text-[10px] font-bold text-danger">{errors.upiId.message}</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Pickup Address */}
+          <section className="border border-border/80 rounded-3xl p-5 sm:p-6 bg-card shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-secondary" />
+                <h2 className="text-sm font-extrabold text-foreground">Book Pickup Address & Campus Location</h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGPSAutofill}
+                disabled={isLocating}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-bold transition-all border border-secondary/25 cursor-pointer disabled:opacity-50"
+              >
+                {isLocating ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Detecting GPS...</span>
+                  </>
+                ) : (
+                  <>
+                    <Compass className="h-3.5 w-3.5" />
+                    <span>Auto-Fill with GPS</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {locationSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <span>Pickup address auto-filled using your current GPS coordinates!</span>
+              </div>
+            )}
+
+            {locationError && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{locationError}</span>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                Street / Hostel / Room Number *
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Hostel C, Room 204"
+                {...register('street')}
+                className="w-full h-11 px-3.5 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+              />
+              {errors.street && (
+                <p className="text-[10px] font-bold text-danger">{errors.street.message}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="col-span-2 space-y-1">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  placeholder="New Delhi"
+                  {...register('city')}
+                  className="w-full h-11 px-3.5 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+                />
+                {errors.city && (
+                  <p className="text-[10px] font-bold text-danger">{errors.city.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                  State *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Delhi"
+                  {...register('state')}
+                  className="w-full h-11 px-3.5 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+                />
+                {errors.state && (
+                  <p className="text-[10px] font-bold text-danger">{errors.state.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground block">
+                  PIN Code *
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  placeholder="110001"
+                  {...register('zipCode')}
+                  className="w-full h-11 px-3.5 text-xs font-bold bg-background border border-border/90 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand outline-none"
+                />
+                {errors.zipCode && (
+                  <p className="text-[10px] font-bold text-danger">{errors.zipCode.message}</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Submit */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            type="submit"
+            disabled={isSubmitting}
+            className="flex w-full h-12 items-center justify-center gap-2 rounded-2xl bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all disabled:opacity-50 cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving Profile...</span>
+              </>
+            ) : (
+              <>
+                <span>Save & Go to Seller Hub</span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </motion.button>
+        </form>
+      </div>
+    </SellerLayout>
   );
 }

@@ -3,8 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
-import { Navbar } from '@/components/shared/navbar';
-import { Footer } from '@/components/shared/footer';
 import { BookCard } from '@/components/shared/book-card';
 import { RoleEmptyState } from '@/components/shared/role-empty-state';
 import { Pagination } from '@/components/ui/navigation';
@@ -125,11 +123,9 @@ function BooksCatalogContent() {
   const totalPages = Math.ceil((booksData.total || 0) / 18);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
-      <Navbar />
-
+    <>
       <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 space-y-6">
-        {/* Catalog Hero Banner */}
+      {/* Catalog Hero Banner */}
         <BooksCatalogHero
           searchQuery={search}
           categoryName={selectedCategoryObj?.name}
@@ -251,9 +247,7 @@ function BooksCatalogContent() {
         setPage={setPage}
         totalResults={booksData.total}
       />
-
-      <Footer />
-    </div>
+    </>
   );
 }
 
@@ -261,12 +255,8 @@ export default function BooksPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-col min-h-screen bg-background">
-          <Navbar />
-          <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12 animate-pulse space-y-6">
-            <div className="h-48 rounded-3xl bg-card border border-border" />
-          </div>
-          <Footer />
+        <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12 animate-pulse space-y-6">
+          <div className="h-48 rounded-3xl bg-card border border-border" />
         </div>
       }
     >

@@ -54,6 +54,51 @@ export class UsersController {
     res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
   };
 
+  /**
+   * PATCH /users/me/seller-profile
+   * Updates seller profile fields. Automatically determines onboarding completeness.
+   * Replaces the broken PATCH /auth/me pattern in /seller/register.
+   */
+  updateSellerProfile = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ValidationError('User authentication failed');
+    }
+
+    const { storeName, bio, phone, upiId, collegeName, courseYear, city, state, zipCode, street } =
+      req.body;
+
+    const user = await this.usersService.updateSellerProfile(userId, {
+      storeName,
+      bio,
+      phone,
+      upiId,
+      collegeName,
+      courseYear,
+      city,
+      state,
+      zipCode,
+      street,
+    });
+
+    res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
+  };
+
+  /**
+   * POST /users/me/seller-verification
+   * Submits the seller's account for admin verification review.
+   * Sellers cannot self-approve — this sets status to 'pending'.
+   */
+  submitSellerVerification = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ValidationError('User authentication failed');
+    }
+
+    const user = await this.usersService.submitSellerVerification(userId);
+    res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
+  };
+
   addAddress = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user?.id;
     if (!userId) {

@@ -52,17 +52,24 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 
 export function BookCardSkeleton() {
   return (
-    <div className="flex flex-col h-full rounded-xl border border-border bg-card overflow-hidden animate-pulse shadow-sm">
-      <div className="w-full aspect-[2/3] bg-muted" />
-      <div className="p-3.5 space-y-2.5">
-        <div className="h-4 w-3/4 bg-muted rounded-sm" />
-        <div className="h-3.5 w-1/2 bg-muted rounded-sm" />
-        <div className="h-3.5 w-1/3 bg-muted rounded-sm" />
-        <div className="flex justify-between items-center pt-1">
-          <div className="h-5 w-16 bg-muted rounded" />
-          <div className="h-4 w-14 bg-muted rounded" />
+    <div className="flex flex-col h-full rounded-2xl border border-border/80 bg-card overflow-hidden animate-pulse shadow-xs">
+      <div className="w-full aspect-[4/3.8] bg-muted/60" />
+      <div className="p-3 sm:p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <div className="h-3 w-14 bg-muted rounded-md" />
+            <div className="h-3 w-8 bg-muted rounded-md" />
+          </div>
+          <div className="h-3.5 w-5/6 bg-muted rounded-md" />
+          <div className="h-3 w-1/2 bg-muted rounded-md" />
         </div>
-        <div className="h-8 w-full bg-muted rounded-lg mt-2" />
+        <div className="pt-2 border-t border-border/40 space-y-2">
+          <div className="flex justify-between items-center">
+            <div className="h-4 w-12 bg-muted rounded-md" />
+            <div className="h-3 w-10 bg-muted rounded-md" />
+          </div>
+          <div className="h-8 w-full bg-muted/80 rounded-xl" />
+        </div>
       </div>
     </div>
   );

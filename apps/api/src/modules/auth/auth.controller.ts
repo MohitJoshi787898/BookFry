@@ -30,8 +30,10 @@ export class AuthController {
       state,
       zipCode,
     } = req.body;
+    // Only allow customer and seller roles via public registration.
+    // 'admin' role is forbidden from self-registration.
     const safeRoles: UserRole[] = Array.isArray(roles)
-      ? (roles.filter((r: string): r is UserRole => r === 'customer' || r === 'seller' || r === 'admin') as UserRole[])
+      ? (roles.filter((r: string): r is UserRole => r === 'customer' || r === 'seller') as UserRole[])
       : ['customer'];
     const finalRoles: UserRole[] = safeRoles.length > 0 ? safeRoles : ['customer'];
 

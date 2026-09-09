@@ -674,6 +674,31 @@ export class OrdersService {
       }
     }
 
+    // When a sub-order is cancelled, atomically restore its item inventory
+    if (newStatus === 'cancelled' && subOrder.items && subOrder.items.length > 0) {
+      for (const it of subOrder.items) {
+        if (it.listingId) {
+          try {
+            await BookListingModel.findOneAndUpdate(
+              { _id: it.listingId },
+              [
+                {
+                  $set: {
+                    stock: { $add: ['$stock', it.quantity || 1] },
+                    status: {
+                      $cond: { if: { $eq: ['$status', 'sold'] }, then: 'active', else: '$status' },
+                    },
+                  },
+                },
+              ]
+            );
+          } catch (err) {
+            console.error(`[SubOrder Cancellation Stock Restore Error]: Failed for listing ${it.listingId}:`, err);
+          }
+        }
+      }
+    }
+
     const allStatuses = order.subOrders.map((s: any) => s.status);
     if (allStatuses.every((s: string) => s === 'delivered')) {
       order.status = 'delivered';
@@ -789,6 +814,31 @@ export class OrdersService {
             note: note || `Package status updated to ${newStatus}`,
             timestamp: new Date(),
           });
+        }
+      }
+    }
+
+    if (newStatus === 'cancelled' && order.items && order.items.length > 0) {
+      for (const it of order.items) {
+        const listingId = it.listingId ? it.listingId.toString() : (it as any).bookId ? (it as any).bookId.toString() : '';
+        if (listingId) {
+          try {
+            await BookListingModel.findOneAndUpdate(
+              { _id: listingId },
+              [
+                {
+                  $set: {
+                    stock: { $add: ['$stock', it.quantity || 1] },
+                    status: {
+                      $cond: { if: { $eq: ['$status', 'sold'] }, then: 'active', else: '$status' },
+                    },
+                  },
+                },
+              ]
+            );
+          } catch (err) {
+            console.error(`[Order Cancellation Stock Restore Error]: Failed for listing ${listingId}:`, err);
+          }
         }
       }
     }

@@ -48,7 +48,15 @@ export function SellerHeader() {
               {user?.name || 'Campus Seller'}
             </span>
             <span className="text-[10px] text-secondary font-black uppercase tracking-wider block mt-1">
-              VERIFIED SELLER
+              {user?.sellerOnboardingStatus === 'incomplete'
+                ? 'PROFILE INCOMPLETE'
+                : user?.sellerVerificationStatus === 'approved'
+                ? 'VERIFIED SELLER'
+                : user?.sellerVerificationStatus === 'pending'
+                ? 'VERIFICATION PENDING'
+                : user?.sellerVerificationStatus === 'rejected'
+                ? 'ACTION REQUIRED'
+                : 'SELLER HUB'}
             </span>
           </div>
 

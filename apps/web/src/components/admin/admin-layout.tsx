@@ -37,7 +37,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       if (hasChanged) {
         (
           apiClient('/auth/refresh', { method: 'POST' }) as Promise<{
-            user: Omit<User, 'createdAt' | 'updatedAt' | 'addresses'>;
+            user: User;
             accessToken: string;
           }>
         )

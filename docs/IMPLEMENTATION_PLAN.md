@@ -133,7 +133,9 @@ apps/api/
 │   │       (each module mirrors auth/'s structure, plus a *.repository.ts)
 │   ├── models/                          # Mongoose schemas
 │   │   ├── user.model.ts
-│   │   ├── book.model.ts
+│   │   ├── book-catalog.model.ts        # Canonical book metadata (one per ISBN)
+│   │   ├── book-listing.model.ts        # Per-seller physical offer (condition, price, photos)
+│   │   ├── used-book-request.model.ts   # P2P pre-owned book purchase request
 │   │   ├── order.model.ts
 │   │   ├── category.model.ts
 │   │   ├── review.model.ts
@@ -184,17 +186,26 @@ sellerProfile: { storeName, bio, rating, totalSales, payoutDetails } | null,
 refreshTokenHash, createdAt, updatedAt
 ```
 
-**books**
-
+**bookcatalogs** (Canonical record per ISBN)
 ```
-_id, title, slug (unique, indexed), author, isbn, description, category: ObjectId(ref Category),
-condition: enum["new","like_new","good","fair"], price, discountPrice,
-images: [{url, publicId}], stock, sellerId: ObjectId(ref User, indexed),
-status: enum["draft","active","sold","removed"] (indexed),
-tags: [String], language, publisher, edition, pageCount,
+_id, title, slug (unique, indexed), author, isbn (unique, indexed), description, category (ObjectId, indexed),
+images: [{url, publicId}], tags: [String], language, publisher, edition, pageCount,
 ratingAvg, ratingCount, viewsCount, createdAt, updatedAt
 -- text index on {title, author, description, tags}
--- compound index {category:1, status:1, price:1}
+```
+
+**booklistings** (Per-seller offer)
+```
+_id, catalogId (ObjectId, indexed), sellerId (ObjectId, indexed),
+condition: enum["new", "like_new", "good", "fair"],
+conditionNotes, images: [{url, publicId}],
+price, discountPrice, stock,
+city, state, pincode, campusName, location (GeoJSON Point),
+status: enum["pending", "active", "sold", "rejected", "archived", "removed"] (indexed),
+moderationHistory: [{status, notes, moderatorId, timestamp}], createdAt, updatedAt
+-- compound index {catalogId: 1, status: 1, price: 1}
+-- compound index {sellerId: 1, status: 1}
+-- 2dsphere index on location
 ```
 
 **categories**

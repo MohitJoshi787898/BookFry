@@ -1,9 +1,11 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
 import { API_BASE_URL } from '@/lib/api-client';
+import { toast } from '@/stores/toast.store';
+
 
 export interface LiveEventPayload {
   type?: string;
@@ -53,7 +55,14 @@ export function useLiveEvents() {
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
             queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
 
-            // Trigger custom event for notification toast/bell indicator
+            // Trigger BookFry toast with info mascot
+            if (data.title || data.message || data.body) {
+              toast.info(data.message || data.body || 'You have a new update.', {
+                title: data.title || 'Notification',
+              });
+            }
+
+            // Trigger custom event for notification bell indicator
             window.dispatchEvent(
               new CustomEvent('bookfry:notification', { detail: data })
             );
@@ -72,6 +81,16 @@ export function useLiveEvents() {
             }
             queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] });
             queryClient.invalidateQueries({ queryKey: ['seller', 'orders'] });
+
+            if (data.newStatus) {
+              const formattedStatus = data.newStatus.replace('_', ' ').toUpperCase();
+              toast.success(
+                data.orderNumber
+                  ? `Order #${data.orderNumber} is now ${formattedStatus}.`
+                  : `Your order status changed to ${formattedStatus}.`,
+                { title: 'Order Update' }
+              );
+            }
 
             window.dispatchEvent(
               new CustomEvent('bookfry:order-update', { detail: data })

@@ -20,10 +20,10 @@ export function EarningsCalculatorCard({
   const netEarnings = Math.max(0, validPrice - platformFee);
 
   return (
-    <div className="rounded-3xl border border-secondary/30 bg-gradient-to-br from-primary/10 via-secondary/5 to-card p-6 shadow-xl space-y-4 font-sans backdrop-blur-md">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4 font-sans">
       <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div className="flex items-center space-x-3">
-          <div className="p-2.5 bg-secondary text-secondary-foreground rounded-2xl shadow-sm">
+          <div className="p-2.5 bg-secondary/10 text-secondary rounded-lg">
             <Wallet className="h-5 w-5" />
           </div>
           <div>
@@ -31,7 +31,7 @@ export function EarningsCalculatorCard({
             <p className="text-[11px] text-muted-foreground">Instant payout upon buyer order completion</p>
           </div>
         </div>
-        <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full">
+        <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full">
           100% Payout Safety
         </span>
       </div>
