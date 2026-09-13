@@ -59,7 +59,7 @@ export function AdminDataTable<T extends Record<string, any>>({
   const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="border border-border/80 bg-card rounded-3xl shadow-sm overflow-hidden font-sans space-y-3">
+    <div className="border border-border/80 bg-card rounded-2xl shadow-sm overflow-hidden font-sans space-y-3">
       {/* Table Top Header Row */}
       <div className="p-4 sm:p-5 border-b border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/20">
         <div>
@@ -79,7 +79,7 @@ export function AdminDataTable<T extends Record<string, any>>({
                   setCurrentPage(1);
                 }}
                 placeholder={searchPlaceholder}
-                className="pl-8 pr-3 py-1.5 text-xs bg-background border border-border/80 rounded-2xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-secondary/40 outline-none w-full sm:w-56"
+                className="pl-8 pr-3 py-1.5 text-xs bg-background border border-border/80 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-secondary/40 outline-none w-full sm:w-56"
               />
             </div>
           )}

@@ -306,6 +306,83 @@ export class EmailService {
 
     return this.sendEmail(to, `Reset your BookFry password`, html);
   }
+
+  /** 6. Email Verification 6-Digit OTP */
+  async sendEmailVerificationOtp(to: string, name: string, otp: string): Promise<boolean> {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"/></head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+      <div style="max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="background-color: #1A3B5C; padding: 28px 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">BookFry • Verification Code</h1>
+          <p style="color: #FF9F2D; margin: 4px 0 0 0; font-size: 12px; font-weight: 600;">क्योंकि.. पढ़ाई रुकनी नहीं चाहिए</p>
+        </div>
+        <div style="padding: 28px 24px;">
+          <p style="font-size: 15px; color: #1f2937; margin: 0 0 12px 0;">Hello <strong>${name || 'Reader'}</strong>,</p>
+          <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 20px 0;">
+            Thank you for joining BookFry. Use the following 6-digit verification code to complete your registration and verify your email address:
+          </p>
+          
+          <div style="background-color: #FFF7ED; border: 2px dashed #F26522; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
+            <span style="font-family: monospace, Courier, monospace; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #F26522;">${otp}</span>
+            <p style="margin: 8px 0 0 0; font-size: 12px; color: #9a3412; font-weight: 600;">Valid for 10 minutes</p>
+          </div>
+
+          <p style="font-size: 12px; color: #6b7280; line-height: 1.5; margin: 20px 0 0 0;">
+            If you did not attempt to register on BookFry, please ignore this email. Never share this OTP with anyone.
+          </p>
+        </div>
+        <div style="background-color: #f9fafb; border-top: 1px solid #f3f4f6; padding: 16px; text-align: center;">
+          <p style="margin: 0; font-size: 11px; color: #9ca3af;">BookFry • India's Student Book Marketplace</p>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+    return this.sendEmail(to, `${otp} is your BookFry verification code`, html);
+  }
+
+  /** 7. Password Reset 6-Digit OTP */
+  async sendPasswordResetOtp(to: string, name: string, otp: string): Promise<boolean> {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"/></head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+      <div style="max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="background-color: #1A3B5C; padding: 28px 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">BookFry • Password Reset</h1>
+          <p style="color: #FF9F2D; margin: 4px 0 0 0; font-size: 12px; font-weight: 600;">Security Verification Code</p>
+        </div>
+        <div style="padding: 28px 24px;">
+          <p style="font-size: 15px; color: #1f2937; margin: 0 0 12px 0;">Hello <strong>${name || 'Member'}</strong>,</p>
+          <p style="font-size: 14px; color: #4b5563; line-height: 1.6; margin: 0 0 20px 0;">
+            We received a request to reset your password. Enter this 6-digit OTP code to authorize your password change:
+          </p>
+          
+          <div style="background-color: #FFF7ED; border: 2px dashed #F26522; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
+            <span style="font-family: monospace, Courier, monospace; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #F26522;">${otp}</span>
+            <p style="margin: 8px 0 0 0; font-size: 12px; color: #9a3412; font-weight: 600;">Expires in 10 minutes</p>
+          </div>
+
+          <p style="font-size: 12px; color: #dc2626; font-weight: 600; margin: 16px 0 0 0;">
+            ⚠️ Do not share this OTP with anyone. BookFry employees will never ask for your code.
+          </p>
+          <p style="font-size: 12px; color: #6b7280; margin: 8px 0 0 0;">
+            If you did not request this, please change your password immediately or contact support.
+          </p>
+        </div>
+        <div style="background-color: #f9fafb; border-top: 1px solid #f3f4f6; padding: 16px; text-align: center;">
+          <p style="margin: 0; font-size: 11px; color: #9ca3af;">BookFry • India's Student Book Marketplace</p>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+    return this.sendEmail(to, `${otp} is your BookFry password reset code`, html);
+  }
 }
 
 export default EmailService;

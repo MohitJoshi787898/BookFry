@@ -38,8 +38,17 @@ export interface PushNotificationPayload {
   title: string;
   body: string;
   icon?: string;
+  badge?: string;
   url?: string;
-  data?: Record<string, string>;
+  tag?: string;
+  data?: {
+    notificationId?: string;
+    type?: string;
+    entityType?: string;
+    entityId?: string;
+    url?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 export class PushNotificationService {
@@ -59,13 +68,25 @@ export class PushNotificationService {
   /** Send Push Notification to all active device tokens of a user */
   async sendPushToUser(userId: string, payload: PushNotificationPayload): Promise<boolean> {
     try {
-      const user = await UserModel.findById(userId).select('fcmTokens name email').exec();
-      if (!user || !user.fcmTokens || user.fcmTokens.length === 0) {
+      const user = await UserModel.findById(userId).select('fcmTokens devices name email notificationPreferences').exec();
+      if (!user) {
+        logger.info(`[PushNotification] User ${userId} not found.`);
+        return false;
+      }
+
+      // Collect active tokens from both fcmTokens and devices array
+      const deviceTokens = (user.devices || [])
+        .filter((d) => d.isActive && d.token)
+        .map((d) => d.token);
+      const directTokens = user.fcmTokens || [];
+      const allTokens = Array.from(new Set([...deviceTokens, ...directTokens]));
+
+      if (allTokens.length === 0) {
         logger.info(`[PushNotification] No registered device tokens for user ${userId}.`);
         return false;
       }
 
-      return await this.sendPushToTokens(user.fcmTokens, payload, userId);
+      return await this.sendPushToTokens(allTokens, payload, userId);
     } catch (error) {
       logger.error(`[PushNotification Error] Failed to send push to user ${userId}:`, error);
       return false;
@@ -76,14 +97,26 @@ export class PushNotificationService {
   async sendPushToTokens(tokens: string[], payload: PushNotificationPayload, userId?: string): Promise<boolean> {
     if (!tokens || tokens.length === 0) return false;
 
-    logger.info(`[Push Notification Dispatch] Tokens: ${tokens.length} | Title: "${payload.title}" | Body: "${payload.body}"`);
+    logger.info(`[Push Notification Dispatch] User: ${userId || 'broadcast'} | Tokens: ${tokens.length} | Title: "${payload.title}" | Body: "${payload.body}"`);
 
     if (!isFirebaseInitialized || !firebaseApp) {
-      logger.info(`[Push Simulation] Simulated push notification sent to ${tokens.length} device(s).`);
+      logger.info(`[Push Simulation] Simulated push notification dispatched to ${tokens.length} device(s). Target URL: ${payload.url || '/account/orders'}`);
       return true;
     }
 
     try {
+      // Stringify all data values for FCM compatibility
+      const stringData: Record<string, string> = {
+        url: payload.url || '/account/orders',
+      };
+      if (payload.data) {
+        for (const [k, v] of Object.entries(payload.data)) {
+          if (v !== undefined && v !== null) {
+            stringData[k] = String(v);
+          }
+        }
+      }
+
       const message: MulticastMessage = {
         tokens,
         notification: {
@@ -91,17 +124,15 @@ export class PushNotificationService {
           body: payload.body,
           imageUrl: payload.icon || 'https://bookfry.in/fox_reading_178491148655455.png',
         },
-        data: {
-          url: payload.url || '/account/orders',
-          ...payload.data,
-        },
+        data: stringData,
         webpush: {
           fcmOptions: {
             link: payload.url || 'https://bookfry.in',
           },
           notification: {
-            icon: 'https://bookfry.in/fox_reading_178491148655455.png',
-            badge: 'https://bookfry.in/favicon.ico',
+            icon: payload.icon || 'https://bookfry.in/fox_reading_178491148655455.png',
+            badge: payload.badge || 'https://bookfry.in/favicon.ico',
+            tag: payload.tag || 'bookfry-general',
           },
         },
       };
@@ -127,9 +158,12 @@ export class PushNotificationService {
 
         if (invalidTokens.length > 0) {
           await UserModel.findByIdAndUpdate(userId, {
-            $pull: { fcmTokens: { $in: invalidTokens } },
+            $pull: {
+              fcmTokens: { $in: invalidTokens },
+              devices: { token: { $in: invalidTokens } },
+            },
           });
-          logger.info(`[PushNotification] Removed ${invalidTokens.length} expired FCM tokens for user ${userId}.`);
+          logger.info(`[PushNotification] Pruned ${invalidTokens.length} expired FCM tokens from user ${userId}.`);
         }
       }
 

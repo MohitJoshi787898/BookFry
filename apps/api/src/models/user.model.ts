@@ -32,6 +32,23 @@ export interface ISellerProfile {
 export type SellerOnboardingStatus = 'incomplete' | 'complete';
 export type SellerVerificationStatus = 'not_submitted' | 'pending' | 'approved' | 'rejected';
 
+export interface IDeviceToken {
+  token: string;
+  platform: 'web' | 'android' | 'ios';
+  deviceId?: string;
+  userAgent?: string;
+  lastSeenAt: Date;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export interface INotificationPreferences {
+  orders: boolean;
+  seller: boolean;
+  delivery: boolean;
+  marketing: boolean;
+}
+
 export interface IUserDocument extends Document {
   name: string;
   email: string;
@@ -49,6 +66,8 @@ export interface IUserDocument extends Document {
   sellerVerificationSubmittedAt?: Date;
   sellerVerificationRejectionReason?: string;
   fcmTokens?: string[];
+  devices?: IDeviceToken[];
+  notificationPreferences?: INotificationPreferences;
   refreshTokenHash?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -137,6 +156,29 @@ const UserSchema = new Schema<IUserDocument>(
     sellerVerificationSubmittedAt: { type: Date },
     sellerVerificationRejectionReason: { type: String },
     fcmTokens: { type: [String], default: [] },
+    devices: {
+      type: [
+        new Schema<IDeviceToken>(
+          {
+            token: { type: String, required: true },
+            platform: { type: String, enum: ['web', 'android', 'ios'], default: 'web' },
+            deviceId: { type: String },
+            userAgent: { type: String },
+            lastSeenAt: { type: Date, default: Date.now },
+            isActive: { type: Boolean, default: true },
+            createdAt: { type: Date, default: Date.now },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
+    notificationPreferences: {
+      orders: { type: Boolean, default: true },
+      seller: { type: Boolean, default: true },
+      delivery: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: false },
+    },
     refreshTokenHash: { type: String, default: null },
   },
   {

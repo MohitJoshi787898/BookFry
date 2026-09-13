@@ -60,7 +60,7 @@ export function OrdersCardItem({ order, onOpenReturnModal }: OrdersCardItemProps
   const isReturnEligible = isWithinReturnWindow(order) && !order.returnRequest;
 
   return (
-    <div className="group relative rounded-3xl bg-card border border-border/80 p-5 sm:p-6 shadow-md hover:shadow-xl transition-all duration-200 hover-page-turn">
+    <div className="group relative rounded-xl bg-card border border-border/80 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-200 hover-page-turn font-sans">
       {/* Top Meta Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4 mb-4">
         <div className="space-y-0.5">
@@ -90,9 +90,9 @@ export function OrdersCardItem({ order, onOpenReturnModal }: OrdersCardItemProps
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Book Covers Showcase */}
         <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative h-20 w-16 sm:h-24 sm:w-18 shrink-0 rounded-xl bg-muted border border-border/80 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
+          <div className="relative h-20 w-14 sm:h-24 sm:w-16 shrink-0 rounded-lg bg-muted border border-border/80 overflow-hidden shadow-2xs group-hover:scale-105 transition-transform">
             <Image
-              src="/fox_reading_178491148655455.png"
+              src="/assets/bookfry/bookfry-fox-reading.webp"
               alt={firstItem?.title || "Book Cover"}
               fill
               className="object-cover"
@@ -145,7 +145,7 @@ export function OrdersCardItem({ order, onOpenReturnModal }: OrdersCardItemProps
 
             <Link
               href={`/account/orders/${order.id}`}
-              className="px-4 py-2 rounded-2xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-xs font-extrabold tracking-wider uppercase transition-all shadow-md flex items-center gap-1.5 active:scale-95"
+              className="px-4 py-2 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 text-xs font-extrabold tracking-wider uppercase transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
             >
               <span>View Details</span>
               <ChevronRight className="h-4 w-4" />

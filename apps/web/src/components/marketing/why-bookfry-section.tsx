@@ -64,21 +64,21 @@ export function WhyBookFrySection({
   return (
     <section
       aria-label="Why BookFry"
-      className="py-14 sm:py-18 lg:py-24 relative bg-[#151B29] border-b border-white/10 font-sans text-[#F8FAFC] transition-colors duration-200 overflow-hidden"
+      className="py-14 sm:py-18 lg:py-24 relative bg-card/60 dark:bg-muted/10 border-b border-border/80 font-sans text-foreground transition-colors duration-200 overflow-hidden"
     >
-      <div className="pointer-events-none absolute top-1/2 right-0 -translate-y-1/2 w-96 h-96 rounded-full bg-[#FF9F2D]/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 w-96 h-96 rounded-full bg-[#1D2535] blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2 right-0 -translate-y-1/2 w-96 h-96 rounded-full bg-secondary/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#FF9F2D]/15 border border-[#FF9F2D]/30 text-xs font-black uppercase tracking-wider text-[#FF9F2D] shadow-xs">
-            <Sparkles className="h-3.5 w-3.5 animate-pulse text-[#FFB347]" />
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-secondary/15 border border-secondary/30 text-xs font-black uppercase tracking-wider text-secondary shadow-xs">
+            <Sparkles className="h-3.5 w-3.5 animate-pulse" />
             <span>{eyebrow}</span>
           </div>
-          <h2 className="font-sans text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#F8FAFC] tracking-tight leading-tight">
+          <h2 className="font-sans text-2xl sm:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
             {title}
           </h2>
-          <p className="text-xs sm:text-base text-[#AEB7C6] leading-relaxed font-medium">
+          <p className="text-xs sm:text-base text-muted-foreground leading-relaxed font-medium">
             {subtitle}
           </p>
         </div>
@@ -95,30 +95,30 @@ export function WhyBookFrySection({
                   viewport={{ once: true }}
                   transition={{ duration: 0.35, delay: idx * 0.08 }}
                   whileHover={{ y: -4 }}
-                  className="p-5 sm:p-6 rounded-3xl bg-[#1D2535] border border-white/10 shadow-xl hover:border-[#FF9F2D]/50 hover:bg-[#242E40] transition-all duration-300 space-y-4 relative overflow-hidden group flex flex-col justify-between"
+                  className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 shadow-sm hover:shadow-md hover:border-secondary/40 transition-all duration-300 space-y-4 relative overflow-hidden group flex flex-col justify-between"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="p-3 rounded-2xl border text-[#FF9F2D] bg-[#FF9F2D]/15 border-[#FF9F2D]/30 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <div className="p-2.5 rounded-xl border text-secondary bg-secondary/10 border-secondary/25 shrink-0 group-hover:scale-105 transition-transform duration-300">
                       <IconComp className="h-5 w-5 stroke-[2.2]" />
                     </div>
                     {pillar.badge && (
-                      <span className="text-[10px] font-black uppercase tracking-wider text-[#FF9F2D] bg-[#FF9F2D]/15 px-3 py-1 rounded-full border border-[#FF9F2D]/30">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-secondary bg-secondary/10 px-3 py-1 rounded-full border border-secondary/25">
                         {pillar.badge}
                       </span>
                     )}
                   </div>
                   
                   <div className="space-y-1.5">
-                    <h3 className="text-base sm:text-lg font-bold text-[#F8FAFC] group-hover:text-[#FF9F2D] transition-colors">
+                    <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-secondary transition-colors">
                       {pillar.title}
                     </h3>
-                    <p className="text-xs text-[#AEB7C6] leading-relaxed font-medium">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
                       {pillar.description}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#FF9F2D] font-bold pt-2 border-t border-white/10">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  <div className="flex items-center gap-1.5 text-xs text-secondary font-bold pt-2 border-t border-border/60">
+                    <CheckCircle2 className="h-4 w-4" />
                     <span>{verifiedGuaranteeLabel}</span>
                   </div>
                 </motion.div>
@@ -131,14 +131,14 @@ export function WhyBookFrySection({
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
-            className="lg:col-span-4 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#1D2535] via-[#151B29] to-[#E97918]/30 text-white text-center space-y-6 shadow-2xl relative overflow-hidden border border-white/15 flex flex-col justify-between"
+            className="lg:col-span-4 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-card via-card to-secondary/10 text-foreground text-center space-y-6 shadow-md relative overflow-hidden border border-border/80 flex flex-col justify-between"
           >
             <div className="space-y-2">
-              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-extrabold uppercase tracking-wider text-[#FFB347]">
-                <Zap className="h-3 w-3 fill-[#FFB347]" />
+              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-secondary/15 border border-secondary/30 text-[11px] font-extrabold uppercase tracking-wider text-secondary">
+                <Zap className="h-3.5 w-3.5 fill-secondary" />
                 <span>{ecoTag}</span>
               </div>
-              <h3 className="italic text-xl font-extrabold text-[#FFB347]">
+              <h3 className="italic text-xl font-extrabold text-secondary">
                 {sloganQuote}
               </h3>
             </div>
@@ -147,9 +147,9 @@ export function WhyBookFrySection({
               <EcoBookIllustration className="w-full h-auto max-h-48 drop-shadow-xl" />
             </div>
 
-            <div className="space-y-2 pt-2 border-t border-white/15">
-              <span className="text-2xl font-black font-mono text-[#F8FAFC] block">{treesSavedValue}</span>
-              <p className="text-xs text-[#AEB7C6] leading-relaxed font-medium">
+            <div className="space-y-1.5 pt-2 border-t border-border/70">
+              <span className="text-2xl font-black font-mono text-foreground block">{treesSavedValue}</span>
+              <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                 {treesSavedDesc}
               </p>
             </div>

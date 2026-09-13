@@ -25,6 +25,23 @@ export default function SellerVerifyPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
+  const handleSubmitVerification = async () => {
+    setApiError(null);
+    setIsSubmitting(true);
+    try {
+      const updatedUser = await apiClient('/users/seller-verification', {
+        method: 'POST',
+      });
+      setUser(updatedUser);
+      setSubmitted(true);
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setApiError(error.message || 'Failed to submit verification request. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <SellerLayout>
@@ -110,6 +127,67 @@ export default function SellerVerifyPage() {
     );
   }
 
+  // Rejected by admin — show reason and resolution actions
+  if (user?.sellerVerificationStatus === 'rejected') {
+    return (
+      <SellerLayout>
+        <div className="max-w-xl mx-auto space-y-6 font-sans py-8">
+          <div className="p-8 rounded-3xl border border-danger/30 bg-danger/10 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-danger/20 text-danger shrink-0">
+                <AlertCircle className="h-7 w-7" />
+              </div>
+              <div>
+                <h2 className="font-serif text-2xl font-extrabold text-foreground">
+                  Verification Rejected
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Your previous verification request was not approved.
+                </p>
+              </div>
+            </div>
+
+            {user.sellerVerificationRejectionReason && (
+              <div className="p-4 rounded-2xl bg-background border border-danger/25 text-xs text-foreground space-y-1">
+                <span className="font-black uppercase tracking-wider text-[10px] text-danger block">
+                  Admin Feedback:
+                </span>
+                <p className="font-semibold text-muted-foreground">
+                  {user.sellerVerificationRejectionReason}
+                </p>
+              </div>
+            )}
+
+            <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+              <Link
+                href="/seller/register"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-danger text-white rounded-xl text-xs font-bold shadow-xs hover:bg-danger/90"
+              >
+                <span>Edit Profile Details</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <button
+                type="button"
+                onClick={handleSubmitVerification}
+                disabled={isSubmitting}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-secondary text-white rounded-xl text-xs font-bold shadow-xs hover:bg-secondary/90 disabled:opacity-50 cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Resubmitting...</span>
+                  </>
+                ) : (
+                  <span>Resubmit for Review</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </SellerLayout>
+    );
+  }
+
   // Pending admin review
   if (user?.sellerVerificationStatus === 'pending' || submitted) {
     return (
@@ -140,22 +218,6 @@ export default function SellerVerifyPage() {
     );
   }
 
-  const handleSubmitVerification = async () => {
-    setApiError(null);
-    setIsSubmitting(true);
-    try {
-      const updatedUser = await apiClient('/users/seller-verification', {
-        method: 'POST',
-      });
-      setUser(updatedUser);
-      setSubmitted(true);
-    } catch (err: unknown) {
-      const error = err as { message?: string };
-      setApiError(error.message || 'Failed to submit verification request. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <SellerLayout>

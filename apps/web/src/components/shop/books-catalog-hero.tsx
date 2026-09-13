@@ -37,7 +37,7 @@ export function BooksCatalogHero({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-muted/80 border border-border/80 text-foreground p-5 sm:p-7 lg:p-8 shadow-sm mb-6 font-sans">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card to-muted/80 border border-border/80 text-foreground p-5 sm:p-7 lg:p-8 shadow-sm mb-6 font-sans">
       {/* Ambient Lighting Glows */}
       <div
         aria-hidden="true"

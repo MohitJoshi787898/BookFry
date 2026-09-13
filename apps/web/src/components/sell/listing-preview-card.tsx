@@ -54,7 +54,7 @@ export function ListingPreviewCard({ formValues }: ListingPreviewCardProps) {
       </div>
 
       {/* Simulated Book Card */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-md max-w-sm mx-auto transition-all">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm max-w-sm mx-auto transition-all hover:shadow-md">
         {/* Aspect 2:3 Cover Container */}
         <div className="relative w-full aspect-[2/3] bg-muted/60 border-b border-border flex items-center justify-center overflow-hidden">
           {previewImageUrl ? (
@@ -62,21 +62,24 @@ export function ListingPreviewCard({ formValues }: ListingPreviewCardProps) {
             <img
               src={previewImageUrl}
               alt={title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover object-center transition-transform hover:scale-105 duration-300"
             />
           ) : (
-            <div className="p-6 text-center text-muted-foreground space-y-2">
-              <div className="h-12 w-12 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto text-secondary">
-                <ShoppingBag className="h-6 w-6" />
+            <div className="p-6 text-center text-muted-foreground space-y-3">
+              <div className="h-14 w-14 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto text-secondary shadow-xs">
+                <ShoppingBag className="h-7 w-7" />
               </div>
-              <p className="text-xs font-medium">Cover photo will render here</p>
+              <div className="space-y-1">
+                <p className="text-xs sm:text-sm font-semibold text-foreground">Cover photo preview</p>
+                <p className="text-[11px] text-muted-foreground">Upload photo to see live cover</p>
+              </div>
             </div>
           )}
 
           {/* Condition Ribbon Top Left */}
           <span
             className={cn(
-              'absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border shadow-xs backdrop-blur-sm',
+              'absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border shadow-xs backdrop-blur-md',
               conditionInfo.badgeClass
             )}
           >
@@ -85,53 +88,53 @@ export function ListingPreviewCard({ formValues }: ListingPreviewCardProps) {
         </div>
 
         {/* Card Content Area */}
-        <div className="p-4 space-y-2.5">
+        <div className="p-4 sm:p-5 space-y-3">
           {/* Title & Author */}
           <div>
-            <h4 className="font-bold text-sm text-foreground line-clamp-2 leading-snug">
+            <h4 className="font-bold text-base text-foreground line-clamp-2 leading-snug">
               {title}
             </h4>
-            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">by {author}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 mt-0.5 font-medium">by {author}</p>
           </div>
 
           {/* Price & Delivery badge */}
           <div className="flex items-baseline justify-between pt-1">
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs text-muted-foreground">Price</span>
-              <span className="font-mono text-lg font-black text-foreground">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xs text-muted-foreground font-medium">Price</span>
+              <span className="font-mono text-xl font-black text-foreground">
                 ₹{price > 0 ? price.toFixed(2) : '0.00'}
               </span>
             </div>
             {formValues.freeShipping && (
-              <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+              <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                 Free Delivery
               </span>
             )}
           </div>
 
           {/* Seller location snippet */}
-          <div className="flex items-center justify-between pt-2 border-t border-border text-xs text-muted-foreground">
-            <span className="flex items-center gap-1 truncate max-w-[180px]">
-              <MapPin className="h-3 w-3 text-secondary shrink-0" />
-              <span className="truncate">{location}</span>
+          <div className="flex items-center justify-between pt-2.5 border-t border-border text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 truncate max-w-[180px]">
+              <MapPin className="h-3.5 w-3.5 text-secondary shrink-0" />
+              <span className="truncate font-medium">{location}</span>
             </span>
             <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
-              <CheckCircle2 className="h-3 w-3" />
+              <CheckCircle2 className="h-3.5 w-3.5" />
               <span>Verified</span>
             </span>
           </div>
 
           {/* Condition Notes excerpt if provided */}
           {formValues.conditionNotes && (
-            <p className="text-[11px] text-muted-foreground italic line-clamp-2 bg-muted/40 p-2 rounded-lg border border-border/40">
+            <p className="text-xs text-muted-foreground italic line-clamp-2 bg-muted/40 p-2.5 rounded-xl border border-border/40">
               &ldquo;{formValues.conditionNotes}&rdquo;
             </p>
           )}
 
           {/* Simulated Add to Cart Action */}
           <div className="pt-2">
-            <div className="w-full py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm opacity-90 select-none">
-              <ShoppingBag className="h-3.5 w-3.5" />
+            <div className="w-full py-3 rounded-xl bg-secondary text-secondary-foreground text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm select-none">
+              <ShoppingBag className="h-4 w-4" />
               <span>Buy This Copy</span>
             </div>
           </div>
@@ -139,9 +142,9 @@ export function ListingPreviewCard({ formValues }: ListingPreviewCardProps) {
       </div>
 
       {/* Seller Confidence Info */}
-      <div className="p-3.5 bg-muted/30 border border-border rounded-xl text-[11px] text-muted-foreground flex items-center gap-2">
-        <ShieldCheck className="h-4 w-4 text-secondary shrink-0" />
-        <span>Live preview matches exact buyer view on BookFry.</span>
+      <div className="p-3.5 sm:p-4 bg-muted/40 border border-border rounded-xl text-xs text-muted-foreground flex items-center gap-2.5">
+        <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-secondary shrink-0" />
+        <span>Live preview matches exact buyer view on the BookFry marketplace.</span>
       </div>
     </div>
   );

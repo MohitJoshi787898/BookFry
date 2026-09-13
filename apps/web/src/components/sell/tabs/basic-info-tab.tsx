@@ -72,7 +72,7 @@ export function BasicInfoTab({
 
         {source === 'auto' && (
           <div className="space-y-2 pt-3 border-t border-border/60">
-            <label htmlFor="isbn-input" className="text-xs font-semibold text-muted-foreground block">
+            <label htmlFor="isbn-input" className="text-xs sm:text-sm font-semibold text-muted-foreground block">
               10- or 13-Digit ISBN (from back cover barcode)
             </label>
             <div className="flex flex-col sm:flex-row gap-2.5">
@@ -81,13 +81,13 @@ export function BasicInfoTab({
                 type="text"
                 placeholder="e.g. 9780143127741 or 9788120305960"
                 {...register('isbn')}
-                className="flex-grow px-3.5 py-2.5 text-sm border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary font-mono"
+                className="flex-grow px-4 py-3 text-base border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary font-mono"
               />
               <button
                 type="button"
                 onClick={onFetchIsbn}
                 disabled={isFetchingIsbn}
-                className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm font-semibold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95 disabled:opacity-50"
+                className="h-12 px-6 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95 disabled:opacity-50"
               >
                 {isFetchingIsbn ? (
                   <>
@@ -103,7 +103,7 @@ export function BasicInfoTab({
               </button>
             </div>
             {isbnFoundMsg && (
-              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
+              <p className="text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                 <span>{isbnFoundMsg}</span>
               </p>
@@ -114,8 +114,8 @@ export function BasicInfoTab({
       </div>
 
       {/* Book Title */}
-      <div className="space-y-1.5">
-        <label htmlFor="book-title" className="text-sm font-semibold text-foreground flex items-center gap-1">
+      <div className="space-y-2">
+        <label htmlFor="book-title" className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1">
           Book Title <span className="text-rose-500">*</span>
         </label>
         <input
@@ -123,15 +123,15 @@ export function BasicInfoTab({
           type="text"
           placeholder="e.g. Engineering Mathematics 3rd Edition (H.K. Dass)"
           {...register('title')}
-          className="w-full px-3.5 py-2.5 sm:py-3 text-sm border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+          className="w-full px-4 py-3 sm:py-3.5 text-base border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
         />
         {errors.title && <p className="text-xs text-rose-500 font-medium">{errors.title.message}</p>}
       </div>
 
       {/* Author & Publisher */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <div className="space-y-1.5">
-          <label htmlFor="book-author" className="text-sm font-semibold text-foreground flex items-center gap-1">
+        <div className="space-y-2">
+          <label htmlFor="book-author" className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1">
             Author / Writer <span className="text-rose-500">*</span>
           </label>
           <input
@@ -139,13 +139,13 @@ export function BasicInfoTab({
             type="text"
             placeholder="e.g. James Clear or R.S. Aggarwal"
             {...register('author')}
-            className="w-full px-3.5 py-2.5 sm:py-3 text-sm border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+            className="w-full px-4 py-3 sm:py-3.5 text-base border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
           />
           {errors.author && <p className="text-xs text-rose-500 font-medium">{errors.author.message}</p>}
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="book-publisher" className="text-sm font-semibold text-foreground block">
+        <div className="space-y-2">
+          <label htmlFor="book-publisher" className="text-sm sm:text-base font-bold text-foreground block">
             Publisher / Edition (Optional)
           </label>
           <input
@@ -153,7 +153,7 @@ export function BasicInfoTab({
             type="text"
             placeholder="e.g. S. Chand Publishing, 5th Edition"
             {...register('publisher')}
-            className="w-full px-3.5 py-2.5 sm:py-3 text-sm border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+            className="w-full px-4 py-3 sm:py-3.5 text-base border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
           />
         </div>
       </div>

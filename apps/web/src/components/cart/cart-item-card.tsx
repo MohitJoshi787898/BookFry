@@ -32,7 +32,7 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, height: 0, overflow: 'hidden', marginBottom: 0 }}
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="hover-page-turn group relative rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xs p-4 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+      className="hover-page-turn group relative rounded-xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden font-sans"
     >
       {/* Soft background hover gradient */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-secondary/0 via-secondary/[0.02] to-secondary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -40,7 +40,7 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
       <div className="relative z-10 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center">
         {/* Book Cover Container */}
         <Link href={`/books/${book.slug}`} className="shrink-0 self-center sm:self-start">
-          <div className="relative h-32 w-22 sm:h-36 sm:w-26 rounded-2xl overflow-hidden border border-border/80 bg-muted shadow-sm group-hover:shadow-md transition-all duration-300">
+          <div className="relative h-32 w-22 sm:h-36 sm:w-26 rounded-xl overflow-hidden border border-border/80 bg-muted shadow-2xs group-hover:shadow-xs transition-all duration-300">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
@@ -53,10 +53,10 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               }}
             />
             <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
-              <span className={`px-2.5 py-1 rounded-full bg-background/90 backdrop-blur-md border text-xs font-extrabold uppercase tracking-wider shadow-2xs ${
+              <span className={`px-2 py-0.5 rounded-md bg-background/90 backdrop-blur-md border text-[11px] font-extrabold uppercase tracking-wider shadow-2xs ${
                 condition === 'new' ? 'border-success/60 text-success' : 'border-secondary/60 text-secondary'
               }`}>
-                {condition === 'new' ? 'New • Pay Online' : 'Used • Direct Contact'}
+                {condition === 'new' ? 'New • Online' : 'Used • Escrow'}
               </span>
             </div>
           </div>
@@ -75,7 +75,7 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               <button
                 onClick={() => onRemove(itemKey)}
                 disabled={isLoading}
-                className="h-10 w-10 flex items-center justify-center rounded-2xl border border-border/80 text-muted-foreground hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-all shrink-0 active:scale-90 cursor-pointer"
+                className="h-9 w-9 flex items-center justify-center rounded-xl border border-border/80 text-muted-foreground hover:bg-danger/10 hover:text-danger hover:border-danger/30 transition-all shrink-0 active:scale-90 cursor-pointer"
                 title="Remove item"
                 aria-label="Remove item"
               >
@@ -87,10 +87,10 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
 
             {/* Quality & Speed Badges */}
             <div className="flex flex-wrap gap-2 pt-1">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/10 border border-success/20 text-success text-xs font-extrabold">
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-success/10 border border-success/20 text-success text-[11px] font-bold">
                 <ShieldCheck className="h-3.5 w-3.5" /> Verified Quality
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-extrabold">
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold">
                 <Clock className="h-3.5 w-3.5" /> 2–4 Days Dispatch
               </span>
             </div>
@@ -103,15 +103,15 @@ export function CartItemCard({ item, isLoading, onQtyChange, onRemove }: CartIte
               <div className="flex items-baseline gap-2">
                 <span className="text-lg sm:text-xl font-extrabold text-foreground">₹{itemTotal.toFixed(0)}</span>
                 <span className="text-xs text-muted-foreground line-through font-medium">₹{strikePrice.toFixed(0)}</span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/20 text-xs font-extrabold text-secondary">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary/10 border border-secondary/20 text-xs font-bold text-secondary">
                   <Tag className="h-3 w-3" /> 20% OFF
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5">₹{item.priceSnapshot.toFixed(0)} / book</p>
+              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">₹{item.priceSnapshot.toFixed(0)} / book</p>
             </div>
 
             {/* Stepper Control */}
-            <div className="flex items-center border border-border/90 rounded-2xl overflow-hidden bg-background/80 shadow-2xs">
+            <div className="flex items-center border border-border/90 rounded-xl overflow-hidden bg-background shadow-2xs">
               <button
                 onClick={() => onQtyChange(itemKey, item.quantity, -1, stock)}
                 disabled={item.quantity <= 1 || isLoading}

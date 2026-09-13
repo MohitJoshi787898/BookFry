@@ -329,8 +329,8 @@ function SellBookPageInner() {
       <Navbar />
       <SellHero />
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
-        <div className="space-y-6">
+      <main className="flex-1 w-full px-3.5 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-8">
+        <div className="space-y-6 max-w-7xl mx-auto">
           <ListingProgressTabs
             currentTab={currentTab}
             completedStepNumbers={completedSteps}
@@ -341,8 +341,8 @@ function SellBookPageInner() {
             tabErrors={tabErrors}
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            <div className="lg:col-span-7 xl:col-span-8 bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            <div className="lg:col-span-7 xl:col-span-8 bg-card border border-border/80 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-xs">
               <form onSubmit={handleSubmit(onSubmit)}>
                 {currentTab === 'basic' && (
                   <BasicInfoTab
@@ -359,14 +359,14 @@ function SellBookPageInner() {
                 {currentTab === 'images' && <ImagesTab form={form} />}
                 {currentTab === 'review' && <ReviewTab form={form} />}
 
-                {/* Form Action Controls */}
+                {/* Form Action Controls Desktop */}
                 <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handlePrev}
                     disabled={currentTabIdx === 0 || isSubmitting}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 h-11 px-5 rounded-xl font-bold cursor-pointer"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     <span>Back</span>
@@ -376,7 +376,7 @@ function SellBookPageInner() {
                     <Button
                       type="button"
                       onClick={handleNext}
-                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-2 font-bold px-6"
+                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-2 font-extrabold h-11 px-7 rounded-xl shadow-xs cursor-pointer active:scale-95"
                     >
                       <span>Continue</span>
                       <ArrowRight className="h-4 w-4" />
@@ -385,7 +385,7 @@ function SellBookPageInner() {
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-2 font-bold px-8 shadow-md"
+                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-2 font-extrabold h-11 px-8 rounded-xl shadow-md cursor-pointer active:scale-95"
                     >
                       {isSubmitting ? (
                         <>
@@ -411,38 +411,49 @@ function SellBookPageInner() {
         </div>
       </main>
 
-      {/* Mobile Sticky Bottom Dock */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-3.5 bg-background/95 backdrop-blur-md border-t border-border z-40 flex items-center justify-between gap-3 shadow-lg">
-        <Button
+      {/* Mobile Sticky Bottom Dock with Safe Area Support */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-card/95 backdrop-blur-md border-t border-border/80 z-40 flex items-center justify-between gap-3 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <button
           type="button"
-          variant="outline"
-          size="sm"
           onClick={handlePrev}
           disabled={currentTabIdx === 0 || isSubmitting}
-          className="shrink-0"
+          className="h-12 w-12 rounded-2xl border border-border/80 bg-background hover:bg-muted flex items-center justify-center text-foreground disabled:opacity-30 shrink-0 transition-all active:scale-90 cursor-pointer"
+          aria-label="Previous step"
         >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+          <ArrowLeft className="h-5 w-5" />
+        </button>
         <div className="flex-1">
           {currentTabIdx < LISTING_TABS.length - 1 ? (
-            <Button
+            <button
               type="button"
               onClick={handleNext}
-              className="w-full bg-secondary text-secondary-foreground font-bold flex items-center justify-center gap-2"
+              className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-sm uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer"
             >
-              <span>Continue</span>
+              <span>Continue (Step {currentTabIdx + 2} of {LISTING_TABS.length})</span>
               <ArrowRight className="h-4 w-4" />
-            </Button>
+            </button>
           ) : (
-            <Button
+            <button
               type="button"
               onClick={handleSubmit(onSubmit)}
               disabled={isSubmitting}
-              className="w-full bg-secondary text-secondary-foreground font-bold flex items-center justify-center gap-2"
+              className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-sm uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer disabled:opacity-60"
             >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              <span>{isEditMode ? 'Update Listing' : 'Publish Book'}</span>
-            </Button>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Publishing...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-5 w-5 fill-current" />
+                  <span>{isEditMode ? 'Update Listing' : 'Publish Book Now'}</span>
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>

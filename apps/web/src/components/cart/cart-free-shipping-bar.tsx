@@ -15,10 +15,10 @@ export function CartFreeShippingBar({ subtotal, threshold = 499 }: CartFreeShipp
   const remaining = threshold - subtotal;
 
   return (
-    <div className="rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xs p-5 shadow-xs mb-4">
+    <div className="rounded-xl border border-border/80 bg-card p-5 shadow-xs mb-4 font-sans">
       <div className="flex items-center justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
-          <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${isFree ? 'bg-success/15 text-success' : 'bg-secondary/15 text-secondary'}`}>
+          <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${isFree ? 'bg-success/15 text-success' : 'bg-secondary/15 text-secondary'}`}>
             {isFree ? <Sparkles className="h-4 w-4 animate-pulse" /> : <Truck className="h-4 w-4" />}
           </div>
           <div>

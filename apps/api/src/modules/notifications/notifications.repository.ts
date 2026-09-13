@@ -12,6 +12,10 @@ export class NotificationsRepository {
     return NotificationModel.findById(id).exec();
   }
 
+  async findByIdempotencyKey(key: string): Promise<INotificationDocument | null> {
+    return NotificationModel.findOne({ idempotencyKey: key }).exec();
+  }
+
   async create(data: Partial<INotificationDocument>): Promise<INotificationDocument> {
     const doc = new NotificationModel(data);
     return doc.save();
@@ -26,6 +30,18 @@ export class NotificationsRepository {
       userId: new mongoose.Types.ObjectId(userId),
       isRead: false,
     });
+  }
+
+  async markAllAsRead(userId: string): Promise<void> {
+    await NotificationModel.updateMany(
+      {
+        userId: new mongoose.Types.ObjectId(userId),
+        isRead: false,
+      },
+      {
+        $set: { isRead: true },
+      }
+    ).exec();
   }
 }
 export default NotificationsRepository;

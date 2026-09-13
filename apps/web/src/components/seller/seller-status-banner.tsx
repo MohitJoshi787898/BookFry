@@ -25,17 +25,17 @@ export function SellerStatusBanner({
     return (
       <div
         role="alert"
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-3xl border border-danger/25 bg-danger/8 font-sans"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-xl border border-danger/25 bg-danger/8 font-sans"
       >
         <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-2xl bg-danger/15 shrink-0">
+          <div className="p-2.5 rounded-xl bg-danger/15 shrink-0">
             <AlertCircle className="h-5 w-5 text-danger" />
           </div>
           <div>
             <h4 className="text-sm font-extrabold text-foreground">
               Complete Your Seller Profile
             </h4>
-            <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
               Your seller profile is missing required information (store name, phone, UPI ID).
               Complete your profile to start listing books.
             </p>
@@ -43,7 +43,7 @@ export function SellerStatusBanner({
         </div>
         <Link
           href="/seller/register"
-          className="px-4 py-2 bg-danger hover:bg-danger/90 text-white font-black text-xs rounded-2xl transition-all shadow-xs shrink-0 self-end sm:self-center flex items-center gap-1.5"
+          className="px-4 py-2 bg-danger hover:bg-danger/90 text-white font-black text-xs rounded-xl transition-all shadow-xs shrink-0 self-end sm:self-center flex items-center gap-1.5"
         >
           <span>Complete Profile</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -57,27 +57,27 @@ export function SellerStatusBanner({
     return (
       <div
         role="alert"
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-3xl border border-danger/25 bg-danger/8 font-sans"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-xl border border-danger/25 bg-danger/8 font-sans"
       >
         <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-2xl bg-danger/15 shrink-0">
+          <div className="p-2.5 rounded-xl bg-danger/15 shrink-0">
             <XCircle className="h-5 w-5 text-danger" />
           </div>
           <div>
             <h4 className="text-sm font-extrabold text-foreground">Verification Rejected</h4>
             {rejectionReason && (
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                 Reason: <span className="text-foreground font-semibold">{rejectionReason}</span>
               </p>
             )}
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Update your seller profile and resubmit for review.
             </p>
           </div>
         </div>
         <Link
           href="/seller/register"
-          className="px-4 py-2 bg-danger hover:bg-danger/90 text-white font-black text-xs rounded-2xl transition-all shadow-xs shrink-0 self-end sm:self-center flex items-center gap-1.5"
+          className="px-4 py-2 bg-danger hover:bg-danger/90 text-white font-black text-xs rounded-xl transition-all shadow-xs shrink-0 self-end sm:self-center flex items-center gap-1.5"
         >
           <span>Fix & Resubmit</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -89,14 +89,14 @@ export function SellerStatusBanner({
   // Profile complete, not yet submitted for verification
   if (verificationStatus === 'not_submitted') {
     return (
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-3xl border border-secondary/25 bg-secondary/8 font-sans">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-xl border border-secondary/25 bg-secondary/8 font-sans">
         <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-2xl bg-secondary/15 shrink-0">
+          <div className="p-2.5 rounded-xl bg-secondary/15 shrink-0">
             <ShieldCheck className="h-5 w-5 text-secondary" />
           </div>
           <div>
             <h4 className="text-sm font-extrabold text-foreground">Ready for Verification</h4>
-            <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
               Your profile is complete. Submit it for admin review to get the &quot;Verified
               Seller&quot; badge and increase buyer trust.
             </p>
@@ -104,7 +104,7 @@ export function SellerStatusBanner({
         </div>
         <Link
           href="/seller/verify"
-          className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-white font-black text-xs rounded-2xl transition-all shadow-xs shrink-0 self-end sm:self-center flex items-center gap-1.5"
+          className="px-4 py-2 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs rounded-xl transition-all shadow-xs shrink-0 self-end sm:self-center flex items-center gap-1.5"
         >
           <span>Submit Verification</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -116,13 +116,13 @@ export function SellerStatusBanner({
   // Pending admin review
   if (verificationStatus === 'pending') {
     return (
-      <div className="flex items-start gap-3 p-4 sm:p-5 rounded-3xl border border-amber-500/25 bg-amber-500/8 font-sans">
-        <div className="p-2.5 rounded-2xl bg-amber-500/15 shrink-0">
+      <div className="flex items-start gap-3 p-4 sm:p-5 rounded-xl border border-amber-500/25 bg-amber-500/8 font-sans">
+        <div className="p-2.5 rounded-xl bg-amber-500/15 shrink-0">
           <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400 animate-pulse" />
         </div>
         <div>
           <h4 className="text-sm font-extrabold text-foreground">Verification Under Review</h4>
-          <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
             Your seller profile is under admin review. This usually takes 1–2 business days.
             You&apos;ll receive a notification once reviewed.
           </p>

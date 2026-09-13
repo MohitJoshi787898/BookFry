@@ -124,31 +124,32 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
         onChange={(e) => handleFileSelect(e.target.files)}
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         {renderSlots.map((slot) => {
           if (slot.type === 'image' && slot.index !== undefined) {
             return (
               <div
                 key={`img-${slot.index}`}
-                className="relative aspect-square sm:aspect-[4/5] rounded-3xl border border-border/80 overflow-hidden bg-muted/40 shadow-xs group"
+                className="relative aspect-square sm:aspect-[4/5] rounded-2xl sm:rounded-3xl border border-border/80 overflow-hidden bg-muted/40 shadow-xs group"
               >
                 <ImagePreview img={slot.value!} />
 
                 {/* Cover label at top left for first index */}
                 {slot.index === 0 && (
-                  <span className="absolute top-3 left-3 bg-secondary text-secondary-foreground text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
-                    COVER PHOTO
+                  <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-secondary text-secondary-foreground text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                    COVER
                   </span>
                 )}
 
-                {/* Remove button at top right */}
+                {/* Remove button at top right - min 40px touch target */}
                 <button
                   type="button"
                   onClick={() => removeImage(slot.index!)}
-                  className="absolute top-2.5 right-2.5 h-8 w-8 rounded-full bg-card/90 border border-border/80 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-md transition-all active:scale-95 backdrop-blur-md"
+                  className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 h-10 w-10 sm:h-9 sm:w-9 rounded-full bg-card/95 border border-border flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-md transition-all active:scale-95 backdrop-blur-md"
                   title="Remove photo"
+                  aria-label="Remove photo"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             );
@@ -156,19 +157,20 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
 
           // Dotted Add Photo card
           return (
-            <div
+            <button
               key="uploader-slot"
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="cursor-pointer aspect-square sm:aspect-[4/5] rounded-3xl border-2 border-dashed border-border/80 hover:border-secondary bg-card hover:bg-secondary/5 flex flex-col items-center justify-center text-center p-4 transition-all active:scale-95 shadow-xs"
+              className="cursor-pointer aspect-square sm:aspect-[4/5] rounded-2xl sm:rounded-3xl border-2 border-dashed border-border hover:border-secondary bg-card hover:bg-secondary/5 flex flex-col items-center justify-center text-center p-3 sm:p-4 transition-all active:scale-95 shadow-xs group min-h-[140px]"
             >
-              <div className="h-10 w-10 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-2">
-                <Plus className="h-5 w-5" />
+              <div className="h-12 w-12 rounded-2xl bg-secondary/10 group-hover:bg-secondary/20 flex items-center justify-center text-secondary mb-2 sm:mb-2.5 transition-colors">
+                <Plus className="h-6 w-6" />
               </div>
-              <span className="text-xs font-bold text-foreground">Add Photo</span>
-              <span className="text-[10px] text-muted-foreground mt-1 leading-tight font-medium">
-                JPG, PNG, WebP<br />Max 5MB each
+              <span className="text-xs sm:text-sm font-bold text-foreground">Add Photo</span>
+              <span className="text-[11px] text-muted-foreground mt-1 leading-tight font-medium">
+                JPG, PNG, WebP<br />Max 5MB
               </span>
-            </div>
+            </button>
           );
         })}
       </div>

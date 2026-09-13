@@ -5,60 +5,36 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { forgotPasswordSchema, ForgotPasswordFormData } from '@/lib/validations/auth-schemas';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
-import { ArrowLeft, CheckCircle2, Loader2, Mail, Send } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+import { ArrowLeft, Loader2, Mail, Send, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function ForgotPasswordForm() {
-  const { setScreen } = useAuthModalStore();
-  const [submitted, setSubmitted] = useState(false);
+  const { setScreen, setUserEmail } = useAuthModalStore();
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const emailValue = watch('email');
-
-  const onSubmit = async () => {
-    await new Promise((res) => setTimeout(res, 1000));
-    setSubmitted(true);
+  const onSubmit = async (values: ForgotPasswordFormData) => {
+    setApiError(null);
+    try {
+      await apiClient('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: values.email }),
+      });
+      setUserEmail(values.email);
+      setScreen('reset_password');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setApiError(error.message || 'Unable to process reset request. Please check email.');
+    }
   };
-
-  if (submitted) {
-    return (
-      <div className="space-y-6 text-center font-sans">
-        <div className="mx-auto h-16 w-16 rounded-3xl bg-success/15 border border-success/30 text-success flex items-center justify-center">
-          <CheckCircle2 className="h-8 w-8" />
-        </div>
-
-        <div className="space-y-2">
-          <span className="text-[11px] font-extrabold text-success uppercase tracking-wider bg-success/10 px-3 py-1 rounded-full border border-success/20 inline-block">
-            Reset Link Dispatched
-          </span>
-          <h3 className="font-serif text-2xl font-extrabold text-foreground">Check Your Email Inbox</h3>
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed max-w-sm mx-auto">
-            We&apos;ve sent a secure password reset link to{' '}
-            <strong className="text-foreground">{emailValue}</strong>. Click the link inside to set a new password.
-          </p>
-        </div>
-
-        <div className="pt-4 border-t border-border/80">
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={() => setScreen('login')}
-            className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Return to Sign In</span>
-          </motion.button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 font-sans">
@@ -77,6 +53,13 @@ export function ForgotPasswordForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {apiError && (
+          <div className="p-3 rounded-2xl bg-danger/10 border border-danger/20 text-xs font-bold text-danger flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{apiError}</span>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <label className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground block">
             Registered Email Address
@@ -104,12 +87,12 @@ export function ForgotPasswordForm() {
           {isSubmitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Sending Reset Link...</span>
+              <span>Sending Reset Code...</span>
             </>
           ) : (
             <>
               <Send className="h-4 w-4" />
-              <span>Send Reset Instructions</span>
+              <span>Send Reset Code</span>
             </>
           )}
         </motion.button>

@@ -70,7 +70,7 @@ export function BooksFilterSidebar({
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
-    <aside className="rounded-3xl border border-border/80 bg-card p-5 space-y-5 font-sans shadow-xs">
+    <aside className="rounded-2xl border border-border/80 bg-card p-5 space-y-5 font-sans shadow-xs">
       {/* Header & Reset */}
       <div className="flex items-center justify-between pb-3 border-b border-border/70">
         <h3 className="text-sm font-extrabold uppercase tracking-wider text-foreground">
@@ -99,7 +99,7 @@ export function BooksFilterSidebar({
         </button>
 
         {expanded.location && (
-          <div className="p-3 rounded-2xl bg-muted/50 border border-border/80 flex items-center justify-between gap-2">
+          <div className="p-3 rounded-xl bg-muted/40 border border-border/70 flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Deliver to</p>
               <p className="text-xs font-bold text-foreground truncate">{locationName}</p>

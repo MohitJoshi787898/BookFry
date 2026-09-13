@@ -116,10 +116,9 @@ export function BookCard({ book, compact = false }: BookCardProps) {
     >
 
       {/* ══════════════════════════════════════════
-          COVER — compact square-ish (4:5) thumbnail
-          Makes cards proportionate at every grid width
+          COVER — classic book aspect ratio (2:3)
           ══════════════════════════════════════════ */}
-      <div className="relative w-full aspect-[4/5] overflow-hidden bg-muted/40 flex-shrink-0">
+      <div className="relative w-full aspect-[2/3] overflow-hidden bg-muted/40 flex-shrink-0">
 
         {/* Book cover image */}
         <Link
@@ -137,17 +136,17 @@ export function BookCard({ book, compact = false }: BookCardProps) {
             onError={() => setImgErr(true)}
             className={cn(
               'h-full w-full object-cover',
-              'transition-transform duration-400 ease-out group-hover:scale-105',
+              'transition-transform duration-300 ease-out group-hover:scale-105',
               imgOk ? 'opacity-100' : 'opacity-0',
             )}
           />
           {!imgOk && <div className="absolute inset-0 bg-muted/60 animate-pulse" />}
         </Link>
 
-        {/* Subtle gradient into card body — seamless merge */}
+        {/* Subtle gradient into card body */}
         <div
           aria-hidden="true"
-          className="absolute bottom-0 inset-x-0 h-16 pointer-events-none"
+          className="absolute bottom-0 inset-x-0 h-12 pointer-events-none"
           style={{
             background: 'linear-gradient(to top, hsl(var(--card)) 0%, transparent 100%)',
           }}
@@ -157,16 +156,16 @@ export function BookCard({ book, compact = false }: BookCardProps) {
         {pctOff > 0 && (
           <span
             aria-label={`${pctOff}% off`}
-            className="bookmark-badge absolute top-0 left-3 z-10 inline-flex items-center px-2 pt-1 pb-2.5 text-[10px] font-black uppercase tracking-widest leading-none bg-secondary text-secondary-foreground shadow-md"
+            className="absolute top-2 left-2 z-10 inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-black uppercase tracking-wider bg-secondary text-secondary-foreground shadow-sm"
           >
-            {pctOff}%<br />OFF
+            {pctOff}% OFF
           </span>
         )}
 
         {/* ─── Bestseller pill — top-left below ribbon ────── */}
-        {isBestseller && (
-          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary text-primary-foreground shadow-sm">
-            <Star className="h-2 w-2 fill-current" />Popular
+        {isBestseller && !pctOff && (
+          <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground shadow-sm">
+            <Star className="h-2.5 w-2.5 fill-current" /> Popular
           </span>
         )}
 
@@ -177,8 +176,8 @@ export function BookCard({ book, compact = false }: BookCardProps) {
           disabled={busy}
           aria-label={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
           className={cn(
-            'absolute top-2 right-2 z-10 w-7 h-7 rounded-xl flex items-center justify-center cursor-pointer',
-            'glass-surface shadow-sm',
+            'absolute top-2 right-2 z-10 w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer',
+            'bg-background/80 hover:bg-background backdrop-blur-md shadow-xs border border-border/60',
             'transition-all duration-200 active:scale-90',
             wishlisted ? 'text-secondary border-secondary/30' : 'text-muted-foreground hover:text-secondary',
           )}
@@ -191,8 +190,8 @@ export function BookCard({ book, compact = false }: BookCardProps) {
 
         {/* ─── Multi-seller pill — bottom-left ────────────── */}
         {multiSeller && (
-          <span className="absolute bottom-1.5 left-2 z-10 pointer-events-none inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md glass-surface text-[9px] font-semibold text-muted-foreground">
-            <Layers className="h-2.5 w-2.5" />{book.listingCount} sellers
+          <span className="absolute bottom-2 left-2 z-10 pointer-events-none inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-background/85 backdrop-blur-xs border border-border/60 text-[10px] font-bold text-muted-foreground">
+            <Layers className="h-3 w-3" />{book.listingCount} sellers
           </span>
         )}
 

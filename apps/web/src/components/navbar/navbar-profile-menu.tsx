@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Package,
   Heart,
@@ -18,7 +17,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthModalStore } from "@/stores/auth-modal.store";
-import { apiClient } from "@/lib/api-client";
+import { DashboardAvatar, LogoutConfirmDialog } from "@/components/dashboard-nav";
 
 interface NavbarProfileMenuProps {
   className?: string;
@@ -31,10 +30,10 @@ export function NavbarProfileMenu({
   theme,
   onToggleTheme,
 }: NavbarProfileMenuProps) {
-  const router = useRouter();
-  const { user, isAuthenticated, clearAuth } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { openModal } = useAuthModalStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,18 +52,6 @@ export function NavbarProfileMenu({
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
-
-  const handleLogout = async () => {
-    setIsOpen(false);
-    try {
-      await apiClient("/auth/logout", { method: "POST" });
-    } catch {
-    } finally {
-      clearAuth();
-      router.push("/");
-      router.refresh();
-    }
-  };
 
   if (!isAuthenticated || !user) {
     return (
@@ -89,7 +76,6 @@ export function NavbarProfileMenu({
 
   const isSeller = user.roles?.includes("seller");
   const isAdmin = user.roles?.includes("admin");
-  const initial = user.name?.charAt(0).toUpperCase() || "U";
 
   const roleLabel = isAdmin
     ? "Administrator"
@@ -119,10 +105,7 @@ export function NavbarProfileMenu({
             : "bg-transparent hover:bg-muted/60 border-transparent"
         }`}
       >
-        <span className="relative flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-[13px] font-bold shrink-0">
-          {initial}
-          <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background" />
-        </span>
+        <DashboardAvatar user={user} size="xs" />
         <span className="hidden sm:block text-xs font-semibold text-foreground max-w-[100px] truncate">
           {user.name?.split(" ")[0]}
         </span>
@@ -139,9 +122,7 @@ export function NavbarProfileMenu({
           {/* Identity */}
           <div className="px-4 pt-4 pb-3">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground text-sm font-bold shrink-0">
-                {initial}
-              </div>
+              <DashboardAvatar user={user} size="md" />
               <div className="min-w-0">
                 <p className="text-sm font-bold text-foreground truncate leading-tight">
                   {user.name}
@@ -255,8 +236,11 @@ export function NavbarProfileMenu({
           <div className="py-1.5">
             <button
               type="button"
-              onClick={handleLogout}
-              className="group w-full flex items-center gap-2.5 pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-danger hover:bg-danger/5 transition-colors"
+              onClick={() => {
+                setIsOpen(false);
+                setIsLogoutOpen(true);
+              }}
+              className="group w-full flex items-center gap-2.5 pl-4 pr-4 py-2 border-l-2 border-transparent hover:border-danger hover:bg-danger/5 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4 text-muted-foreground group-hover:text-danger shrink-0" />
               <span className="text-xs font-medium text-foreground group-hover:text-danger">
@@ -266,6 +250,13 @@ export function NavbarProfileMenu({
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Dialog */}
+      <LogoutConfirmDialog
+        isOpen={isLogoutOpen}
+        onClose={() => setIsLogoutOpen(false)}
+        userName={user?.name}
+      />
     </div>
   );
 }

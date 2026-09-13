@@ -70,7 +70,7 @@ export function BookDetailBuyBox({
   const isOutOfStock = book.stock !== undefined && book.stock <= 0;
 
   return (
-    <div className="rounded-3xl border border-border/80 bg-card p-5 sm:p-6 space-y-5 font-sans shadow-md sticky top-24">
+    <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 space-y-5 font-sans shadow-sm sticky top-24">
       {/* Price & Discount Section */}
       <div className="space-y-1">
         <div className="flex items-baseline gap-2.5">
@@ -116,34 +116,34 @@ export function BookDetailBuyBox({
             Select Quantity:
           </label>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 p-1 rounded-2xl bg-muted/80 border border-border">
+            <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/70 border border-border/80">
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
-                className="h-9 w-9 rounded-xl bg-card hover:bg-background text-foreground flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 active:scale-95"
+                className="h-8 w-8 rounded-lg bg-card hover:bg-background text-foreground flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 active:scale-95 shadow-2xs"
                 aria-label="Decrease quantity"
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-3.5 w-3.5" />
               </button>
-              <span className="font-mono font-extrabold text-base px-3 min-w-[28px] text-center text-foreground">
+              <span className="font-mono font-extrabold text-base px-2 min-w-[28px] text-center text-foreground">
                 {quantity}
               </span>
               <button
                 onClick={() => setQuantity((q) => q + 1)}
-                className="h-9 w-9 rounded-xl bg-secondary text-white flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+                className="h-8 w-8 rounded-lg bg-secondary text-secondary-foreground flex items-center justify-center transition-colors cursor-pointer active:scale-95 shadow-2xs"
                 aria-label="Increase quantity"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
 
             {onToggleWishlist && (
               <button
                 onClick={onToggleWishlist}
-                className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
+                className={`p-2 rounded-xl border transition-all cursor-pointer ${
                   isWishlisted
                     ? 'bg-rose-500/15 border-rose-500/30 text-rose-500'
-                    : 'bg-muted/60 border-border/80 text-muted-foreground hover:text-foreground'
+                    : 'bg-card border-border/80 text-muted-foreground hover:text-foreground'
                 }`}
                 title={isWishlisted ? 'Saved in Wishlist' : 'Add to Wishlist'}
               >
@@ -159,7 +159,7 @@ export function BookDetailBuyBox({
         <button
           onClick={handleAddToCart}
           disabled={isOutOfStock || isAdding}
-          className="w-full py-3.5 px-4 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-secondary/25 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+          className="w-full py-3.5 px-4 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
         >
           <ShoppingBag className="h-4 w-4" />
           <span>{inCartCount > 0 ? `In Cart (${inCartCount}) • Add More` : 'Add to Cart'}</span>
@@ -168,7 +168,7 @@ export function BookDetailBuyBox({
         <button
           onClick={handleBuyNow}
           disabled={isOutOfStock || isAdding}
-          className="w-full py-3.5 px-4 rounded-2xl bg-primary hover:bg-primary/90 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-primary/20 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+          className="w-full py-3.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
         >
           <Zap className="h-4 w-4" />
           <span>Buy Now • Express Checkout</span>

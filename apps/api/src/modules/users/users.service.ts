@@ -64,10 +64,15 @@ export class UsersService {
         ]
       : [];
 
+    const rawRoles = data.roles || ['customer'];
+    const safeRoles: UserRole[] = rawRoles.includes('seller')
+      ? (Array.from(new Set(['customer', ...rawRoles])) as UserRole[])
+      : (rawRoles.length > 0 ? rawRoles : ['customer']) as UserRole[];
+
     const finalRoles: UserRole[] =
       data.email.toLowerCase() === 'admin@bookfry.com'
         ? ['customer', 'seller', 'admin']
-        : data.roles || ['customer'];
+        : safeRoles;
 
     // Determine onboarding completeness for sellers:
     // If the seller completed all required store & payout details during registration,
@@ -472,6 +477,29 @@ export class UsersService {
         accountName: payoutDetails.accountName || user.sellerProfile?.payoutDetails?.accountName,
       },
     };
+    await user.save();
+    return user;
+  }
+
+  async verifyUserEmail(email: string): Promise<IUserDocument> {
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      throw new NotFoundError('User with this email not found');
+    }
+    user.isEmailVerified = true;
+    await user.save();
+    return user;
+  }
+
+  async resetUserPassword(email: string, newPassword: string): Promise<IUserDocument> {
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      throw new NotFoundError('User with this email not found');
+    }
+    const salt = await bcrypt.genSalt(12);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    // Invalidate refresh tokens on password change
+    user.refreshTokenHash = null;
     await user.save();
     return user;
   }

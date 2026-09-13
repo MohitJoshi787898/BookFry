@@ -31,6 +31,12 @@ export class NotificationsController {
     res.status(200).json(ApiResponse.success(notification));
   };
 
+  markAllRead = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    await this.notificationsService.markAllAsRead(userId);
+    res.status(200).json(ApiResponse.success({ success: true }));
+  };
+
   stream = async (req: Request, res: Response): Promise<void> => {
     let user = req.user;
     if (!user && req.query.token) {
@@ -61,12 +67,16 @@ export class NotificationsController {
 
   registerPushToken = async (req: Request, res: Response): Promise<void> => {
     const userId = req.user!.id;
-    const { token } = req.body;
+    const { token, platform, deviceId, userAgent } = req.body;
     if (!token) {
       res.status(400).json(ApiResponse.error('Push token is required', 'VALIDATION_ERROR'));
       return;
     }
-    const result = await this.notificationsService.registerPushToken(userId, token);
+    const result = await this.notificationsService.registerPushToken(userId, token, {
+      platform,
+      deviceId,
+      userAgent: userAgent || req.headers['user-agent'],
+    });
     res.status(200).json(ApiResponse.success(result));
   };
 
@@ -75,6 +85,18 @@ export class NotificationsController {
     const { token } = req.body;
     const result = await this.notificationsService.removePushToken(userId, token);
     res.status(200).json(ApiResponse.success(result));
+  };
+
+  getPreferences = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    const preferences = await this.notificationsService.getPreferences(userId);
+    res.status(200).json(ApiResponse.success(preferences));
+  };
+
+  updatePreferences = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user!.id;
+    const preferences = await this.notificationsService.updatePreferences(userId, req.body);
+    res.status(200).json(ApiResponse.success(preferences));
   };
 }
 export default NotificationsController;

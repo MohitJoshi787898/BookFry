@@ -23,7 +23,7 @@ export function CartHeroHeader({ itemCount, onShareCart }: CartHeroHeaderProps) 
         };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/40 p-6 sm:p-8 shadow-lg dark:shadow-2xl mb-8">
+    <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm mb-8 font-sans">
       {/* Decorative ambient background glows */}
       <div
         aria-hidden="true"

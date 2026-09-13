@@ -75,5 +75,7 @@ export const startWorkerPool = async () => {
     pageViewWorker,
     recommendationsWorker,
     orderSlaWorker,
+    emailWorker,
+    pushWorker,
   };
 };

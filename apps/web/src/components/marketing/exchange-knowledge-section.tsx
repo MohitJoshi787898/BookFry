@@ -89,7 +89,7 @@ export function ExchangeKnowledgeSection({
   return (
     <section
       aria-label="Exchange Knowledge & Give Books a Second Life"
-      className="py-14 sm:py-18 lg:py-24 relative bg-[#151B29] border-b border-white/10 font-sans text-[#F8FAFC] transition-colors duration-200 overflow-hidden"
+      className="py-14 sm:py-18 lg:py-24 relative bg-card/60 dark:bg-muted/10 border-b border-border/80 font-sans text-foreground transition-colors duration-200 overflow-hidden"
     >
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 space-y-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -101,7 +101,7 @@ export function ExchangeKnowledgeSection({
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4 }}
-              className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-[#1D2535] aspect-[4/3.4] group"
+              className="relative rounded-2xl overflow-hidden shadow-md border border-border/80 bg-card aspect-[4/3.4] group"
             >
               <Image
                 src="/images/book-exchange-students-removebg-preview.png"
@@ -111,40 +111,40 @@ export function ExchangeKnowledgeSection({
                 className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
               />
 
-              <div className="absolute bottom-4 left-4 h-12 w-12 rounded-2xl bg-[#151B29]/90 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-xl backdrop-blur-md">
-                <Leaf className="h-6 w-6 stroke-[2.2]" />
+              <div className="absolute bottom-4 left-4 h-11 w-11 rounded-xl bg-card/90 border border-emerald-500/40 flex items-center justify-center text-emerald-500 shadow-md backdrop-blur-md">
+                <Leaf className="h-5 w-5 stroke-[2.2]" />
               </div>
             </motion.div>
 
             {/* Quick stats panel */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 p-4 rounded-2xl bg-[#1D2535] border border-white/10 shadow-md font-sans">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 p-4 rounded-2xl bg-card border border-border/80 shadow-xs font-sans">
               <div className="flex items-center space-x-2.5">
-                <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0 border border-emerald-500/20">
                   <IndianRupee className="h-4.5 w-4.5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <span className="text-xs font-black text-[#F8FAFC] block leading-tight">{savePercentText}</span>
-                  <span className="text-[10px] text-[#7D8798] font-medium block">{savePercentSubtext}</span>
+                  <span className="text-xs font-black text-foreground block leading-tight">{savePercentText}</span>
+                  <span className="text-[11px] text-muted-foreground font-medium block">{savePercentSubtext}</span>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2.5 border-x border-white/10 px-2 sm:px-3">
-                <div className="h-9 w-9 rounded-xl bg-[#FF9F2D]/15 text-[#FF9F2D] flex items-center justify-center shrink-0 border border-[#FF9F2D]/20">
+              <div className="flex items-center space-x-2.5 border-x border-border/70 px-2 sm:px-3">
+                <div className="h-9 w-9 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
                   <Coins className="h-4.5 w-4.5 stroke-[2.2]" />
                 </div>
                 <div>
-                  <span className="text-xs font-black text-[#F8FAFC] block leading-tight">{earnPercentText}</span>
-                  <span className="text-[10px] text-[#7D8798] font-medium block">{earnPercentSubtext}</span>
+                  <span className="text-xs font-black text-foreground block leading-tight">{earnPercentText}</span>
+                  <span className="text-[11px] text-muted-foreground font-medium block">{earnPercentSubtext}</span>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2.5">
-                <div className="h-9 w-9 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                <div className="h-9 w-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0 border border-primary/20">
                   <Globe className="h-4.5 w-4.5 stroke-[2.2]" />
                 </div>
                 <div>
-                  <span className="text-xs font-black text-[#F8FAFC] block leading-tight">{ecoText}</span>
-                  <span className="text-[10px] text-[#7D8798] font-medium block">{ecoSubtext}</span>
+                  <span className="text-xs font-black text-foreground block leading-tight">{ecoText}</span>
+                  <span className="text-[11px] text-muted-foreground font-medium block">{ecoSubtext}</span>
                 </div>
               </div>
             </div>
@@ -153,16 +153,16 @@ export function ExchangeKnowledgeSection({
           {/* Right Column: Editorial Steps & Action Buttons */}
           <div className="lg:col-span-7 space-y-7">
             <div className="space-y-3">
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-[#FF9F2D]/15 text-[#FF9F2D] border border-[#FF9F2D]/30 text-xs font-black uppercase tracking-wider">
+              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-secondary/15 text-secondary border border-secondary/30 text-xs font-black uppercase tracking-wider">
                 <Users className="h-4 w-4" />
                 <span>{eyebrow}</span>
               </div>
 
-              <h2 className="font-sans text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-[#F8FAFC] tracking-tight leading-[1.12]">
+              <h2 className="font-sans text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-foreground tracking-tight leading-[1.12]">
                 {title}
               </h2>
 
-              <p className="text-xs sm:text-sm text-[#AEB7C6] leading-relaxed max-w-2xl font-medium">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl font-medium">
                 {subtitle}
               </p>
             </div>
@@ -173,21 +173,21 @@ export function ExchangeKnowledgeSection({
                 return (
                   <div
                     key={idx}
-                    className="p-5 rounded-2xl bg-[#1D2535] border border-white/10 shadow-lg flex flex-col justify-between space-y-4 hover:border-[#FF9F2D]/40 transition-all"
+                    className="p-5 rounded-2xl bg-card border border-border/80 shadow-xs flex flex-col justify-between space-y-4 hover:border-secondary/40 transition-all"
                   >
                     <div className="space-y-3">
-                      <div className="h-11 w-11 rounded-2xl bg-[#FF9F2D]/15 border border-[#FF9F2D]/30 text-[#FF9F2D] flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-xl bg-secondary/15 border border-secondary/30 text-secondary flex items-center justify-center">
                         <Icon className="h-5 w-5 stroke-[2.2]" />
                       </div>
 
                       <div className="space-y-1">
-                        <span className="font-sans text-xs font-black text-[#FF9F2D]">
+                        <span className="font-sans text-xs font-black text-secondary">
                           {step.stepNumber || `0${idx + 1}`}
                         </span>
-                        <h3 className="font-sans text-sm font-bold text-[#F8FAFC]">
+                        <h3 className="font-sans text-sm font-bold text-foreground">
                           {step.title}
                         </h3>
-                        <p className="text-[11px] text-[#AEB7C6] leading-relaxed font-medium">
+                        <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                           {step.description}
                         </p>
                       </div>
@@ -195,7 +195,7 @@ export function ExchangeKnowledgeSection({
 
                     {step.badge && (
                       <div>
-                        <span className="inline-block px-2.5 py-1 rounded-full bg-[#151B29] text-[#FF9F2D] border border-[#FF9F2D]/30 text-[10px] font-black uppercase tracking-wider">
+                        <span className="inline-block px-2.5 py-1 rounded-full bg-muted text-secondary border border-secondary/25 text-[10px] font-black uppercase tracking-wider">
                           {step.badge}
                         </span>
                       </div>
@@ -214,7 +214,7 @@ export function ExchangeKnowledgeSection({
                     useAuthModalStore.getState().openModal("login", "/sell");
                   }
                 }}
-                className="px-8 py-3.5 bg-gradient-to-r from-[#FF9F2D] to-[#E97918] hover:from-[#FFB347] hover:to-[#FF9F2D] text-[#151B29] font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-[0_4px_20px_rgba(255,159,45,0.35)] flex items-center justify-center space-x-2.5 active:scale-95 text-center"
+                className="px-8 py-3.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md flex items-center justify-center space-x-2.5 active:scale-95 text-center"
               >
                 <BookOpen className="h-4.5 w-4.5" />
                 <span>{primaryCtaLabel}</span>
@@ -223,9 +223,9 @@ export function ExchangeKnowledgeSection({
 
               <Link
                 href={secondaryCtaUrl}
-                className="px-8 py-3.5 bg-[#1D2535] hover:bg-[#242E40] text-[#F8FAFC] border border-white/10 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 text-center active:scale-95 shadow-sm"
+                className="px-8 py-3.5 bg-card hover:bg-muted text-foreground border border-border/80 font-bold text-xs uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center space-x-2 text-center active:scale-95 shadow-xs"
               >
-                <Search className="h-4 w-4 text-[#FF9F2D]" />
+                <Search className="h-4 w-4 text-secondary" />
                 <span>{secondaryCtaLabel}</span>
               </Link>
             </div>

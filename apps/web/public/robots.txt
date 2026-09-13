@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /seller/
+Disallow: /account/
+Disallow: /api/
+
+Sitemap: https://bookfry.in/sitemap.xml

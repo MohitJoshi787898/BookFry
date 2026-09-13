@@ -53,15 +53,15 @@ export function AdminStatCard({
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className="p-4 sm:p-5 rounded-3xl border border-border/80 bg-card/90 backdrop-blur-md shadow-sm space-y-3.5 font-sans transition-all hover:border-[#FF9F2D]/40 relative overflow-hidden"
+      className="p-4 sm:p-5 rounded-xl border border-border bg-card shadow-xs space-y-3 font-sans transition-all hover:border-secondary/40 relative overflow-hidden"
     >
       {/* Top row: Icon, title, and Trend Badge */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center space-x-2.5 min-w-0">
-          <div className={`p-2 rounded-2xl ${iconBg} shrink-0`}>
+          <div className={`p-2 rounded-lg ${iconBg} shrink-0`}>
             <Icon className="h-4 w-4" />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground truncate">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">
             {title}
           </span>
         </div>

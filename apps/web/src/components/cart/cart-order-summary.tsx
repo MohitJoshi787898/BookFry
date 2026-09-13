@@ -52,7 +52,7 @@ export function CartOrderSummary({
   return (
     <div className="space-y-4 lg:sticky lg:top-24">
       {/* Address Card */}
-      <div className="rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xs p-5 shadow-xs space-y-3">
+      <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-xs space-y-3 font-sans">
         <div className="flex items-center justify-between">
           <h4 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-foreground">
             <MapPin className="h-4 w-4 text-secondary" /> Delivery Location
@@ -66,13 +66,13 @@ export function CartOrderSummary({
         </div>
 
         {activeAddress ? (
-          <div className="p-3.5 rounded-2xl bg-muted/60 border border-border/60 space-y-1">
+          <div className="p-3.5 rounded-xl bg-muted/50 border border-border/60 space-y-1">
             <div className="flex items-center gap-2">
               <p className="text-xs font-extrabold text-foreground">
                 {parseAddress(activeAddress.street).labelName}
               </p>
               {activeAddress.isDefault && (
-                <span className="px-2.5 py-0.5 rounded-full bg-secondary/15 text-xs font-extrabold text-secondary uppercase">
+                <span className="px-2 py-0.5 rounded-full bg-secondary/15 text-[11px] font-extrabold text-secondary uppercase">
                   Default
                 </span>
               )}
@@ -86,7 +86,7 @@ export function CartOrderSummary({
             </p>
           </div>
         ) : (
-          <div className="text-center py-4 border border-dashed border-border/80 rounded-2xl bg-muted/30">
+          <div className="text-center py-4 border border-dashed border-border/80 rounded-xl bg-muted/30">
             <p className="text-xs font-bold text-muted-foreground mb-2">
               No address selected
             </p>
@@ -101,7 +101,7 @@ export function CartOrderSummary({
       </div>
 
       {/* Main Order Summary Card */}
-      <div className="rounded-3xl border border-border/90 bg-gradient-to-b from-card via-card to-muted/20 p-6 shadow-xl dark:shadow-2xl overflow-hidden space-y-5">
+      <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm overflow-hidden space-y-5 font-sans">
         <div className="border-b border-border/80 pb-4">
           <h3 className="font-serif text-xl font-extrabold text-foreground">
             Order Summary
@@ -148,7 +148,7 @@ export function CartOrderSummary({
           </div>
 
           {savings > 0 && (
-            <div className="flex justify-between px-3.5 py-2.5 rounded-2xl bg-success/10 border border-success/20 text-success font-extrabold text-xs">
+            <div className="flex justify-between px-3.5 py-2.5 rounded-xl bg-success/10 border border-success/20 text-success font-extrabold text-xs">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Total Saved
               </span>
@@ -169,7 +169,7 @@ export function CartOrderSummary({
           whileTap={{ scale: 0.96 }}
           onClick={onProceedCheckout}
           disabled={isCheckingOut}
-          className="w-full h-14 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-sm uppercase tracking-wider rounded-2xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+          className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
         >
           {isCheckingOut ? (
             <Loader2 className="h-5 w-5 animate-spin" />

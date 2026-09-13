@@ -40,7 +40,7 @@ export function BookDetailGallery({ book }: BookDetailGalleryProps) {
   return (
     <div className="space-y-4 font-sans">
       {/* Primary Image Stage */}
-      <div className="relative aspect-[3/4] sm:aspect-[4/5] w-full rounded-3xl overflow-hidden bg-card border border-border/80 shadow-md flex items-center justify-center p-6 group">
+      <div className="relative aspect-[3/4] sm:aspect-[4/5] w-full rounded-2xl overflow-hidden bg-card border border-border/80 shadow-sm flex items-center justify-center p-6 group">
         <motion.div
           key={selectedImageIndex}
           initial={{ opacity: 0, scale: 0.96 }}
@@ -54,7 +54,7 @@ export function BookDetailGallery({ book }: BookDetailGalleryProps) {
             fill
             priority
             sizes="(max-width: 768px) 100vw, 450px"
-            className="object-contain drop-shadow-xl group-hover:scale-103 transition-transform duration-300"
+            className="object-contain drop-shadow-md group-hover:scale-103 transition-transform duration-300"
           />
         </motion.div>
 
@@ -74,7 +74,7 @@ export function BookDetailGallery({ book }: BookDetailGalleryProps) {
         {/* Quick Preview Button */}
         <button
           onClick={() => setIsPreviewModalOpen(true)}
-          className="absolute bottom-4 right-4 z-10 px-3 py-1.5 rounded-2xl bg-card/90 hover:bg-card text-foreground border border-border/80 text-xs font-bold shadow-xs backdrop-blur-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+          className="absolute bottom-4 right-4 z-10 px-3 py-1.5 rounded-xl bg-card/90 hover:bg-card text-foreground border border-border/80 text-xs font-bold shadow-xs backdrop-blur-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
         >
           <Eye className="h-3.5 w-3.5 text-secondary" />
           <span>Full Preview</span>
@@ -88,7 +88,7 @@ export function BookDetailGallery({ book }: BookDetailGalleryProps) {
             <button
               key={idx}
               onClick={() => setSelectedImageIndex(idx)}
-              className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-2xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+              className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
                 selectedImageIndex === idx
                   ? 'border-secondary shadow-xs scale-102'
                   : 'border-border/70 hover:border-secondary/40 opacity-70 hover:opacity-100'

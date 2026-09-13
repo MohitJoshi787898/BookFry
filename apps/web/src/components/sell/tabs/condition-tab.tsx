@@ -30,7 +30,7 @@ export function ConditionTab({ form }: ConditionTabProps) {
 
       {/* 4 Canonical Condition Cards */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-foreground flex items-center gap-1">
+        <label className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1">
           Physical Condition Tier <span className="text-rose-500">*</span>
         </label>
         <Controller
@@ -46,8 +46,8 @@ export function ConditionTab({ form }: ConditionTabProps) {
       </div>
 
       {/* Seller Condition Notes */}
-      <div className="space-y-1.5 pt-2">
-        <label htmlFor="condition-notes" className="text-sm font-semibold text-foreground block">
+      <div className="space-y-2 pt-2">
+        <label htmlFor="condition-notes" className="text-sm sm:text-base font-bold text-foreground block">
           Seller Condition Notes &amp; Highlights (Optional)
         </label>
         <textarea
@@ -55,9 +55,9 @@ export function ConditionTab({ form }: ConditionTabProps) {
           rows={3}
           placeholder="Mention specific details: e.g., 'First 2 chapters highlighted with yellow marker; corners slightly rounded; binding solid; name written inside cover.'"
           {...register('conditionNotes')}
-          className="w-full px-3.5 py-2.5 sm:py-3 text-sm border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary leading-relaxed"
+          className="w-full px-4 py-3 sm:py-3.5 text-base border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary leading-relaxed placeholder:text-muted-foreground"
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
           Buyers appreciate transparent condition notes. This text will be shown directly on your listing offer.
         </p>
         {errors.conditionNotes && (

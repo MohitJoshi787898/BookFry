@@ -32,7 +32,7 @@ export function RoleEmptyState({
   const imageSrc = mascotMap[mascotVariant] || mascotMap.reading;
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xs font-sans my-4">
+    <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-2xl border border-border/80 bg-card shadow-xs font-sans my-4">
       <motion.div
         initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -60,14 +60,14 @@ export function RoleEmptyState({
       {action && action.href ? (
         <Link
           href={action.href}
-          className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md shadow-secondary/20 active:scale-95"
+          className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs active:scale-95"
         >
           {action.label}
         </Link>
       ) : action && action.onClick ? (
         <button
           onClick={action.onClick}
-          className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all shadow-md shadow-secondary/20 active:scale-95 cursor-pointer"
+          className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
         >
           {action.label}
         </button>

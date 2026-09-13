@@ -102,7 +102,11 @@ export function usePushNotifications() {
       if (token !== cached) {
         await apiClient('/notifications/push-token', {
           method: 'POST',
-          body: JSON.stringify({ token }),
+          body: JSON.stringify({
+            token,
+            platform: 'web',
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+          }),
         });
         localStorage.setItem(FCM_TOKEN_KEY, token);
       }

@@ -39,7 +39,7 @@ export function AdminEmptyState({
   const mascotSrc = MASCOT_MAP[mascotVariant];
 
   return (
-    <div className="flex flex-col items-center justify-center text-center p-8 sm:p-12 rounded-3xl border border-border/80 bg-card/80 backdrop-blur-md shadow-sm font-sans space-y-4 my-4 relative overflow-hidden">
+    <div className="flex flex-col items-center justify-center text-center p-8 sm:p-12 rounded-2xl border border-border/80 bg-card/80 backdrop-blur-md shadow-xs font-sans space-y-4 my-4 relative overflow-hidden">
       {/* Subtle background ambient glow */}
       <div
         aria-hidden="true"
@@ -57,7 +57,7 @@ export function AdminEmptyState({
           priority
         />
         {Icon && (
-          <div className="absolute -bottom-1 -right-1 p-2 rounded-2xl bg-secondary text-white shadow-md border-2 border-card">
+          <div className="absolute -bottom-1 -right-1 p-2 rounded-xl bg-secondary text-secondary-foreground shadow-xs border-2 border-card">
             <Icon className="h-4 w-4" />
           </div>
         )}

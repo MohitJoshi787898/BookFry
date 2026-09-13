@@ -2,15 +2,19 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { env } from '../../config/env';
-import { UnauthorizedError } from '../../utils/AppError';
+import { UnauthorizedError, ValidationError } from '../../utils/AppError';
 import { IUserDocument } from '../../models/user.model';
 import { UserRole } from '@bookmarket/types';
+import { otpService } from '../../services/otp.service';
+import { EmailService } from '../../services/email.service';
 
 export class AuthService {
   private usersService: UsersService;
+  private emailService: EmailService;
 
   constructor() {
     this.usersService = new UsersService();
+    this.emailService = new EmailService();
   }
 
   generateAccessToken(user: IUserDocument): string {
@@ -86,6 +90,66 @@ export class AuthService {
 
   async logout(userId: string): Promise<void> {
     await this.usersService.updateRefreshToken(userId, null);
+  }
+
+  /**
+   * Generates, saves in Redis, logs to terminal, and emails an email verification OTP.
+   */
+  async sendVerificationOtp(email: string, name?: string): Promise<{ success: boolean; message: string }> {
+    const otp = otpService.generateOtp();
+    await otpService.storeOtp(email, 'email_verification', otp, 600);
+    await this.emailService.sendEmailVerificationOtp(email, name || 'Reader', otp);
+    return { success: true, message: 'Verification OTP has been sent to your email.' };
+  }
+
+  /**
+   * Verifies the 6-digit OTP against Redis/store and marks the user's email as verified.
+   */
+  async verifyEmailWithOtp(email: string, otp: string): Promise<IUserDocument> {
+    const isValid = await otpService.verifyAndConsumeOtp(email, 'email_verification', otp);
+    if (!isValid) {
+      throw new ValidationError('Invalid or expired verification code.');
+    }
+    return this.usersService.verifyUserEmail(email);
+  }
+
+  /**
+   * Initiates forgot password flow: generates OTP, stores in Redis, logs, and emails.
+   */
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    const user = await this.usersService.getUserByEmail(email);
+    if (user) {
+      const otp = otpService.generateOtp();
+      await otpService.storeOtp(email, 'password_reset', otp, 600);
+      await this.emailService.sendPasswordResetOtp(email, user.name, otp);
+    }
+    // Always return success message for security/anti-enumeration
+    return {
+      success: true,
+      message: 'If an account exists with this email, a 6-digit password reset code has been sent.',
+    };
+  }
+
+  /**
+   * Checks if reset OTP is valid without consuming it yet.
+   */
+  async verifyResetOtp(email: string, otp: string): Promise<{ valid: boolean }> {
+    const isValid = await otpService.peekVerifyOtp(email, 'password_reset', otp);
+    if (!isValid) {
+      throw new ValidationError('Invalid or expired reset code.');
+    }
+    return { valid: true };
+  }
+
+  /**
+   * Verifies OTP, updates password, and invalidates existing sessions.
+   */
+  async resetPasswordWithOtp(email: string, otp: string, newPassword: string): Promise<IUserDocument> {
+    const isValid = await otpService.verifyAndConsumeOtp(email, 'password_reset', otp);
+    if (!isValid) {
+      throw new ValidationError('Invalid or expired reset code.');
+    }
+    return this.usersService.resetUserPassword(email, newPassword);
   }
 }
 export default AuthService;

@@ -32,7 +32,7 @@ export function CartCouponSection({
   ];
 
   return (
-    <div className="rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xs overflow-hidden shadow-xs mb-4">
+    <div className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-xs mb-4 font-sans">
       {/* Header Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -40,7 +40,7 @@ export function CartCouponSection({
         aria-expanded={isExpanded}
       >
         <span className="flex items-center gap-3">
-          <span className="h-9 w-9 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shrink-0">
+          <span className="h-8 w-8 rounded-lg bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary shrink-0">
             <Tag className="h-4 w-4" />
           </span>
           {appliedCoupon ? (
@@ -74,11 +74,11 @@ export function CartCouponSection({
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                   placeholder="ENTER PROMO CODE"
-                  className="flex-1 h-11 px-4 rounded-2xl border border-border bg-background text-xs font-extrabold uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary tracking-wider"
+                  className="flex-1 h-10 px-4 rounded-xl border border-border bg-background text-xs font-extrabold uppercase text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary tracking-wider"
                 />
                 <button
                   onClick={handleApply}
-                  className="h-11 px-5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-2xl transition-all active:scale-95 shrink-0 shadow-xs"
+                  className="h-10 px-5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95 shrink-0 shadow-2xs"
                 >
                   Apply
                 </button>
@@ -86,13 +86,13 @@ export function CartCouponSection({
 
               {/* Feedback messages */}
               {couponError && (
-                <div className="flex items-center gap-2 p-3 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-xs font-extrabold">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs font-bold">
                   <AlertCircle className="h-4 w-4 shrink-0" /> {couponError}
                 </div>
               )}
 
               {appliedCoupon && (
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-success/10 border border-success/20 text-success text-xs font-extrabold">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-bold">
                   <span className="flex items-center gap-2">
                     <Check className="h-4 w-4" /> Coupon &ldquo;{appliedCoupon}&rdquo; active!
                   </span>
