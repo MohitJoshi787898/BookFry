@@ -18,9 +18,16 @@ import {
   Clock,
 } from 'lucide-react';
 
+import { useRouter } from 'next/navigation';
+
 export default function SellerOrdersPage() {
-  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const isSeller = user?.roles?.includes('seller');
+  const isAdmin = user?.roles?.includes('admin');
+  const hasAccess = isSeller || isAdmin;
 
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,7 +53,7 @@ export default function SellerOrdersPage() {
         return [];
       }
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && hasAccess,
   });
 
   const updateStatusMutation = useMutation({
@@ -66,6 +73,26 @@ export default function SellerOrdersPage() {
           title="Sign In to Manage Orders"
           description="View and fulfill customer orders placed for your listed books."
           mascotVariant="reading"
+        />
+      </SellerLayout>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <SellerLayout>
+        <RoleEmptyState
+          title="Become a BookFry Campus Seller"
+          description="You are currently signed in as a student buyer. Register as a campus seller to sell textbooks, fulfill student orders, and receive payouts."
+          mascotVariant="reading"
+          action={{
+            label: 'Register as Campus Seller',
+            onClick: () => router.push('/seller/register'),
+          }}
+          secondaryAction={{
+            label: 'Browse Student Marketplace',
+            onClick: () => router.push('/books'),
+          }}
         />
       </SellerLayout>
     );

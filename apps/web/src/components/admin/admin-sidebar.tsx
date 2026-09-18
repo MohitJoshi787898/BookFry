@@ -179,10 +179,14 @@ function SidebarItem({
   );
 }
 
+import { useAuthStore } from "@/stores/auth.store";
+
 export function AdminSidebar({
   collapsed,
   onToggleCollapse,
 }: AdminSidebarProps) {
+  const { user } = useAuthStore();
+  const isSeller = user?.roles?.includes("seller");
   return (
     <aside
       className={`hidden md:flex flex-col h-full max-h-screen min-h-0 shrink-0 border-r border-border/80 bg-gradient-to-b from-card via-card to-muted/80 backdrop-blur-lg transition-all duration-300 ease-out z-30 ${
@@ -273,6 +277,21 @@ export function AdminSidebar({
               <Activity className="h-3 w-3 text-emerald-500 shrink-0" />
               <span>Telemetry Online</span>
             </div>
+          )}
+
+          {isSeller && (
+            <Link
+              href="/seller/dashboard"
+              className={`flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-secondary transition-all duration-200 hover:bg-secondary/10 mb-1 ${
+                collapsed ? "justify-center px-2" : ""
+              }`}
+              title="Switch to Seller Hub"
+            >
+              <span className="flex h-7.5 w-7.5 items-center justify-center rounded-lg border border-secondary/20 bg-secondary/10 text-secondary shrink-0">
+                <Store className="h-3.5 w-3.5" />
+              </span>
+              {!collapsed && <span>Seller Hub</span>}
+            </Link>
           )}
 
           <Link

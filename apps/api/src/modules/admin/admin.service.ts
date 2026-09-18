@@ -4,6 +4,8 @@ import { BookCatalogModel } from '../../models/book-catalog.model';
 import { OrderModel } from '../../models/order.model';
 import { ContactModel } from '../../models/contact.model';
 import { NotFoundError, ValidationError } from '../../utils/AppError';
+import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../../services/email.service';
 import mongoose from 'mongoose';
 
 export class AdminService {
@@ -84,6 +86,13 @@ export class AdminService {
     }
 
     user.isBanned = !user.isBanned;
+    if (user.isBanned) {
+      user.refreshTokenHash = undefined;
+      await BookListingModel.updateMany(
+        { sellerId: user._id, status: 'active' },
+        { $set: { status: 'archived' } }
+      );
+    }
     await user.save();
 
     return {
@@ -130,6 +139,20 @@ export class AdminService {
         },
       },
       { $unwind: '$catalog' },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'sellerId',
+          foreignField: '_id',
+          as: 'seller',
+        },
+      },
+      {
+        $unwind: {
+          path: '$seller',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ];
 
     if (search) {
@@ -139,6 +162,8 @@ export class AdminService {
             { 'catalog.title': { $regex: search, $options: 'i' } },
             { 'catalog.author': { $regex: search, $options: 'i' } },
             { 'catalog.isbn': { $regex: search, $options: 'i' } },
+            { 'seller.name': { $regex: search, $options: 'i' } },
+            { 'seller.email': { $regex: search, $options: 'i' } },
           ],
         },
       });
@@ -163,11 +188,40 @@ export class AdminService {
       title: b.catalog.title,
       slug: b.catalog.slug,
       author: b.catalog.author,
+      isbn: b.catalog.isbn,
+      publisher: b.catalog.publisher,
+      edition: b.catalog.edition,
+      description: b.catalog.description,
+      catalogImages: (b.catalog.images || []).map((img: any) =>
+        typeof img === 'string' ? { url: img } : img
+      ),
       price: b.price,
+      discountPrice: b.discountPrice,
       stock: b.stock,
       status: b.status,
       condition: b.condition,
+      conditionNotes: b.conditionNotes,
+      images: (b.images || []).map((img: any) =>
+        typeof img === 'string' ? { url: img } : img
+      ),
+      city: b.city,
+      state: b.state,
+      pincode: b.pincode,
+      campusName: b.campusName,
+      rejectionReason: b.rejectionReason,
+      moderationHistory: b.moderationHistory || [],
       sellerId: b.sellerId.toString(),
+      seller: b.seller
+        ? {
+            id: b.seller._id.toString(),
+            name: b.seller.name,
+            email: b.seller.email,
+            phone: b.seller.phone,
+            storeName: b.seller.sellerProfile?.storeName,
+            rating: b.seller.sellerProfile?.rating,
+            verificationStatus: b.seller.sellerVerificationStatus,
+          }
+        : undefined,
       category: b.catalog.category ? b.catalog.category.toString() : 'Uncategorized',
       createdAt: b.createdAt.toISOString(),
     }));
@@ -214,10 +268,53 @@ export class AdminService {
     await listing.save();
 
     const catalog = await BookCatalogModel.findById(listing.catalogId);
+    const bookTitle = catalog ? catalog.title : 'Book';
+
+    // Dispatch in-app notification and transactional email to seller
+    setImmediate(async () => {
+      try {
+        const notificationsService = new NotificationsService();
+        const emailService = new EmailService();
+        const sellerUser = await UserModel.findById(listing.sellerId);
+
+        const notifTitle =
+          status === 'active'
+            ? 'Listing Approved'
+            : status === 'rejected'
+            ? 'Listing Rejected'
+            : 'Listing Status Updated';
+        const notifMessage =
+          status === 'active'
+            ? `Your book listing "${bookTitle}" has been approved and is now live.`
+            : status === 'rejected'
+            ? `Your book listing "${bookTitle}" was rejected. Reason: ${rejectionReason}`
+            : `Your book listing "${bookTitle}" status was changed to ${status}.`;
+
+        await notificationsService.createNotification(
+          listing.sellerId.toString(),
+          'order_status',
+          notifTitle,
+          notifMessage,
+          { listingId: listing._id.toString() }
+        );
+
+        if (sellerUser?.email) {
+          await emailService.sendListingModerationEmail(
+            sellerUser.email,
+            sellerUser.name,
+            bookTitle,
+            status,
+            rejectionReason
+          );
+        }
+      } catch (err) {
+        console.error('[Listing Moderation Notification Warning]:', err);
+      }
+    });
 
     return {
       id: listing._id.toString(),
-      title: catalog ? catalog.title : 'Book',
+      title: bookTitle,
       status: listing.status,
       rejectionReason: listing.rejectionReason,
       moderationHistory: listing.moderationHistory,
@@ -507,6 +604,40 @@ export class AdminService {
     }
 
     await user.save();
+
+    // Dispatch in-app notification & email to seller
+    setImmediate(async () => {
+      try {
+        const notificationsService = new NotificationsService();
+        const emailService = new EmailService();
+
+        const notifTitle =
+          action === 'approved' ? 'Seller Account Approved!' : 'Seller Verification Update';
+        const notifMessage =
+          action === 'approved'
+            ? 'Congratulations! Your BookFry seller verification has been approved. You can now list and sell books.'
+            : `Your seller verification was rejected. Reason: ${rejectionReason}`;
+
+        await notificationsService.createNotification(
+          user._id.toString(),
+          'order_status',
+          notifTitle,
+          notifMessage,
+          { sellerVerificationStatus: action }
+        );
+
+        if (user.email) {
+          await emailService.sendSellerVerificationEmail(
+            user.email,
+            user.name,
+            action,
+            rejectionReason
+          );
+        }
+      } catch (err) {
+        console.error('[Seller Verification Notification Warning]:', err);
+      }
+    });
 
     return {
       id: user._id.toString(),

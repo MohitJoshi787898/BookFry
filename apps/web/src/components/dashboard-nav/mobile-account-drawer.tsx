@@ -11,6 +11,7 @@ import {
   Store,
   Settings,
   ShieldCheck,
+  ShieldAlert,
   UserCircle,
   Package,
   Heart,
@@ -43,7 +44,7 @@ export function MobileAccountDrawer({
   onToggleTheme,
 }: MobileAccountDrawerProps) {
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
-  const { user, isSeller, roleLabel } = useCurrentUser();
+  const { user, isSeller, isAdmin, roleLabel } = useCurrentUser();
 
   const displayName =
     user?.name ||
@@ -115,9 +116,21 @@ export function MobileAccountDrawer({
                     <p className="text-xs text-muted-foreground font-mono truncate">
                       {user?.email || 'No email associated'}
                     </p>
-                    <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary border border-secondary/20">
-                      {roleLabel}
-                    </span>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {isAdmin && (
+                        <span className="inline-flex items-center text-[9.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                          Admin
+                        </span>
+                      )}
+                      {isSeller && (
+                        <span className="inline-flex items-center text-[9.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-secondary/15 text-secondary border border-secondary/20">
+                          Seller
+                        </span>
+                      )}
+                      <span className="inline-flex items-center text-[9.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                        Student
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -280,22 +293,69 @@ export function MobileAccountDrawer({
                           </div>
                           <span>Used Book Requests</span>
                         </Link>
-                        {isSeller && (
-                          <Link
-                            href="/seller/dashboard"
-                            onClick={onClose}
-                            className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-secondary/30 text-secondary font-black text-xs active:scale-98"
-                          >
-                            <div className="p-2 rounded-xl bg-secondary/15 text-secondary">
-                              <Store className="h-4 w-4" />
-                            </div>
-                            <span>Switch to Seller Workspace</span>
-                          </Link>
-                        )}
                       </>
                     )}
                   </div>
                 </div>
+
+                {/* Cross-Workspace Switchers */}
+                {((isAdmin && role !== 'admin') || (isSeller && role !== 'seller') || (!isSeller && role !== 'seller') || role !== 'buyer') && (
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 px-2 block">
+                      Switch Workspace
+                    </span>
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {isAdmin && role !== 'admin' && (
+                        <Link
+                          href="/admin/dashboard"
+                          onClick={onClose}
+                          className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-rose-500/30 text-rose-600 dark:text-rose-400 font-black text-xs active:scale-98"
+                        >
+                          <div className="p-2 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400">
+                            <ShieldAlert className="h-4 w-4" />
+                          </div>
+                          <span>Admin Control Center</span>
+                        </Link>
+                      )}
+                      {isSeller && role !== 'seller' && (
+                        <Link
+                          href="/seller/dashboard"
+                          onClick={onClose}
+                          className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-secondary/30 text-secondary font-black text-xs active:scale-98"
+                        >
+                          <div className="p-2 rounded-xl bg-secondary/15 text-secondary">
+                            <Store className="h-4 w-4" />
+                          </div>
+                          <span>Seller Workspace &amp; Listings</span>
+                        </Link>
+                      )}
+                      {!isSeller && role !== 'seller' && (
+                        <Link
+                          href="/seller/register"
+                          onClick={onClose}
+                          className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-border/80 text-foreground font-bold text-xs active:scale-98"
+                        >
+                          <div className="p-2 rounded-xl bg-secondary/10 text-secondary">
+                            <Store className="h-4 w-4" />
+                          </div>
+                          <span>Become a Campus Seller</span>
+                        </Link>
+                      )}
+                      {role !== 'buyer' && (
+                        <Link
+                          href="/account/orders"
+                          onClick={onClose}
+                          className="flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-border/80 text-foreground font-bold text-xs active:scale-98"
+                        >
+                          <div className="p-2 rounded-xl bg-muted text-muted-foreground">
+                            <Package className="h-4 w-4" />
+                          </div>
+                          <span>My Personal Orders &amp; Profile</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Theme & Storefront */}
                 <div className="space-y-1.5 pt-1">

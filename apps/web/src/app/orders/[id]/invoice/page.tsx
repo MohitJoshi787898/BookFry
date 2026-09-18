@@ -54,7 +54,7 @@ export default function PublicInvoicePage({ params: paramsPromise }: PublicInvoi
           <div className="pt-2 flex justify-center gap-3">
             <Link
               href="/books"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#1A3B5C] text-white text-xs font-bold"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all shadow-sm active:scale-95"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Browse Catalog</span>

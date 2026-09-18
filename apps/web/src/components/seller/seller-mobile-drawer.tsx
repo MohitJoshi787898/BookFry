@@ -17,8 +17,10 @@ import {
   Sparkles,
   ExternalLink,
   PlusCircle,
+  ShieldAlert,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useAuthStore } from '@/stores/auth.store';
 
 export interface SellerMobileDrawerProps {
   isOpen: boolean;
@@ -47,6 +49,7 @@ const sellerNavSections = [
 
 export function SellerMobileDrawer({ isOpen, onClose }: SellerMobileDrawerProps) {
   const pathname = usePathname();
+  const { user } = useAuthStore();
 
   return (
     <AnimatePresence>
@@ -163,6 +166,27 @@ export function SellerMobileDrawer({ isOpen, onClose }: SellerMobileDrawerProps)
                 <PlusCircle className="h-4 w-4" />
                 <span>List a New Book</span>
               </Link>
+
+              {/* Admin Portal Switcher for Multi-Role Users */}
+              {user?.roles?.includes('admin') && (
+                <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-foreground space-y-1.5">
+                  <div className="flex items-center space-x-2">
+                    <ShieldAlert className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                    <span className="text-xs font-black text-rose-600 dark:text-rose-400">Admin Control Center</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Direct access to platform moderation, users & system reports.
+                  </p>
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={onClose}
+                    className="w-full py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                  >
+                    <span>Open Admin Portal</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              )}
 
               {/* Customer View */}
               <div className="p-4 rounded-2xl bg-muted border border-border text-foreground space-y-2">

@@ -55,7 +55,15 @@ async function createAdminUsers() {
           bio: 'Official BookFry System Administrator.',
           rating: 5.0,
           totalSales: 150,
+          payoutDetails: {
+            upiId: 'admin@okaxis',
+            accountName: 'BookFry Admin Operations',
+            accountNumber: '919876543210',
+            ifscCode: 'UTIB0000123',
+          },
         },
+        sellerOnboardingStatus: 'complete',
+        sellerVerificationStatus: 'approved',
       });
 
       console.log('🎉 Admin Account Created:');

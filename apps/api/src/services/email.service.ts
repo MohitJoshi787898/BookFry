@@ -383,6 +383,98 @@ export class EmailService {
 
     return this.sendEmail(to, `${otp} is your BookFry password reset code`, html);
   }
+
+  /** 8. Seller Verification Status Update Email */
+  async sendSellerVerificationEmail(
+    to: string,
+    sellerName: string,
+    status: 'approved' | 'rejected',
+    rejectionReason?: string
+  ): Promise<boolean> {
+    const isApproved = status === 'approved';
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"/></head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+      <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="background-color: #1A3B5C; padding: 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">
+            ${isApproved ? '🎉 Seller Verification Approved!' : '⚠️ Seller Verification Update'}
+          </h1>
+          <p style="color: #FF9F2D; margin: 4px 0 0 0; font-size: 12px; font-weight: 600;">BookFry Seller Network</p>
+        </div>
+        <div style="padding: 24px;">
+          <p style="font-size: 15px; color: #1f2937; margin: 0 0 12px 0;">Hello <strong>${sellerName || 'Seller'}</strong>,</p>
+          <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">
+            ${
+              isApproved
+                ? 'Congratulations! Your BookFry seller account has been verified and approved by our trust & safety team. You can now list new and used books on the marketplace.'
+                : `Your seller verification could not be approved at this time. Reason provided by admin: <strong>${rejectionReason || 'Incomplete or unclear documentation'}</strong>. Please review your seller profile and resubmit.`
+            }
+          </p>
+          <div style="margin-top: 24px; text-align: center;">
+            <a href="https://bookfry.in/seller/dashboard" style="display: inline-block; background-color: #F26522; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+              ${isApproved ? 'Go to Seller Dashboard' : 'Review Seller Profile'}
+            </a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+    const subject = isApproved
+      ? '🎉 Congratulations! Your BookFry Seller Verification is Approved'
+      : 'Action Required: BookFry Seller Verification Update';
+
+    return this.sendEmail(to, subject, html);
+  }
+
+  /** 9. Listing Moderation Alert Email */
+  async sendListingModerationEmail(
+    to: string,
+    sellerName: string,
+    bookTitle: string,
+    status: string,
+    rejectionReason?: string
+  ): Promise<boolean> {
+    const isApproved = status === 'active';
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"/></head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+      <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
+        <div style="background-color: #1A3B5C; padding: 24px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">
+            ${isApproved ? '✅ Book Listing Published' : '⚠️ Listing Moderation Notice'}
+          </h1>
+        </div>
+        <div style="padding: 24px;">
+          <p style="font-size: 15px; color: #1f2937;">Hello <strong>${sellerName || 'Seller'}</strong>,</p>
+          <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">
+            Your book listing for <strong>"${bookTitle}"</strong> has been reviewed.
+          </p>
+          <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #e5e7eb;">
+            <p style="margin: 0; font-size: 13px; color: #111827;">Status: <strong>${status.toUpperCase()}</strong></p>
+            ${rejectionReason ? `<p style="margin: 8px 0 0 0; font-size: 13px; color: #dc2626;">Feedback: ${rejectionReason}</p>` : ''}
+          </div>
+          <div style="margin-top: 24px; text-align: center;">
+            <a href="https://bookfry.in/seller/listings" style="display: inline-block; background-color: #1A3B5C; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+              Manage My Listings
+            </a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>`;
+
+    const subject = isApproved
+      ? `✅ Your book listing "${bookTitle}" is now live on BookFry`
+      : `BookFry Listing Update: "${bookTitle}" (${status})`;
+
+    return this.sendEmail(to, subject, html);
+  }
 }
 
 export default EmailService;

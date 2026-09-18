@@ -58,6 +58,7 @@ export interface User {
   email: string;
   roles: UserRole[];
   avatarUrl?: string;
+  avatarPublicId?: string;
   phone?: string;
   isEmailVerified: boolean;
   isBanned: boolean;

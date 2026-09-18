@@ -47,10 +47,26 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    // Auto-promote admin@bookfry.com to admin role if missing
-    if (email.toLowerCase() === 'admin@bookfry.com' && !user.roles.includes('admin')) {
-      user.roles = ['customer', 'seller', 'admin'];
-      await user.save();
+    // Auto-promote admin@bookfry.com to full multi-role access if missing any role
+    if (email.toLowerCase() === 'admin@bookfry.com') {
+      let needsSave = false;
+      const allRoles: ('customer' | 'seller' | 'admin')[] = ['customer', 'seller', 'admin'];
+      const missingRole = allRoles.some((r) => !user.roles.includes(r));
+      if (missingRole) {
+        user.roles = allRoles;
+        needsSave = true;
+      }
+      if (user.sellerOnboardingStatus !== 'complete') {
+        user.sellerOnboardingStatus = 'complete';
+        needsSave = true;
+      }
+      if (user.sellerVerificationStatus !== 'approved') {
+        user.sellerVerificationStatus = 'approved';
+        needsSave = true;
+      }
+      if (needsSave) {
+        await user.save();
+      }
     }
 
     const accessToken = this.generateAccessToken(user);
@@ -68,10 +84,37 @@ export class AuthService {
       const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
       const user = await this.usersService.getUserById(decoded.userId);
 
+      if (user.isBanned) {
+        await this.usersService.updateRefreshToken(user._id.toString(), null);
+        throw new UnauthorizedError('Your account has been suspended. Please contact support.', 'ACCOUNT_BANNED');
+      }
+
       const isValid = await this.usersService.verifyRefreshToken(user, refreshToken);
       if (!isValid) {
         await this.usersService.updateRefreshToken(user._id.toString(), null);
         throw new UnauthorizedError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN');
+      }
+
+      // Ensure admin@bookfry.com always retains full multi-role access
+      if (user.email.toLowerCase() === 'admin@bookfry.com') {
+        let needsSave = false;
+        const allRoles: ('customer' | 'seller' | 'admin')[] = ['customer', 'seller', 'admin'];
+        const missingRole = allRoles.some((r) => !user.roles.includes(r));
+        if (missingRole) {
+          user.roles = allRoles;
+          needsSave = true;
+        }
+        if (user.sellerOnboardingStatus !== 'complete') {
+          user.sellerOnboardingStatus = 'complete';
+          needsSave = true;
+        }
+        if (user.sellerVerificationStatus !== 'approved') {
+          user.sellerVerificationStatus = 'approved';
+          needsSave = true;
+        }
+        if (needsSave) {
+          await user.save();
+        }
       }
 
       const accessToken = this.generateAccessToken(user);

@@ -117,7 +117,7 @@ export function AdminHero({
                   <span className="truncate">{st.label}</span>
                   {st.badge && (
                     <span
-                      className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full shrink-0 ${
+                      className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded-full shrink-0 ${
                         st.isPositive !== false
                           ? 'bg-emerald-500/20 text-emerald-300'
                           : 'bg-rose-500/20 text-rose-300'

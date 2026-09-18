@@ -13,13 +13,17 @@ import {
   BookOpen,
   EyeOff,
   CheckCircle,
+  CheckCircle2,
+  XCircle,
   ExternalLink,
   AlertOctagon,
   RefreshCw,
   Eye,
   Pencil,
   Trash2,
-  Tag,
+  Store,
+  ImageIcon,
+  History,
 } from 'lucide-react';
 import {
   AdminModal,
@@ -30,18 +34,43 @@ import {
 import { AdminDangerModal } from '@/components/admin/admin-danger-modal';
 import { AdminDecisionModal } from '@/components/admin/admin-decision-modal';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface AdminListing {
   id: string;
   title: string;
   slug: string;
   author: string;
+  isbn?: string;
+  publisher?: string;
+  edition?: string;
+  description?: string;
+  catalogImages?: Array<{ url: string; publicId?: string }>;
   price: number;
+  discountPrice?: number;
   stock: number;
   status: string;
   category: string;
   condition?: string;
+  conditionNotes?: string;
+  images?: Array<{ url: string; publicId?: string }>;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  campusName?: string;
   rejectionReason?: string;
+  moderationHistory?: Array<{ status: string; notes?: string; timestamp: string }>;
+  sellerId: string;
+  seller?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    storeName?: string;
+    rating?: number;
+    verificationStatus?: string;
+  };
+  createdAt?: string;
 }
 
 export default function AdminListingsPage() {
@@ -52,6 +81,7 @@ export default function AdminListingsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedListing, setSelectedListing] = useState<AdminListing | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -283,76 +313,280 @@ export default function AdminListingsPage() {
         />
       )}
 
-      {/* VIEW LISTING INSPECTOR SHEET */}
-      {selectedListing && (
-        <AdminModal
-          isOpen={viewModalOpen}
-          onClose={() => { setViewModalOpen(false); setSelectedListing(null); }}
-          size="sheet"
-          title={selectedListing.title}
-          subtitle={`by ${selectedListing.author}`}
-          icon={<BookOpen className="h-5 w-5 text-secondary" />}
-          badge={
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-secondary/15 text-secondary border border-secondary/20">
-              {selectedListing.status}
-            </span>
-          }
-          footer={
-            <div className="flex items-center justify-between w-full">
-              <Link
-                href={`/books/${selectedListing.slug || selectedListing.id}`}
-                target="_blank"
-                className="inline-flex items-center gap-1 text-xs font-bold text-secondary hover:underline"
-              >
-                <span>View Storefront Page</span>
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
-              <button
-                onClick={() => { setViewModalOpen(false); setSelectedListing(null); }}
-                className="px-5 py-2.5 bg-secondary text-white text-xs font-extrabold uppercase tracking-wider rounded-2xl hover:bg-secondary/90 shadow-md shadow-secondary/20 cursor-pointer"
-              >
-                Close Inspector
-              </button>
-            </div>
-          }
-        >
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <AdminStatBadge label="Offer Price" value={`₹${selectedListing.price}`} variant="default" />
-              <AdminStatBadge label="Inventory" value={`${selectedListing.stock} Units`} variant={selectedListing.stock > 0 ? 'success' : 'danger'} />
-              <AdminStatBadge label="Quality Grade" value={(selectedListing.condition || 'good').replace('_', ' ').toUpperCase()} variant="info" />
-              <AdminStatBadge label="Store Status" value={selectedListing.status.toUpperCase()} variant={selectedListing.status === 'active' ? 'success' : 'warning'} />
-            </div>
+      {/* VIEW LISTING INSPECTOR WORKSPACE */}
+      {selectedListing && (() => {
+        const listingPhotos = (selectedListing.images || []).map((img) => ({
+          url: img.url,
+          label: 'Seller Condition Photo',
+          source: 'seller' as const,
+        }));
+        const catalogPhotos = (selectedListing.catalogImages || []).map((img) => ({
+          url: img.url,
+          label: 'Official Catalog Cover',
+          source: 'catalog' as const,
+        }));
+        const allMedia = [...listingPhotos, ...catalogPhotos];
+        const activeMedia = allMedia[activeImageIndex] || allMedia[0] || null;
 
-            {selectedListing.status === 'rejected' && selectedListing.rejectionReason && (
-              <div className="p-4 bg-rose-500/12 border border-rose-500/25 rounded-2xl flex items-start gap-3">
-                <AlertOctagon className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider">Moderator Rejection Feedback:</p>
-                  <p className="text-xs text-rose-700 dark:text-rose-300 font-medium mt-1 leading-relaxed">&quot;{selectedListing.rejectionReason}&quot;</p>
+        return (
+          <AdminModal
+            isOpen={viewModalOpen}
+            onClose={() => { setViewModalOpen(false); setSelectedListing(null); }}
+            size="2xl"
+            title={selectedListing.title}
+            subtitle={`by ${selectedListing.author} • ${selectedListing.category}`}
+            icon={<BookOpen className="h-5 w-5 text-secondary" />}
+            badge={
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border ${
+                  selectedListing.status === 'active'
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    : selectedListing.status === 'pending'
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                    : selectedListing.status === 'rejected'
+                    ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                    : 'bg-muted text-muted-foreground border-border'
+                }`}
+              >
+                {selectedListing.status}
+              </span>
+            }
+            headerActions={
+              <div className="flex items-center gap-2">
+                {selectedListing.status !== 'active' && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      moderateMutation.mutate(
+                        { id: selectedListing.id, status: 'active' },
+                        {
+                          onSuccess: () => {
+                            setSelectedListing((prev) => prev ? { ...prev, status: 'active', rejectionReason: undefined } : null);
+                          },
+                        }
+                      )
+                    }
+                    disabled={moderateMutation.isPending}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>Approve</span>
+                  </button>
+                )}
+                {selectedListing.status !== 'rejected' && (
+                  <button
+                    type="button"
+                    onClick={() => setRejectModalOpen(true)}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    <span>Reject</span>
+                  </button>
+                )}
+              </div>
+            }
+            footer={
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-4">
+                  <Link
+                    href={`/books/${selectedListing.slug || selectedListing.id}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-secondary hover:underline"
+                  >
+                    <span>View Storefront Page</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setEditForm({
+                        title: selectedListing.title,
+                        price: selectedListing.price,
+                        stock: selectedListing.stock,
+                        status: selectedListing.status,
+                        condition: selectedListing.condition || 'good',
+                      });
+                      setEditModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-foreground cursor-pointer"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span>Quick Edit</span>
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setViewModalOpen(false); setSelectedListing(null); }}
+                  className="px-5 py-2.5 bg-secondary text-white text-xs font-extrabold uppercase tracking-wider rounded-2xl hover:bg-secondary/90 shadow-md shadow-secondary/20 cursor-pointer"
+                >
+                  Close Inspector
+                </button>
+              </div>
+            }
+          >
+            <div className="space-y-6">
+              {/* Stat Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <AdminStatBadge label="Asking Price" value={`₹${selectedListing.price}`} variant="default" />
+                <AdminStatBadge label="Stock Copies" value={`${selectedListing.stock} Units`} variant={selectedListing.stock > 0 ? 'success' : 'danger'} />
+                <AdminStatBadge label="Condition Grade" value={(selectedListing.condition || 'good').replace('_', ' ').toUpperCase()} variant="info" />
+                <AdminStatBadge label="Campus Node" value={selectedListing.campusName || selectedListing.city || 'National Delivery'} variant="default" />
+              </div>
+
+              {/* Rejection Alert */}
+              {selectedListing.status === 'rejected' && selectedListing.rejectionReason && (
+                <div className="p-4 bg-rose-500/12 border border-rose-500/25 rounded-2xl flex items-start gap-3">
+                  <AlertOctagon className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider">Moderator Rejection Feedback:</p>
+                    <p className="text-xs text-rose-700 dark:text-rose-300 font-medium leading-relaxed">&quot;{selectedListing.rejectionReason}&quot;</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 2-Column Split: Visual Photos Inspection (Left) + Seller & Metadata (Right) */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                {/* Media Gallery (5 cols) */}
+                <div className="md:col-span-5 space-y-4">
+                  <div className="relative aspect-3/4 rounded-2xl overflow-hidden border border-border/80 bg-muted/30 flex items-center justify-center group shadow-inner">
+                    {activeMedia ? (
+                      <Image
+                        src={activeMedia.url}
+                        alt={selectedListing.title}
+                        fill
+                        className="object-contain p-2"
+                        sizes="(max-width: 768px) 100vw, 350px"
+                      />
+                    ) : (
+                      <div className="text-center p-6 space-y-2 text-muted-foreground">
+                        <ImageIcon className="h-10 w-10 mx-auto opacity-40" />
+                        <p className="text-xs font-medium">No photos uploaded for this listing</p>
+                      </div>
+                    )}
+                    {activeMedia && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm ${
+                          activeMedia.source === 'seller'
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-secondary text-white'
+                        }`}>
+                          {activeMedia.label}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Thumbnail Row */}
+                  {allMedia.length > 1 && (
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                      {allMedia.map((m, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setActiveImageIndex(idx)}
+                          className={`relative h-14 w-11 shrink-0 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                            activeImageIndex === idx ? 'border-secondary ring-2 ring-secondary/30 scale-105' : 'border-border/80 opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          <Image src={m.url} alt="" fill className="object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Condition Notes Callout */}
+                  <div className="p-4 rounded-2xl border border-border/80 bg-muted/20 space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block">
+                      Seller Condition Notes &amp; Defect Notes
+                    </span>
+                    <p className="text-xs text-foreground font-medium italic leading-relaxed">
+                      &quot;{selectedListing.conditionNotes || 'No specific condition defects reported by seller.'}&quot;
+                    </p>
+                  </div>
+                </div>
+
+                {/* Seller & Catalog Metadata (7 cols) */}
+                <div className="md:col-span-7 space-y-5">
+                  {/* Seller Identity Card */}
+                  <AdminDetailSection title="Seller Identity & Accountability" icon={<Store className="h-4 w-4" />}>
+                    <div className="p-4 bg-muted/30 border border-border/80 rounded-2xl space-y-2.5">
+                      <AdminDetailRow
+                        label="Store Name"
+                        value={selectedListing.seller?.storeName || 'Independent Student Seller'}
+                      />
+                      <AdminDetailRow
+                        label="Seller Contact"
+                        value={selectedListing.seller?.name || selectedListing.sellerId}
+                      />
+                      <AdminDetailRow
+                        label="Email Address"
+                        value={selectedListing.seller?.email || 'N/A'}
+                        copyable
+                      />
+                      {selectedListing.seller?.phone && (
+                        <AdminDetailRow
+                          label="Phone Number"
+                          value={selectedListing.seller.phone}
+                          copyable
+                        />
+                      )}
+                      <AdminDetailRow
+                        label="Campus / Location"
+                        value={`${selectedListing.campusName || 'Main Campus'}${selectedListing.city ? ` • ${selectedListing.city}, ${selectedListing.state || ''} ${selectedListing.pincode || ''}` : ''}`}
+                      />
+                      <AdminDetailRow
+                        label="Seller Verification"
+                        value={
+                          selectedListing.seller?.verificationStatus === 'approved'
+                            ? 'VERIFIED CAMPUS SELLER'
+                            : selectedListing.seller?.verificationStatus?.toUpperCase() || 'UNVERIFIED'
+                        }
+                      />
+                    </div>
+                  </AdminDetailSection>
+
+                  {/* Catalog Metadata */}
+                  <AdminDetailSection title="Book Catalog & Publishing Specs" icon={<BookOpen className="h-4 w-4" />}>
+                    <div className="p-4 bg-muted/30 border border-border/80 rounded-2xl space-y-2.5">
+                      <AdminDetailRow label="ISBN Code" value={selectedListing.isbn || 'N/A'} copyable />
+                      <AdminDetailRow label="Publisher" value={selectedListing.publisher || 'N/A'} />
+                      <AdminDetailRow label="Edition" value={selectedListing.edition || 'N/A'} />
+                      <AdminDetailRow label="Category" value={selectedListing.category} />
+                      {selectedListing.description && (
+                        <div className="pt-2 border-t border-border/60">
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground block mb-1">
+                            Book Description
+                          </span>
+                          <p className="text-xs text-foreground/80 leading-relaxed line-clamp-3">
+                            {selectedListing.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </AdminDetailSection>
+
+                  {/* Moderation History Audit Trail */}
+                  {selectedListing.moderationHistory && selectedListing.moderationHistory.length > 0 && (
+                    <AdminDetailSection title="Moderation Audit Trail" icon={<History className="h-4 w-4" />}>
+                      <div className="p-4 bg-muted/30 border border-border/80 rounded-2xl space-y-2">
+                        {selectedListing.moderationHistory.map((item, idx) => (
+                          <div key={idx} className="flex items-start justify-between text-xs py-1 border-b border-border/40 last:border-0">
+                            <div>
+                              <span className="font-bold text-foreground uppercase tracking-wider">{item.status}</span>
+                              {item.notes && <p className="text-muted-foreground text-[11px] mt-0.5">{item.notes}</p>}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground font-mono shrink-0 ml-2">
+                              {new Date(item.timestamp).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </AdminDetailSection>
+                  )}
                 </div>
               </div>
-            )}
-
-            <AdminDetailSection title="Catalog Metadata" icon={<BookOpen className="h-4 w-4" />}>
-              <div className="p-4 bg-muted/30 border border-border/80 rounded-2xl space-y-2">
-                <AdminDetailRow label="Textbook Title" value={selectedListing.title} />
-                <AdminDetailRow label="Author / Writer" value={selectedListing.author} />
-                <AdminDetailRow label="Academic Category" value={selectedListing.category} />
-                <AdminDetailRow label="Catalog Slug" value={selectedListing.slug || 'N/A'} copyable />
-              </div>
-            </AdminDetailSection>
-
-            <AdminDetailSection title="Seller Listing Parameters" icon={<Tag className="h-4 w-4" />}>
-              <div className="p-4 bg-muted/30 border border-border/80 rounded-2xl space-y-2">
-                <AdminDetailRow label="Reported Condition" value={(selectedListing.condition || 'good').replace('_', ' ').toUpperCase()} />
-                <AdminDetailRow label="Available Quantity" value={`${selectedListing.stock} in stock`} />
-                <AdminDetailRow label="Seller Asking Price" value={`₹${selectedListing.price}`} />
-              </div>
-            </AdminDetailSection>
-          </div>
-        </AdminModal>
-      )}
+            </div>
+          </AdminModal>
+        );
+      })()}
 
       {/* EDIT LISTING FORM MODAL */}
       {selectedListing && (

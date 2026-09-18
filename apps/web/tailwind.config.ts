@@ -85,9 +85,9 @@ const config: Config = {
         info: 'var(--color-info)',
       },
       fontFamily: {
-        serif: ['var(--font-sans)', 'sans-serif'],
-        sans: ['var(--font-sans)', 'sans-serif'],
-        mono: ['var(--font-sans)', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Source Serif 4', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'ui-monospace', 'Menlo', 'monospace'],
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

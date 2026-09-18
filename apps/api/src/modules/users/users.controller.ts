@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { UsersService } from './users.service';
 import { ApiResponse } from '../../utils/ApiResponse';
 import { ValidationError } from '../../utils/AppError';
-import { uploadToCloudinary } from '../../config/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../../config/cloudinary';
 
 export class UsersController {
   private usersService: UsersService;
@@ -31,15 +31,24 @@ export class UsersController {
       throw new ValidationError('No avatar image file provided');
     }
 
+    const currentUser = await this.usersService.getUserById(userId);
+
     let avatarUrl = '';
+    let avatarPublicId = '';
     try {
+      // Remove old avatar resource from Cloudinary if it exists
+      if (currentUser.avatarPublicId && !currentUser.avatarPublicId.startsWith('mock_')) {
+        await deleteFromCloudinary(currentUser.avatarPublicId).catch(() => {});
+      }
       const uploadResult = await uploadToCloudinary(req.file.buffer, 'avatars');
       avatarUrl = uploadResult.url;
+      avatarPublicId = uploadResult.publicId;
     } catch (error) {
       avatarUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      avatarPublicId = `mock_avatar_${Date.now()}`;
     }
 
-    const user = await this.usersService.updateProfile(userId, { avatarUrl });
+    const user = await this.usersService.updateProfile(userId, { avatarUrl, avatarPublicId });
     res.status(200).json(ApiResponse.success(this.usersService.mapToDTO(user)));
   };
 

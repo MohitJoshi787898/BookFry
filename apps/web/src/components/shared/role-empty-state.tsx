@@ -13,6 +13,11 @@ export interface RoleEmptyStateProps {
     onClick?: () => void;
     href?: string;
   };
+  secondaryAction?: {
+    label: string;
+    onClick?: () => void;
+    href?: string;
+  };
   mascotVariant?: 'reading' | 'pointing' | 'floating' | 'searching';
 }
 
@@ -20,6 +25,7 @@ export function RoleEmptyState({
   title,
   description,
   action,
+  secondaryAction,
   mascotVariant = 'reading',
 }: RoleEmptyStateProps) {
   const mascotMap: Record<string, string> = {
@@ -57,21 +63,41 @@ export function RoleEmptyState({
         {description}
       </p>
 
-      {action && action.href ? (
-        <Link
-          href={action.href}
-          className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs active:scale-95"
-        >
-          {action.label}
-        </Link>
-      ) : action && action.onClick ? (
-        <button
-          onClick={action.onClick}
-          className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
-        >
-          {action.label}
-        </button>
-      ) : null}
+      <div className="flex flex-wrap items-center justify-center gap-2.5">
+        {action && action.href ? (
+          <Link
+            href={action.href}
+            className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs active:scale-95"
+          >
+            {action.label}
+          </Link>
+        ) : action && action.onClick ? (
+          <button
+            type="button"
+            onClick={action.onClick}
+            className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
+          >
+            {action.label}
+          </button>
+        ) : null}
+
+        {secondaryAction && secondaryAction.href ? (
+          <Link
+            href={secondaryAction.href}
+            className="px-4 py-2.5 border border-border/80 bg-muted/60 hover:bg-muted text-foreground font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95"
+          >
+            {secondaryAction.label}
+          </Link>
+        ) : secondaryAction && secondaryAction.onClick ? (
+          <button
+            type="button"
+            onClick={secondaryAction.onClick}
+            className="px-4 py-2.5 border border-border/80 bg-muted/60 hover:bg-muted text-foreground font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
+          >
+            {secondaryAction.label}
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

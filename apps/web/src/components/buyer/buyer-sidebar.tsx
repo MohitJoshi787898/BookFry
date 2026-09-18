@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import Link from 'next/link';
@@ -16,6 +16,8 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
+  ShieldAlert,
+  Store,
   Search,
 } from 'lucide-react';
 
@@ -144,9 +146,13 @@ function SidebarItem({
 }
 
 export function BuyerSidebar({
+  user,
   collapsed = false,
   onToggleCollapse,
 }: BuyerSidebarProps) {
+  const isSeller = user?.roles?.includes('seller');
+  const isAdmin = user?.roles?.includes('admin');
+
   return (
     <aside
       className={`hidden md:flex flex-col border-r border-border/80 bg-gradient-to-b from-card via-card to-muted/80 backdrop-blur-lg transition-all duration-300 ease-out z-30 ${
@@ -251,6 +257,49 @@ export function BuyerSidebar({
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
               100% Escrow Protected
             </div>
+          )}
+
+          {isAdmin && (
+            <Link
+              href="/admin/dashboard"
+              className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 transition-all duration-200 hover:bg-rose-500/10 mb-1 ${
+                collapsed ? 'justify-center px-2.5' : ''
+              }`}
+              title="Admin Control Center"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
+                <ShieldAlert className="h-4 w-4" />
+              </span>
+              {!collapsed && <span>Admin Center</span>}
+            </Link>
+          )}
+
+          {isSeller ? (
+            <Link
+              href="/seller/dashboard"
+              className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-secondary transition-all duration-200 hover:bg-secondary/10 mb-1 ${
+                collapsed ? 'justify-center px-2.5' : ''
+              }`}
+              title="Seller Hub"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-secondary/20 bg-secondary/10 text-secondary shrink-0">
+                <Store className="h-4 w-4" />
+              </span>
+              {!collapsed && <span>Seller Hub</span>}
+            </Link>
+          ) : (
+            <Link
+              href="/seller/register"
+              className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-secondary transition-all duration-200 hover:bg-secondary/10 mb-1 ${
+                collapsed ? 'justify-center px-2.5' : ''
+              }`}
+              title="Become a Campus Seller"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-secondary/20 bg-secondary/10 text-secondary shrink-0">
+                <Store className="h-4 w-4" />
+              </span>
+              {!collapsed && <span>Become a Seller</span>}
+            </Link>
           )}
 
           <Link

@@ -166,35 +166,66 @@ export function NavbarMobileDrawer({
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-black text-foreground truncate">{user.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {isAdmin && (
+                          <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                            Admin
+                          </span>
+                        )}
+                        {isSeller && (
+                          <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold uppercase bg-secondary/10 text-secondary border border-secondary/20">
+                            Seller
+                          </span>
+                        )}
+                        <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold uppercase bg-muted text-muted-foreground border border-border">
+                          Student
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Seller / Admin status banner */}
-                  {isAdmin ? (
-                    <Link
-                      href="/admin/dashboard"
-                      onClick={onClose}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-danger/10 text-danger text-xs font-bold"
-                    >
-                      <span className="flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4" />
-                        <span>Admin Control Center</span>
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  ) : isSeller ? (
-                    <Link
-                      href="/seller/dashboard"
-                      onClick={onClose}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/15 text-secondary text-xs font-bold"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Store className="w-4 h-4" />
-                        <span>Seller Hub & Listings</span>
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  ) : null}
+                  {/* Multi-role Workspace Portals */}
+                  <div className="space-y-1.5">
+                    {isAdmin && (
+                      <Link
+                        href="/admin/dashboard"
+                        onClick={onClose}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-danger/10 text-danger text-xs font-bold"
+                      >
+                        <span className="flex items-center gap-2">
+                          <ShieldAlert className="w-4 h-4" />
+                          <span>Admin Control Center</span>
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
+                    {isSeller && (
+                      <Link
+                        href="/seller/dashboard"
+                        onClick={onClose}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/15 text-secondary text-xs font-bold"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Store className="w-4 h-4" />
+                          <span>Seller Hub & Listings</span>
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
+                    {!isAdmin && !isSeller && (
+                      <Link
+                        href="/seller/register"
+                        onClick={onClose}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/10 text-secondary text-xs font-bold border border-secondary/20"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Store className="w-4 h-4" />
+                          <span>Become a Campus Seller</span>
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
+                  </div>
 
                   {/* Fast Account Links */}
                   <div className="grid grid-cols-2 gap-2 pt-1">

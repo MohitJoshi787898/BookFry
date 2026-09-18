@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { OrganizationJsonLd, WebsiteJsonLd } from "@/components/seo/json-ld";
@@ -9,6 +9,22 @@ const sans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-sans",
+  display: "swap",
+  adjustFontFallback: true,
+});
+
+const serif = Source_Serif_4({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-serif",
+  display: "swap",
+  adjustFontFallback: true,
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-mono",
   display: "swap",
   adjustFontFallback: true,
 });
@@ -54,7 +70,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sans.variable}`}
+      className={`${sans.variable} ${serif.variable} ${mono.variable}`}
       suppressHydrationWarning
     >
       <head suppressHydrationWarning>

@@ -79,8 +79,14 @@ export function BasicInfoTab({
               <input
                 id="isbn-input"
                 type="text"
-                placeholder="e.g. 9780143127741 or 9788120305960"
+                placeholder="e.g. 978-0-14-312774-1 or 9780132350884"
                 {...register('isbn')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    onFetchIsbn();
+                  }
+                }}
                 className="flex-grow px-4 py-3 text-base border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary font-mono"
               />
               <button

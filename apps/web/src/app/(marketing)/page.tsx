@@ -30,6 +30,122 @@ export interface LandingPageResponse {
   sections: SectionData[];
 }
 
+const DEFAULT_SECTIONS: SectionData[] = [
+  {
+    sectionId: 'hero_main',
+    type: 'hero',
+    title: "Books you love. Deals you'll adore.",
+    subtitle: 'Buy, sell, and discover verified new & used textbooks at unbeatable prices across India.',
+    enabled: true,
+    order: 0,
+    content: {
+      eyebrow: 'क्योंकि.. पढ़ाई रुकनी नहीं चाहिए',
+      highlightText: 'adore.',
+      primaryCtaLabel: 'Buy Books',
+      primaryCtaUrl: '/books',
+      secondaryCtaLabel: 'Sell Your Books',
+      secondaryCtaUrl: '/sell',
+      image: '/fox_reading_178491148655455.png',
+      escrowBadge: 'Direct Peer-to-Peer Campus Escrow',
+      searchHeading: 'Search Millions of Verified Textbooks & Novels',
+      searchSubheading: 'Instant Book Finder',
+      searchPlaceholder: 'Search Engineering, NEET, UPSC, Novels, or ISBN...',
+      searchButtonLabel: 'Search Catalog',
+      discountBadge: 'Up to 80% Off Retail Prices',
+    },
+  },
+  {
+    sectionId: 'features_bar',
+    type: 'features',
+    title: 'BookFry Value Propositions',
+    subtitle: 'Why thousands of Indian students trust BookFry',
+    enabled: true,
+    order: 1,
+    content: {
+      items: [
+        { title: 'Up to 80% Off', description: 'On New & Verified Used Textbooks', badge: 'Best Value' },
+        { title: 'Express Delivery', description: 'Free Shipping across India over ₹499', badge: 'Pan-India' },
+        { title: '100% Quality Checked', description: 'Verified Sellers & Escrow Guarantee', badge: 'Student Safe' },
+        { title: '7-Day Easy Returns', description: 'Instant Refunds & Replacement Support', badge: 'Hassle-Free' },
+      ],
+    },
+  },
+  {
+    sectionId: 'quick_filter_bar',
+    type: 'quick_filter',
+    title: 'Quick Filter Bar',
+    subtitle: 'Browse by subject',
+    enabled: true,
+    order: 2,
+    content: {},
+  },
+  {
+    sectionId: 'trending_reads',
+    type: 'book_carousel',
+    title: 'Trending Reads',
+    subtitle: 'Real-time popular velocity based on student activity & study demands',
+    enabled: true,
+    order: 3,
+    content: {
+      eyebrow: 'Trending Velocity',
+      selectionStrategy: 'trending',
+      limit: 12,
+      seeAllUrl: '/books?sort=viewsCount',
+    },
+  },
+  {
+    sectionId: 'knowledge_story',
+    type: 'knowledge_story',
+    title: 'Exchange Knowledge & Keep Books Circulating',
+    subtitle: 'Pass down study notes & textbooks to junior batches across India',
+    enabled: true,
+    order: 4,
+    content: {
+      eyebrow: 'PEER-TO-PEER STUDENT MARKETPLACE',
+      primaryCtaLabel: 'LIST YOUR BOOK NOW',
+      primaryCtaUrl: '/sell',
+      secondaryCtaLabel: 'BROWSE PRE-OWNED BOOKS',
+      secondaryCtaUrl: '/books',
+    },
+  },
+  {
+    sectionId: 'why_bookfry',
+    type: 'why_bookfry',
+    title: 'Why Students & Book Lovers Choose BookFry',
+    subtitle: 'India\'s safest, most affordable marketplace for new & used books.',
+    enabled: true,
+    order: 5,
+    content: {},
+  },
+  {
+    sectionId: 'reading_journey_cta',
+    type: 'cta',
+    title: 'Ready to Start Your Reading Journey?',
+    subtitle: 'Join over 50,000 students buying, selling, and circulating textbooks across India.',
+    enabled: true,
+    order: 6,
+    content: {},
+  },
+  {
+    sectionId: 'faq_section',
+    type: 'faq',
+    title: 'Frequently Asked Questions',
+    subtitle: 'Everything you need to know about buying and selling on BookFry',
+    enabled: true,
+    order: 7,
+    content: {},
+  },
+  {
+    sectionId: 'newsletter_section',
+    type: 'newsletter',
+    title: 'Never Miss a Campus Book Drop',
+    subtitle: 'Get curated deals, syllabus discount alerts, and exam prep recommendations in your inbox.',
+    enabled: true,
+    order: 8,
+    content: {},
+  },
+];
+
 const getLandingData = cache(async (): Promise<LandingPageResponse | null> => {
   try {
     const res = await fetch(`${API_BASE_URL}/landing`, {
@@ -84,7 +200,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function LandingPage() {
   const data = await getLandingData();
-  const sections = data?.sections || [];
+  const sections = data?.sections && data.sections.length > 0 ? data.sections : DEFAULT_SECTIONS;
 
   return (
     <>

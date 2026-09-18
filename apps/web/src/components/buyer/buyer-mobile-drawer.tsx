@@ -13,8 +13,10 @@ import {
   X,
   Store,
   ShieldCheck,
+  ShieldAlert,
   Search,
 } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
 
 export interface BuyerMobileDrawerProps {
   isOpen: boolean;
@@ -23,6 +25,9 @@ export interface BuyerMobileDrawerProps {
 
 export function BuyerMobileDrawer({ isOpen, onClose }: BuyerMobileDrawerProps) {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const isSeller = user?.roles?.includes('seller');
+  const isAdmin = user?.roles?.includes('admin');
 
   if (!isOpen) return null;
 
@@ -103,14 +108,41 @@ export function BuyerMobileDrawer({ isOpen, onClose }: BuyerMobileDrawerProps) {
           </div>
 
           <div className="border-t border-border pt-4 space-y-2">
-            <Link
-              href="/seller/dashboard"
-              onClick={onClose}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20"
-            >
-              <Store className="h-4 w-4" />
-              <span>Switch to Seller Hub</span>
-            </Link>
+            {isAdmin && (
+              <Link
+                href="/admin/dashboard"
+                onClick={onClose}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-danger/10 text-danger text-xs font-bold"
+              >
+                <span className="flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Admin Control Center</span>
+                </span>
+              </Link>
+            )}
+            {isSeller ? (
+              <Link
+                href="/seller/dashboard"
+                onClick={onClose}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/15 text-secondary text-xs font-bold"
+              >
+                <span className="flex items-center gap-2">
+                  <Store className="w-4 h-4" />
+                  <span>Seller Hub &amp; Listings</span>
+                </span>
+              </Link>
+            ) : (
+              <Link
+                href="/seller/register"
+                onClick={onClose}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/10 text-secondary text-xs font-bold border border-secondary/20"
+              >
+                <span className="flex items-center gap-2">
+                  <Store className="w-4 h-4" />
+                  <span>Become a Campus Seller</span>
+                </span>
+              </Link>
+            )}
           </div>
         </div>
 

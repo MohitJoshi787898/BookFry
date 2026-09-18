@@ -23,21 +23,27 @@ import {
   Flame,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function SellerDashboardPage() {
+  const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const { openModal } = useAuthModalStore();
+
+  const isSeller = user?.roles?.includes('seller');
+  const isAdmin = user?.roles?.includes('admin');
+  const hasAccess = isSeller || isAdmin;
 
   const { data: stats, isLoading: isStatsLoading, isError, refetch } = useQuery<SellerAnalytics>({
     queryKey: ['seller-dashboard'],
     queryFn: () => apiClient('/seller/dashboard'),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && hasAccess,
   });
 
   const { data: listingsRaw } = useQuery<{ listings?: Book[] } | Book[]>({
     queryKey: ['seller-listings-dashboard'],
     queryFn: () => apiClient('/seller/listings?page=1&limit=100'),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && hasAccess,
   });
 
   const { data: requests = [] } = useQuery<UsedBookRequest[]>({
@@ -50,7 +56,7 @@ export default function SellerDashboardPage() {
         return [];
       }
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && hasAccess,
   });
 
   const listings: Book[] = Array.isArray(listingsRaw)
@@ -67,6 +73,26 @@ export default function SellerDashboardPage() {
           action={{
             label: 'Sign In to Seller Account',
             onClick: () => openModal('login', '/seller/dashboard'),
+          }}
+        />
+      </SellerLayout>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <SellerLayout>
+        <RoleEmptyState
+          title="Become a BookFry Campus Seller"
+          description="You are currently signed in as a student buyer. Set up your campus book store in minutes to sell used textbooks, notes, and study guides for cash."
+          mascotVariant="reading"
+          action={{
+            label: 'Register as Campus Seller',
+            onClick: () => router.push('/seller/register'),
+          }}
+          secondaryAction={{
+            label: 'Browse Student Bookstore',
+            onClick: () => router.push('/books'),
           }}
         />
       </SellerLayout>

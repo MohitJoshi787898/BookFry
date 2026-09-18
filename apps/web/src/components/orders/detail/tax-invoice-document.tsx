@@ -71,10 +71,10 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
       <div className="max-w-[1280px] mx-auto space-y-6">
         
         {/* Top Hero Header Banner (Hidden during print) */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A3B5C] via-[#142F4A] to-[#0F2338] text-white p-5 sm:p-8 lg:p-10 shadow-2xl border border-white/10 print:hidden">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 text-primary-foreground p-5 sm:p-8 lg:p-10 shadow-2xl border border-white/10 print:hidden">
           {/* Background Radial Glow */}
-          <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#F26522]/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-[#FF9900]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-secondary/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-80 w-80 rounded-full bg-secondary/15 blur-3xl" />
 
           {/* Decorative Grid Overlay */}
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
@@ -86,7 +86,7 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
                 href={`/account/orders/${order.id}`}
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-xs font-bold text-white transition-all border border-white/15 active:scale-95 shadow-sm"
               >
-                <ArrowLeft className="h-4 w-4 text-[#F26522]" />
+                <ArrowLeft className="h-4 w-4 text-secondary" />
                 <span>Order Details</span>
               </Link>
 
@@ -119,7 +119,7 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
                     </>
                   ) : (
                     <>
-                      <Share2 className="h-4 w-4 text-[#F26522]" />
+                      <Share2 className="h-4 w-4 text-secondary" />
                       <span className="hidden sm:inline">Share Invoice</span>
                     </>
                   )}
@@ -127,7 +127,7 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
 
                 <button
                   onClick={handlePrintPDF}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#F26522] hover:bg-[#D64E0F] text-xs font-black text-white transition-all shadow-md shadow-[#F26522]/25 active:scale-95"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-secondary hover:bg-secondary/90 text-xs font-black text-secondary-foreground transition-all shadow-md shadow-secondary/25 active:scale-95"
                 >
                   <Download className="h-4 w-4" />
                   <span>Download Bill PDF</span>
@@ -145,7 +145,7 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
 
                 <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white flex flex-wrap items-center gap-3">
                   <span>Tax Invoice</span>
-                  <span className="font-mono text-[#F26522] drop-shadow-sm">{invoiceNumber}</span>
+                  <span className="font-mono text-secondary drop-shadow-sm">{invoiceNumber}</span>
                 </h1>
 
                 <p className="text-xs sm:text-sm text-slate-300 flex items-center gap-2 font-sans">
@@ -218,12 +218,12 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
           {/* Document Header */}
           <div className="border-b border-slate-200 pb-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
             <div>
-              <div className="flex items-center gap-2 text-[#1A3B5C]">
-                <div className="h-10 w-10 rounded-xl bg-[#1A3B5C] text-white flex items-center justify-center font-black text-xl font-serif">
+              <div className="flex items-center gap-2 text-primary">
+                <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-black text-xl font-serif">
                   B
                 </div>
                 <span className="font-serif text-2xl sm:text-3xl font-extrabold tracking-tight">
-                  Book<span className="text-[#F26522]">Fry</span>
+                  Book<span className="text-secondary">Fry</span>
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1 font-medium">
@@ -232,11 +232,11 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
             </div>
 
             <div className="text-left sm:text-right space-y-1">
-              <span className="inline-block px-3 py-1 rounded-md bg-slate-100 text-[#1A3B5C] font-black text-xs uppercase tracking-widest border border-slate-200">
+              <span className="inline-block px-3 py-1 rounded-md bg-slate-100 text-primary font-black text-xs uppercase tracking-widest border border-slate-200">
                 Tax Invoice
               </span>
               <p className="font-mono text-sm font-bold text-slate-800 pt-1">
-                No: <span className="text-[#F26522]">{invoiceNumber}</span>
+                No: <span className="text-secondary">{invoiceNumber}</span>
               </p>
               <p className="text-xs text-slate-500 font-medium">
                 Date: <span className="font-mono">{formattedDate}</span>
@@ -305,9 +305,9 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
           <div className="mb-8 overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-[#1A3B5C] text-white rounded-lg">
+                <tr className="bg-primary text-primary-foreground rounded-lg">
                   <th className="py-3 px-4 font-bold rounded-l-xl">#</th>
-                  <th className="py-3 px-4 font-bold">Item Description & Condition</th>
+                  <th className="py-3 px-4 font-bold">Item Description &amp; Condition</th>
                   <th className="py-3 px-4 font-bold text-center">Qty</th>
                   <th className="py-3 px-4 font-bold text-right">Unit Price</th>
                   <th className="py-3 px-4 font-bold text-right rounded-r-xl">Total (₹)</th>
@@ -341,8 +341,8 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
           {/* Price Breakdown & Declaration */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-10 pt-4 border-t border-slate-200">
             <div className="space-y-3">
-              <div className="p-4 rounded-2xl bg-[#1A3B5C]/5 border border-[#1A3B5C]/10 space-y-1">
-                <span className="text-[11px] font-bold text-[#1A3B5C] uppercase tracking-wider block">
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-1">
+                <span className="text-[11px] font-bold text-primary uppercase tracking-wider block">
                   Official Declaration
                 </span>
                 <p className="text-xs text-slate-600 leading-relaxed font-serif">
@@ -371,21 +371,32 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
                 </span>
               </div>
 
-              <div className="flex justify-between py-1 border-b border-slate-100 text-slate-500">
-                <span>CGST (4%):</span>
-                <span className="font-mono font-bold text-slate-700">₹{cgst.toFixed(2)}</span>
-              </div>
+              {tax > 0 ? (
+                <>
+                  <div className="flex justify-between py-1 border-b border-slate-100 text-slate-500">
+                    <span>CGST (4% on retail items):</span>
+                    <span className="font-mono font-bold text-slate-700">₹{cgst.toFixed(2)}</span>
+                  </div>
 
-              <div className="flex justify-between py-1 border-b border-slate-100 text-slate-500">
-                <span>SGST (4%):</span>
-                <span className="font-mono font-bold text-slate-700">₹{sgst.toFixed(2)}</span>
-              </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100 text-slate-500">
+                    <span>SGST (4% on retail items):</span>
+                    <span className="font-mono font-bold text-slate-700">₹{sgst.toFixed(2)}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between py-1 border-b border-slate-100 text-slate-500">
+                  <span>GST (P2P Circular Circulation):</span>
+                  <span className="font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                    0% EXEMPT
+                  </span>
+                </div>
+              )}
 
               <div className="flex justify-between py-3 border-t-2 border-slate-900 items-center">
-                <span className="font-serif text-base font-extrabold text-[#1A3B5C]">
+                <span className="font-serif text-base font-extrabold text-primary">
                   Total Amount Paid:
                 </span>
-                <span className="font-mono text-xl font-black text-[#F26522]">
+                <span className="font-mono text-xl font-black text-secondary">
                   ₹{total.toFixed(2)}
                 </span>
               </div>
@@ -395,7 +406,7 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
           {/* Footer Seal */}
           <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[#F26522]" />
+              <Sparkles className="h-4 w-4 text-secondary" />
               <span>BookFry • Education Must Never Stop</span>
             </div>
             <p className="font-mono text-[10px]">
@@ -410,7 +421,7 @@ export function TaxInvoiceDocument({ order }: TaxInvoiceDocumentProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrintPDF}
-            className="flex-1 py-2.5 px-3 rounded-2xl bg-[#F26522] hover:bg-[#D64E0F] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md shadow-[#F26522]/20 active:scale-95"
+            className="flex-1 py-2.5 px-3 rounded-2xl bg-secondary hover:bg-secondary/90 text-secondary-foreground text-xs font-extrabold flex items-center justify-center gap-2 shadow-md shadow-secondary/20 active:scale-95"
           >
             <Download className="h-4 w-4" />
             <span>Download Bill PDF</span>

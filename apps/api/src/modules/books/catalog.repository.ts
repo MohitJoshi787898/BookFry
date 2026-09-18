@@ -11,7 +11,13 @@ export class CatalogRepository {
   }
 
   async findByIsbn(isbn: string): Promise<IBookCatalogDocument | null> {
-    return BookCatalogModel.findOne({ isbn: isbn.trim() }).populate('category').exec();
+    const raw = isbn.trim();
+    const clean = raw.replace(/[^0-9X]/gi, '').toUpperCase();
+    return BookCatalogModel.findOne({
+      $or: [{ isbn: clean }, { isbn: raw }],
+    })
+      .populate('category')
+      .exec();
   }
 
   /**
@@ -21,7 +27,13 @@ export class CatalogRepository {
   async findOrCreate(
     data: Partial<IBookCatalogDocument>
   ): Promise<{ doc: IBookCatalogDocument; created: boolean }> {
-    const existing = await BookCatalogModel.findOne({ isbn: (data.isbn as string).trim() }).exec();
+    const rawIsbn = ((data.isbn as string) || '').trim();
+    const cleanIsbn = rawIsbn.replace(/[^0-9X]/gi, '').toUpperCase();
+    data.isbn = cleanIsbn;
+
+    const existing = await BookCatalogModel.findOne({
+      $or: [{ isbn: cleanIsbn }, { isbn: rawIsbn }],
+    }).exec();
     if (existing) {
       if ((!existing.images || existing.images.length === 0) && data.images && data.images.length > 0) {
         existing.images = data.images;

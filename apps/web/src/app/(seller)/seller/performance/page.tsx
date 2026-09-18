@@ -79,7 +79,7 @@ export default function SellerPerformancePage() {
           </div>
 
           <div className="w-full bg-muted rounded-full h-3 overflow-hidden border border-border/60">
-            <div className="bg-gradient-to-r from-[#1A3B5C] to-[#FF9F2D] h-3 rounded-full transition-all duration-500 w-[82%]" />
+            <div className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all duration-500 w-[82%]" />
           </div>
 
           <p className="text-[11px] text-muted-foreground font-medium">

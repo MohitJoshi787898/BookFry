@@ -67,6 +67,21 @@ export class BooksController {
     res.status(200).json(ApiResponse.success({ listings }));
   };
 
+  lookupIsbn = async (req: Request, res: Response): Promise<void> => {
+    const { isbn } = req.params;
+    const result = await this.booksService.lookupIsbn(isbn);
+    if (!result) {
+      res.status(404).json(
+        ApiResponse.error(
+          'No book metadata found for this ISBN. You can enter details manually.',
+          'ISBN_NOT_FOUND'
+        )
+      );
+      return;
+    }
+    res.status(200).json(ApiResponse.success(result));
+  };
+
   create = async (req: Request, res: Response): Promise<void> => {
     const sellerId = req.user!.id;
     const images: Array<{ url: string; publicId: string }> = [];

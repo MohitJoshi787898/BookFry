@@ -60,7 +60,9 @@ function LoginFormContent() {
 
       if (redirect) {
         router.push(redirect);
-      } else if (data.user.roles.includes("seller") && redirect === "/seller/dashboard") {
+      } else if (data.user.roles?.includes("admin")) {
+        router.push("/admin/dashboard");
+      } else if (data.user.roles?.includes("seller")) {
         router.push("/seller/dashboard");
       } else {
         router.push("/");

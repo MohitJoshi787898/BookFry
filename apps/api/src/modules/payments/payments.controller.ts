@@ -4,6 +4,8 @@ import { getPaymentProvider } from './payment-provider.factory';
 import { OrderModel, IOrderDocument } from '../../models/order.model';
 import { TransactionModel } from '../../models/transaction.model';
 import { NotificationsService } from '../notifications/notifications.service';
+import { UserModel } from '../../models/user.model';
+import { EmailService } from '../../services/email.service';
 import { NotFoundError } from '../../utils/AppError';
 import { ApiResponse } from '../../utils/ApiResponse';
 import { logger } from '../../utils/logger';
@@ -21,7 +23,7 @@ export class PaymentsController {
     const requestingUserId = req.user?.id;
     const isAdmin = req.user?.roles?.includes('admin');
     if (requestingUserId && order.buyerId.toString() !== requestingUserId && !isAdmin) {
-      res.status(403).json(ApiResponse.error('FORBIDDEN', 'Not authorized to create payment intent for this order'));
+      res.status(403).json(ApiResponse.error('Not authorized to create payment intent for this order', 'FORBIDDEN'));
       return;
     }
 
@@ -63,7 +65,7 @@ export class PaymentsController {
           await session.abortTransaction();
           session.endSession();
         }
-        res.status(403).json(ApiResponse.error('FORBIDDEN', 'Not authorized to verify payment for this order'));
+        res.status(403).json(ApiResponse.error('Not authorized to verify payment for this order', 'FORBIDDEN'));
         return;
       }
 
@@ -128,7 +130,7 @@ export class PaymentsController {
           } else {
             await order.save();
           }
-          res.status(400).json(ApiResponse.error('INVALID_SIGNATURE', 'Razorpay signature verification failed'));
+          res.status(400).json(ApiResponse.error('Razorpay signature verification failed', 'INVALID_SIGNATURE'));
           return;
         }
 
@@ -281,17 +283,29 @@ export class PaymentsController {
       }
 
       // 1. Group items by seller for creating Transaction records & notifications
-      const sellerAmounts: Record<string, number> = {};
+      const sellerData: Record<string, { totalAmount: number; platformFee: number; items: any[] }> = {};
       for (const item of order.items) {
         if (!item.sellerId) continue;
         const sId = item.sellerId.toString();
-        sellerAmounts[sId] = (sellerAmounts[sId] || 0) + item.price * item.quantity;
+        if (!sellerData[sId]) {
+          sellerData[sId] = { totalAmount: 0, platformFee: 0, items: [] };
+        }
+        const itemTotal = item.price * item.quantity;
+        sellerData[sId].totalAmount += itemTotal;
+        sellerData[sId].items.push(item);
+        if (item.condition === 'new') {
+          sellerData[sId].platformFee += itemTotal * 0.10; // 10% platform fee on new retail books
+        } else {
+          // 0% platform fee on used books (P2P student circular economy)
+        }
       }
 
       const notificationsService = new NotificationsService();
+      const emailService = new EmailService();
 
-      for (const [sId, amount] of Object.entries(sellerAmounts)) {
-        const platformFee = parseFloat((amount * 0.10).toFixed(2)); // 10% platform fee
+      for (const [sId, sData] of Object.entries(sellerData)) {
+        const amount = parseFloat(sData.totalAmount.toFixed(2));
+        const platformFee = parseFloat(sData.platformFee.toFixed(2));
         const netPayout = parseFloat((amount - platformFee).toFixed(2));
 
         try {
@@ -334,6 +348,23 @@ export class PaymentsController {
         } catch (e) {
           logger.warn(`Could not create seller notification: ${e}`);
         }
+
+        // Email seller of sale notification
+        try {
+          const sellerUser = await UserModel.findById(sId);
+          if (sellerUser) {
+            const firstTitle = sData.items[0]?.title || 'Book';
+            await emailService.queueSaleNotification(
+              sellerUser.email,
+              sellerUser.name,
+              order.orderNumber,
+              firstTitle,
+              netPayout
+            );
+          }
+        } catch (e) {
+          logger.warn(`Could not dispatch seller sale notification email: ${e}`);
+        }
       }
 
       try {
@@ -346,6 +377,26 @@ export class PaymentsController {
         );
       } catch (e) {
         logger.warn(`Could not create buyer notification: ${e}`);
+      }
+
+      // Email buyer order confirmation
+      try {
+        const buyerUser = await UserModel.findById(order.buyerId);
+        if (buyerUser) {
+          await emailService.queueOrderConfirmation(
+            buyerUser.email,
+            buyerUser.name,
+            order.orderNumber,
+            order.items.map((it) => ({
+              title: it.title,
+              price: it.price,
+              quantity: it.quantity,
+            })),
+            order.total
+          );
+        }
+      } catch (e) {
+        logger.warn(`Could not dispatch buyer confirmation email: ${e}`);
       }
     } catch (e) {
       logger.error('Error processing successful payment:', e);

@@ -28,7 +28,6 @@ export function Navbar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
   const { fetchCart } = useCartStore();
-  const [mounted, setMounted] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const scrolled = useScrolled();
@@ -40,7 +39,6 @@ export function Navbar() {
 
   // Sync client theme & cart on mount
   useEffect(() => {
-    setMounted(true);
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(isDark ? 'dark' : 'light');
     fetchCart(isAuthenticated);
@@ -53,10 +51,8 @@ export function Navbar() {
     localStorage.setItem('theme', next);
   };
 
-  if (!mounted) return null;
-
   return (
-    <div className="w-full">
+    <>
       {/* Top Banner Notifications */}
       <AnnouncementBar />
       <PushNotificationBanner />
@@ -88,7 +84,7 @@ export function Navbar() {
       {/* Global Modals & Bottom Navigation */}
       <LocationSelectorModal />
       <MobileNav />
-    </div>
+    </>
   );
 }
 

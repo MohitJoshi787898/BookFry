@@ -55,6 +55,7 @@ export interface IUserDocument extends Document {
   passwordHash: string;
   roles: UserRole[];
   avatarUrl?: string;
+  avatarPublicId?: string;
   phone?: string;
   isEmailVerified: boolean;
   isBanned: boolean;
@@ -136,6 +137,7 @@ const UserSchema = new Schema<IUserDocument>(
       default: ['customer'],
     },
     avatarUrl: { type: String },
+    avatarPublicId: { type: String },
     phone: { type: String },
     isEmailVerified: { type: Boolean, default: false },
     isBanned: { type: Boolean, default: false },

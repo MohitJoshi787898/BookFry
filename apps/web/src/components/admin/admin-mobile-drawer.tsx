@@ -22,6 +22,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useAuthStore } from '@/stores/auth.store';
 
 export interface AdminMobileDrawerProps {
   isOpen: boolean;
@@ -65,6 +66,8 @@ const allNavSections = [
 
 export function AdminMobileDrawer({ isOpen, onClose }: AdminMobileDrawerProps) {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const isSeller = user?.roles?.includes('seller');
 
   return (
     <AnimatePresence>
@@ -172,6 +175,27 @@ export function AdminMobileDrawer({ isOpen, onClose }: AdminMobileDrawerProps) {
                   </div>
                 </div>
               ))}
+
+              {/* If Seller role present, offer switch to Seller Hub */}
+              {isSeller && (
+                <div className="p-3 rounded-2xl bg-secondary/10 border border-secondary/20 text-foreground space-y-1.5">
+                  <div className="flex items-center space-x-2">
+                    <Store className="h-4 w-4 text-secondary" />
+                    <span className="text-xs font-black text-secondary">Seller Hub &amp; Inventory</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Manage your book listings, fulfill orders, and track your campus payouts.
+                  </p>
+                  <Link
+                    href="/seller/dashboard"
+                    onClick={onClose}
+                    className="w-full py-2 px-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-xs"
+                  >
+                    <span>Open Seller Hub</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              )}
 
               {/* Storefront Link Card */}
               <div className="p-4 rounded-2xl bg-muted border border-border text-foreground space-y-2">

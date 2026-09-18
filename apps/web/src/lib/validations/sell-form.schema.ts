@@ -7,7 +7,14 @@ export const sellBookSchema = z
     source: z.enum(['auto', 'manual']).default('auto'),
     isbn: z
       .string()
-      .regex(/^(?:\d{10}|\d{13})$/, 'ISBN must be 10 or 13 digits')
+      .refine(
+        (val) => {
+          if (!val || val.trim() === '') return true;
+          const clean = val.replace(/[^0-9X]/gi, '');
+          return clean.length === 10 || clean.length === 13;
+        },
+        { message: 'ISBN must be 10 or 13 digits (hyphens are allowed)' }
+      )
       .optional()
       .or(z.literal('')),
     author: z.string().min(2, 'Author name is required'),

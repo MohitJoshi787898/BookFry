@@ -75,7 +75,7 @@ export function NavbarActions({
       >
         <Heart className="w-4 h-4" />
         {wishlistCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[17px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[9px] font-black flex items-center justify-center border-2 border-background shadow-xs">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-black flex items-center justify-center border-2 border-background shadow-xs">
             {wishlistCount > 99 ? '99+' : wishlistCount}
           </span>
         )}
@@ -89,7 +89,7 @@ export function NavbarActions({
       >
         <ShoppingCart className="w-4 h-4" />
         {cartCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[17px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-black flex items-center justify-center border-2 border-background shadow-xs">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center border-2 border-background shadow-xs">
             {cartCount > 99 ? '99+' : cartCount}
           </span>
         )}

@@ -77,11 +77,14 @@ export function NavbarProfileMenu({
   const isSeller = user.roles?.includes("seller");
   const isAdmin = user.roles?.includes("admin");
 
-  const roleLabel = isAdmin
-    ? "Administrator"
-    : isSeller
-      ? "Verified seller"
-      : "Student member";
+  const roleBadges: { label: string; color: string }[] = [];
+  if (isAdmin) {
+    roleBadges.push({ label: "Admin", color: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20" });
+  }
+  if (isSeller) {
+    roleBadges.push({ label: "Seller", color: "text-secondary bg-secondary/10 border border-secondary/20" });
+  }
+  roleBadges.push({ label: "Student", color: "text-muted-foreground bg-muted border border-border" });
 
   const buyerLinks = [
     { label: "Orders & deliveries", href: "/account/orders", icon: Package },
@@ -132,17 +135,16 @@ export function NavbarProfileMenu({
                 </p>
               </div>
             </div>
-            <p className="mt-2.5 text-[11px] text-muted-foreground">
-              {isAdmin ? (
-                <span className="text-danger font-semibold">{roleLabel}</span>
-              ) : isSeller ? (
-                <span className="text-secondary font-semibold">
-                  {roleLabel}
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              {roleBadges.map((badge) => (
+                <span
+                  key={badge.label}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${badge.color}`}
+                >
+                  {badge.label}
                 </span>
-              ) : (
-                roleLabel
-              )}
-            </p>
+              ))}
+            </div>
           </div>
 
           <div className="h-px bg-border mx-4" />

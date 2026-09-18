@@ -57,9 +57,22 @@ export class OrdersService {
       const sSubtotal = sItems.reduce((acc, it) => acc + it.price * it.quantity, 0);
       const sRatio = totalSubtotal > 0 ? sSubtotal / totalSubtotal : 1 / sellerMap.size;
       const sShipping = parseFloat((totalShippingFee * sRatio).toFixed(2));
-      const sTax = parseFloat((sSubtotal * 0.08).toFixed(2));
-      const sTotal = parseFloat((sSubtotal + sShipping + sTax).toFixed(2));
-      const sPayout = parseFloat((sSubtotal * 0.9).toFixed(2));
+      
+      // New books: 8% GST & 10% commission. Used books: 0% GST & 0% commission (P2P student circular economy).
+      let sTax = 0;
+      let sPayout = 0;
+      for (const it of sItems) {
+        const itTotal = it.price * it.quantity;
+        if (it.condition === 'new') {
+          sTax += itTotal * 0.08;
+          sPayout += itTotal * 0.90;
+        } else {
+          sPayout += itTotal;
+        }
+      }
+      const sTaxFixed = parseFloat(sTax.toFixed(2));
+      const sPayoutFixed = parseFloat(sPayout.toFixed(2));
+      const sTotal = parseFloat((sSubtotal + sShipping + sTaxFixed).toFixed(2));
 
       subOrders.push({
         _id: new mongoose.Types.ObjectId(),
@@ -68,9 +81,9 @@ export class OrdersService {
         items: sItems,
         subtotal: sSubtotal,
         shippingFee: sShipping,
-        tax: sTax,
+        tax: sTaxFixed,
         total: sTotal,
-        sellerPayout: sPayout,
+        sellerPayout: sPayoutFixed,
         status: 'pending',
         shippingDetails: {},
         timeline: [
@@ -214,7 +227,17 @@ export class OrdersService {
 
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
     const shippingFee = discountedSubtotal > 499 || discountedSubtotal === 0 ? 0 : 49;
-    const tax = parseFloat((discountedSubtotal * 0.08).toFixed(2));
+
+    // Tax is charged strictly on new retail items; used books are 0% GST (P2P student circular economy)
+    let newBooksSubtotal = 0;
+    for (const it of orderItems) {
+      if (it.condition === 'new') {
+        newBooksSubtotal += it.price * it.quantity;
+      }
+    }
+    const discountRatio = subtotal > 0 ? discountedSubtotal / subtotal : 1;
+    const discountedNewSubtotal = newBooksSubtotal * discountRatio;
+    const tax = parseFloat((discountedNewSubtotal * 0.08).toFixed(2));
     const total = parseFloat((discountedSubtotal + shippingFee + tax).toFixed(2));
 
     const orderNumber = this.generateOrderNumber();
@@ -270,7 +293,8 @@ export class OrdersService {
         for (const item of orderItems) {
           const sellerUser = await UserModel.findById(item.sellerId);
           if (sellerUser) {
-            const payoutAmount = item.price * 0.9; // 10% platform fee
+            const isNew = item.condition === 'new';
+            const payoutAmount = parseFloat((isNew ? item.price * 0.9 : item.price).toFixed(2));
             await emailService.queueSaleNotification(
               sellerUser.email,
               sellerUser.name,

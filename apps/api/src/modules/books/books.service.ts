@@ -4,6 +4,7 @@ import { IBookCatalogDocument } from '../../models/book-catalog.model';
 import { IBookListingDocument } from '../../models/book-listing.model';
 import { NotFoundError, UnauthorizedError, ValidationError } from '../../utils/AppError';
 import { Book, BookCondition, BookStatus, BookCatalog, BookListing } from '@bookmarket/types';
+import { deleteFromCloudinary } from '../../config/cloudinary';
 import mongoose from 'mongoose';
 
 export class BooksService {
@@ -159,7 +160,24 @@ export class BooksService {
     const filter: Record<string, unknown> = {};
 
     if (query.search) {
-      filter.$text = { $search: query.search };
+      const trimmedSearch = query.search.trim();
+      const cleanIsbnSearch = trimmedSearch.replace(/[^0-9X]/gi, '').toUpperCase();
+      const isLikelyIsbn = cleanIsbnSearch.length >= 8 && /^[\d\-X\s]+$/i.test(trimmedSearch);
+
+      if (isLikelyIsbn) {
+        filter.$or = [
+          { isbn: { $regex: cleanIsbnSearch, $options: 'i' } },
+          { title: { $regex: trimmedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } },
+        ];
+      } else {
+        const escaped = trimmedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        filter.$or = [
+          { title: { $regex: escaped, $options: 'i' } },
+          { author: { $regex: escaped, $options: 'i' } },
+          { tags: { $regex: escaped, $options: 'i' } },
+          ...(cleanIsbnSearch.length >= 3 ? [{ isbn: { $regex: cleanIsbnSearch, $options: 'i' } }] : []),
+        ];
+      }
     }
 
     if (query.category) {
@@ -167,9 +185,7 @@ export class BooksService {
     }
 
     const sort: Record<string, unknown> = {};
-    if (query.search) {
-      sort.score = { $meta: 'textScore' };
-    } else if (query.sortBy === 'price_asc') {
+    if (query.sortBy === 'price_asc') {
       sort.lowestPrice = 1;
     } else if (query.sortBy === 'price_desc') {
       sort.lowestPrice = -1;
@@ -295,7 +311,8 @@ export class BooksService {
       { new: true }
     ).exec();
 
-    const slug = this.generateSlug(data.title, data.isbn);
+    const cleanIsbn = data.isbn.replace(/[^0-9X]/gi, '').toUpperCase();
+    const slug = this.generateSlug(data.title, cleanIsbn);
 
     // 1. Find or create canonical catalog entry by ISBN (deduplication!)
     const catalogDescription =
@@ -307,7 +324,7 @@ export class BooksService {
       title: data.title,
       slug,
       author: data.author,
-      isbn: data.isbn.trim(),
+      isbn: cleanIsbn,
       description: catalogDescription,
       category: new mongoose.Types.ObjectId(data.category),
       images: data.images || [],
@@ -446,7 +463,21 @@ export class BooksService {
     if (data.discountPrice !== undefined) updateData.discountPrice = data.discountPrice;
     if (data.condition) updateData.condition = data.condition;
     if (data.conditionNotes !== undefined) updateData.conditionNotes = data.conditionNotes;
-    if (data.images && data.images.length > 0) updateData.images = data.images;
+    if (data.images && data.images.length > 0) {
+      // Prevent orphaned images: delete any old Cloudinary assets not present in the new list
+      const newPublicIds = new Set(data.images.map((img) => img.publicId));
+      for (const oldImg of listing.images || []) {
+        if (
+          oldImg.publicId &&
+          !newPublicIds.has(oldImg.publicId) &&
+          !oldImg.publicId.startsWith('mock_') &&
+          !oldImg.publicId.startsWith('img_')
+        ) {
+          deleteFromCloudinary(oldImg.publicId).catch(() => {});
+        }
+      }
+      updateData.images = data.images;
+    }
     if (data.stock !== undefined) updateData.stock = data.stock;
     if (data.status) updateData.status = data.status;
     if (data.city !== undefined) updateData.city = data.city;
@@ -488,6 +519,19 @@ export class BooksService {
     const isAdmin = roles.includes('admin');
     if (!isOwner && !isAdmin) {
       throw new UnauthorizedError('You are not authorized to delete this listing');
+    }
+
+    // Clean up all Cloudinary assets associated with this listing
+    if (listing.images && listing.images.length > 0) {
+      for (const img of listing.images) {
+        if (
+          img.publicId &&
+          !img.publicId.startsWith('mock_') &&
+          !img.publicId.startsWith('img_')
+        ) {
+          deleteFromCloudinary(img.publicId).catch(() => {});
+        }
+      }
     }
 
     await this.listingRepository.delete(id);
@@ -541,6 +585,149 @@ export class BooksService {
       createdAt: listing ? listing.createdAt.toISOString() : catalog.createdAt.toISOString(),
       updatedAt: listing ? listing.updatedAt.toISOString() : catalog.updatedAt.toISOString(),
     };
+  }
+
+  async lookupIsbn(rawIsbn: string): Promise<{
+    source: 'catalog' | 'openlibrary' | 'google';
+    book: {
+      title: string;
+      author: string;
+      isbn: string;
+      publisher?: string;
+      edition?: string;
+      pageCount?: number;
+      category?: string;
+      images: Array<{ url: string; publicId?: string }>;
+      description?: string;
+    };
+  } | null> {
+    const cleanIsbn = (rawIsbn || '').replace(/[^0-9X]/gi, '').toUpperCase();
+    if (cleanIsbn.length !== 10 && cleanIsbn.length !== 13) {
+      throw new ValidationError('Please provide a valid 10 or 13 digit ISBN.');
+    }
+
+    // 1. Check local catalog
+    const localCatalog = await this.catalogRepository.findByIsbn(cleanIsbn);
+    if (localCatalog) {
+      const categoryId = localCatalog.category
+        ? (localCatalog.category as any)._id
+          ? (localCatalog.category as any)._id.toString()
+          : localCatalog.category.toString()
+        : undefined;
+
+      return {
+        source: 'catalog',
+        book: {
+          title: localCatalog.title,
+          author: localCatalog.author,
+          isbn: localCatalog.isbn,
+          publisher: localCatalog.publisher,
+          edition: localCatalog.edition,
+          pageCount: localCatalog.pageCount,
+          category: categoryId,
+          images: localCatalog.images || [],
+          description: localCatalog.description,
+        },
+      };
+    }
+
+    // 2. Try OpenLibrary Search API
+    try {
+      const olRes = await fetch(`https://openlibrary.org/search.json?isbn=${cleanIsbn}`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (olRes.ok) {
+        const olData = (await olRes.json()) as any;
+        const doc = olData?.docs?.[0];
+        if (doc && doc.title) {
+          const author = Array.isArray(doc.author_name) ? doc.author_name.join(', ') : (doc.author_name || '');
+          const publisher = Array.isArray(doc.publisher) ? doc.publisher[0] : (doc.publisher || '');
+          const coverUrl = doc.cover_i
+            ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+            : `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg`;
+
+          return {
+            source: 'openlibrary',
+            book: {
+              title: doc.title,
+              author: author || 'Unknown Author',
+              isbn: cleanIsbn,
+              publisher: publisher || undefined,
+              edition: doc.edition_count ? `${doc.edition_count}th Edition` : undefined,
+              images: [{ url: coverUrl }],
+              description: doc.first_sentence?.[0] || undefined,
+            },
+          };
+        }
+      }
+    } catch {
+      // Continue to next provider
+    }
+
+    // 3. Try OpenLibrary direct ISBN endpoint
+    try {
+      const olIsbnRes = await fetch(`https://openlibrary.org/isbn/${cleanIsbn}.json`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (olIsbnRes.ok) {
+        const bookData = (await olIsbnRes.json()) as any;
+        if (bookData && bookData.title) {
+          const publisher = Array.isArray(bookData.publishers)
+            ? bookData.publishers[0]
+            : (bookData.publishers || '');
+
+          return {
+            source: 'openlibrary',
+            book: {
+              title: bookData.title,
+              author: 'Unknown Author',
+              isbn: cleanIsbn,
+              publisher: publisher || undefined,
+              pageCount: bookData.number_of_pages,
+              images: [{ url: `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg` }],
+              description:
+                typeof bookData.description === 'string'
+                  ? bookData.description
+                  : bookData.description?.value,
+            },
+          };
+        }
+      }
+    } catch {
+      // Continue to Google Books
+    }
+
+    // 4. Try Google Books API fallback
+    try {
+      const gRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanIsbn}`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (gRes.ok) {
+        const gData = (await gRes.json()) as any;
+        const item = gData?.items?.[0]?.volumeInfo;
+        if (item && item.title) {
+          const author = Array.isArray(item.authors) ? item.authors.join(', ') : (item.authors || '');
+          const coverUrl = item.imageLinks?.thumbnail || item.imageLinks?.smallThumbnail;
+
+          return {
+            source: 'google',
+            book: {
+              title: item.title,
+              author: author || 'Unknown Author',
+              isbn: cleanIsbn,
+              publisher: item.publisher,
+              pageCount: item.pageCount,
+              images: coverUrl ? [{ url: coverUrl.replace(/^http:/, 'https:') }] : [],
+              description: item.description,
+            },
+          };
+        }
+      }
+    } catch {
+      // Fallback exhausted
+    }
+
+    return null;
   }
 }
 export default BooksService;

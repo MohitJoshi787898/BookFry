@@ -177,50 +177,125 @@ function SellBookPageInner() {
 
   // ISBN Auto-lookup
   const handleFetchIsbn = async () => {
-    if (!formValues.isbn || formValues.isbn.length < 10) {
-      toast.warning('Please enter a valid 10 or 13 digit ISBN.', {
+    const rawIsbn = formValues.isbn || '';
+    const cleanIsbn = rawIsbn.replace(/[^0-9X]/gi, '').toUpperCase();
+
+    if (cleanIsbn.length !== 10 && cleanIsbn.length !== 13) {
+      toast.warning('Please enter a valid 10 or 13 digit ISBN (hyphens are supported).', {
         title: 'Invalid ISBN',
       });
       return;
     }
+
     setIsFetchingIsbn(true);
     setIsbnFoundMsg(null);
-    try {
-      const cleanIsbn = formValues.isbn.replace(/[^0-9X]/gi, '');
-      const localRes = await apiClient<{ books: Book[] }>(`/books?search=${cleanIsbn}`).catch(() => null);
-      const existing = localRes?.books?.find((b) => b.isbn.replace(/[^0-9X]/gi, '') === cleanIsbn);
 
-      if (existing) {
-        setValue('title', existing.title, { shouldValidate: true });
-        setValue('author', existing.author, { shouldValidate: true });
-        if (existing.publisher) setValue('publisher', existing.publisher);
-        if (existing.edition) setValue('edition', existing.edition);
-        if (existing.category) setValue('category', existing.category);
-        if (existing.images?.length > 0) setValue('images', existing.images.map((img) => img.url), { shouldValidate: true });
-        setIsbnFoundMsg(`Catalog match: "${existing.title}". Your listing will attach to this book.`);
-        toast.success(`Matched catalog record for "${existing.title}".`, {
-          title: 'Catalog Match Found',
+    try {
+      // 1. Try Backend lookup endpoint first (checks local catalog & server-side metadata)
+      const lookupRes = await apiClient<{
+        source: 'catalog' | 'openlibrary' | 'google';
+        book: {
+          title: string;
+          author: string;
+          isbn: string;
+          publisher?: string;
+          edition?: string;
+          pageCount?: number;
+          category?: string;
+          images?: Array<{ url: string }>;
+          description?: string;
+        };
+      }>(`/books/lookup-isbn/${cleanIsbn}`).catch(() => null);
+
+      if (lookupRes?.book) {
+        const b = lookupRes.book;
+        setValue('title', b.title, { shouldValidate: true });
+        setValue('author', b.author, { shouldValidate: true });
+        if (b.publisher) setValue('publisher', b.publisher);
+        if (b.edition) setValue('edition', b.edition);
+        if (b.category) setValue('category', b.category);
+        if (b.images && b.images.length > 0) {
+          setValue('images', b.images.map((img) => img.url), { shouldValidate: true });
+        }
+
+        const msg =
+          lookupRes.source === 'catalog'
+            ? `Catalog match: "${b.title}". Your listing will attach to this book.`
+            : `Details retrieved for "${b.title}".`;
+        setIsbnFoundMsg(msg);
+        toast.success(msg, {
+          title: lookupRes.source === 'catalog' ? 'Catalog Match Found' : 'Book Details Retrieved',
         });
         return;
       }
 
-      const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${cleanIsbn}&format=json&jscmd=data`);
-      const data = await res.json();
-      const bookData = data[`ISBN:${cleanIsbn}`];
-      if (bookData) {
-        setValue('title', bookData.title || formValues.title, { shouldValidate: true });
-        if (bookData.authors?.[0]?.name) setValue('author', bookData.authors[0].name, { shouldValidate: true });
-        if (bookData.publishers?.[0]?.name) setValue('publisher', bookData.publishers[0].name, { shouldValidate: true });
-        if (bookData.cover?.medium) setValue('images', [bookData.cover.medium], { shouldValidate: true });
-        setIsbnFoundMsg(`Details retrieved from OpenLibrary for "${bookData.title}".`);
-        toast.success(`Retrieved metadata for "${bookData.title}".`, {
-          title: 'Book Details Retrieved',
-        });
-      } else {
-        toast.info('No record found for this ISBN. Please enter details manually.', {
-          title: 'Manual Entry',
-        });
+      // 2. Client-side fallback: OpenLibrary Search API
+      try {
+        const olSearchRes = await fetch(
+          `https://openlibrary.org/search.json?isbn=${cleanIsbn}`
+        );
+        if (olSearchRes.ok) {
+          const searchData = await olSearchRes.json();
+          const doc = searchData?.docs?.[0];
+          if (doc?.title) {
+            const author = Array.isArray(doc.author_name)
+              ? doc.author_name.join(', ')
+              : doc.author_name || '';
+            const publisher = Array.isArray(doc.publisher)
+              ? doc.publisher[0]
+              : doc.publisher || '';
+            const coverUrl = doc.cover_i
+              ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+              : `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg`;
+
+            setValue('title', doc.title, { shouldValidate: true });
+            if (author) setValue('author', author, { shouldValidate: true });
+            if (publisher) setValue('publisher', publisher);
+            if (coverUrl) setValue('images', [coverUrl], { shouldValidate: true });
+
+            setIsbnFoundMsg(`Details retrieved from OpenLibrary for "${doc.title}".`);
+            toast.success(`Retrieved metadata for "${doc.title}".`, {
+              title: 'Book Details Retrieved',
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('OpenLibrary search fallback error:', e);
       }
+
+      // 3. Client-side fallback: OpenLibrary direct ISBN endpoint
+      try {
+        const olIsbnRes = await fetch(`https://openlibrary.org/isbn/${cleanIsbn}.json`);
+        if (olIsbnRes.ok) {
+          const bookData = await olIsbnRes.json();
+          if (bookData?.title) {
+            const publisher = Array.isArray(bookData.publishers)
+              ? bookData.publishers[0]
+              : bookData.publishers || '';
+            setValue('title', bookData.title, { shouldValidate: true });
+            if (publisher) setValue('publisher', publisher);
+            setValue(
+              'images',
+              [`https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg`],
+              { shouldValidate: true }
+            );
+
+            setIsbnFoundMsg(`Details retrieved from OpenLibrary for "${bookData.title}".`);
+            toast.success(`Retrieved metadata for "${bookData.title}".`, {
+              title: 'Book Details Retrieved',
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('OpenLibrary ISBN JSON fallback error:', e);
+      }
+
+      // 4. If no metadata found
+      toast.info('No record found for this ISBN. Please enter details manually.', {
+        title: 'Manual Entry',
+      });
     } catch (err) {
       console.error('ISBN fetch error:', err);
       toast.warning('ISBN lookup failed. Please enter book details manually.', {
@@ -269,7 +344,8 @@ function SellBookPageInner() {
       const formData = new FormData();
       formData.append('title', data.title);
       formData.append('author', data.author);
-      formData.append('isbn', data.isbn || '9780000000000');
+      const cleanIsbn = data.isbn ? data.isbn.replace(/[^0-9X]/gi, '').toUpperCase() : '9780000000000';
+      formData.append('isbn', cleanIsbn);
       formData.append('category', data.category);
       formData.append('condition', data.condition);
       if (data.conditionNotes) formData.append('conditionNotes', data.conditionNotes);

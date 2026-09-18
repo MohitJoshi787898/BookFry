@@ -52,12 +52,16 @@ export function LoginForm() {
 
       closeModal();
 
+      const isAdmin = data.user.roles?.includes('admin');
       const isSeller = data.user.roles?.includes('seller');
       const onboardingIncomplete = data.user.sellerOnboardingStatus === 'incomplete';
 
       if (redirectTo) {
         // Honor explicit redirect — e.g. from a protected page that triggered login
         router.push(redirectTo);
+      } else if (isAdmin) {
+        // Platform Administrator — direct to administrative control center
+        router.push('/admin/dashboard');
       } else if (isSeller && onboardingIncomplete) {
         // Seller with incomplete profile must complete onboarding before accessing dashboard
         router.push('/seller/register');

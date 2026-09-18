@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Loader2, X, Sparkles } from 'lucide-react';
 import { Category } from '@bookmarket/types';
 import { toast } from '@/stores/toast.store';
+import { apiClient } from '@/lib/api-client';
 
 
 interface SellerAddBookFormProps {
@@ -37,33 +38,84 @@ export function SellerAddBookForm({
   }, [photoPreviews]);
 
   const handleFetchIsbn = async () => {
-    if (!isbn || isbn.length < 10) {
-      toast.warning('Please enter a valid 10 or 13 digit ISBN number.', {
+    const cleanIsbn = isbn.replace(/[^0-9X]/gi, '').toUpperCase();
+    if (cleanIsbn.length !== 10 && cleanIsbn.length !== 13) {
+      toast.warning('Please enter a valid 10 or 13 digit ISBN number (hyphens are supported).', {
         title: 'ISBN Required',
       });
       return;
     }
     setIsFetchingIsbn(true);
     try {
-      const cleanIsbn = isbn.replace(/[^0-9X]/gi, '');
-      const res = await fetch(
-        `https://openlibrary.org/api/books?bibkeys=ISBN:${cleanIsbn}&format=json&jscmd=data`
-      );
-      const data = await res.json();
-      const bookData = data[`ISBN:${cleanIsbn}`];
+      // 1. Try Backend lookup endpoint first
+      const lookupRes = await apiClient<{
+        source: 'catalog' | 'openlibrary' | 'google';
+        book: {
+          title: string;
+          author: string;
+          publisher?: string;
+        };
+      }>(`/books/lookup-isbn/${cleanIsbn}`).catch(() => null);
 
-      if (bookData) {
-        setTitle(bookData.title || '');
-        if (bookData.authors?.[0]) setAuthor(bookData.authors[0].name || '');
-        if (bookData.publishers?.[0]) setPublisher(bookData.publishers[0].name || '');
-        toast.success(`Retrieved metadata for "${bookData.title || 'Book'}"`, {
-          title: 'Book Found',
+      if (lookupRes?.book) {
+        setTitle(lookupRes.book.title || '');
+        if (lookupRes.book.author) setAuthor(lookupRes.book.author);
+        if (lookupRes.book.publisher) setPublisher(lookupRes.book.publisher);
+        toast.success(`Retrieved metadata for "${lookupRes.book.title}"`, {
+          title: lookupRes.source === 'catalog' ? 'Catalog Match' : 'Book Found',
         });
-      } else {
-        toast.info('No records found for this ISBN. You can fill in the details manually.', {
-          title: 'Manual Entry',
-        });
+        return;
       }
+
+      // 2. OpenLibrary Search API fallback
+      try {
+        const olSearchRes = await fetch(
+          `https://openlibrary.org/search.json?isbn=${cleanIsbn}`
+        );
+        if (olSearchRes.ok) {
+          const searchData = await olSearchRes.json();
+          const doc = searchData?.docs?.[0];
+          if (doc?.title) {
+            setTitle(doc.title);
+            if (doc.author_name) {
+              setAuthor(Array.isArray(doc.author_name) ? doc.author_name.join(', ') : doc.author_name);
+            }
+            if (doc.publisher) {
+              setPublisher(Array.isArray(doc.publisher) ? doc.publisher[0] : doc.publisher);
+            }
+            toast.success(`Retrieved metadata for "${doc.title}"`, {
+              title: 'Book Found',
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('OpenLibrary search fallback error:', e);
+      }
+
+      // 3. OpenLibrary ISBN JSON fallback
+      try {
+        const olIsbnRes = await fetch(`https://openlibrary.org/isbn/${cleanIsbn}.json`);
+        if (olIsbnRes.ok) {
+          const bookData = await olIsbnRes.json();
+          if (bookData?.title) {
+            setTitle(bookData.title);
+            if (bookData.publishers) {
+              setPublisher(Array.isArray(bookData.publishers) ? bookData.publishers[0] : bookData.publishers);
+            }
+            toast.success(`Retrieved metadata for "${bookData.title}"`, {
+              title: 'Book Found',
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('OpenLibrary ISBN JSON fallback error:', e);
+      }
+
+      toast.info('No records found for this ISBN. You can fill in the details manually.', {
+        title: 'Manual Entry',
+      });
     } catch (err) {
       console.error('ISBN Fetch error:', err);
       toast.warning('Could not connect to book metadata server. Please enter details manually.', {
@@ -98,10 +150,11 @@ export function SellerAddBookForm({
       return;
     }
 
+    const cleanIsbn = isbn ? isbn.replace(/[^0-9X]/gi, '').toUpperCase() : '9780000000000';
     const formData = new FormData();
     formData.append('title', title);
     formData.append('author', author);
-    formData.append('isbn', isbn || '9780000000000');
+    formData.append('isbn', cleanIsbn);
     formData.append('description', `Listed in ${condition} condition. Language: ${language}.`);
     formData.append('category', category);
     formData.append('condition', condition === 'excellent' ? 'like_new' : condition);
@@ -159,9 +212,15 @@ export function SellerAddBookForm({
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="e.g. 9788172234980"
+              placeholder="e.g. 978-0-13-235088-4 or 9788172234980"
               value={isbn}
               onChange={(e) => setIsbn(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleFetchIsbn();
+                }
+              }}
               className="flex-grow px-3.5 py-2.5 border border-border rounded-xl bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-brand font-mono text-xs"
             />
             <button

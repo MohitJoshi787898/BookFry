@@ -247,7 +247,7 @@ export function Footer() {
                 {PAYMENT_BADGES.map((badge) => (
                   <span
                     key={badge}
-                    className="px-2 py-0.5 rounded-md bg-card border border-border/80 text-[9px] font-black text-muted-foreground font-mono"
+                    className="px-2 py-0.5 rounded-md bg-card border border-border/80 text-[10px] font-black text-muted-foreground font-mono"
                   >
                     {badge}
                   </span>
@@ -325,7 +325,7 @@ function FooterSectionAccordion({
                 >
                   <span className="group-hover:underline underline-offset-2">{link.name}</span>
                   {link.badge && (
-                    <span className="text-[9px] font-extrabold bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full">
+                    <span className="text-[10px] font-extrabold bg-secondary/15 text-secondary px-1.5 py-0.5 rounded-full">
                       {link.badge}
                     </span>
                   )}

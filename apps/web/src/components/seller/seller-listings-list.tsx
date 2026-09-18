@@ -27,10 +27,16 @@ export function SellerListingsList({
   ).length;
 
   const filtered = listings.filter((book) => {
+    const q = search.trim().toLowerCase();
+    const cleanQ = q.replace(/[^0-9x]/gi, '');
+    const bookCleanIsbn = (book.isbn || '').replace(/[^0-9x]/gi, '').toLowerCase();
+
     const matchesSearch =
-      book.title.toLowerCase().includes(search.toLowerCase()) ||
-      book.author.toLowerCase().includes(search.toLowerCase()) ||
-      (book.isbn && book.isbn.includes(search));
+      !q ||
+      book.title.toLowerCase().includes(q) ||
+      book.author.toLowerCase().includes(q) ||
+      (cleanQ.length >= 3 && bookCleanIsbn.includes(cleanQ)) ||
+      (book.isbn && book.isbn.toLowerCase().includes(q));
 
     if (!matchesSearch) return false;
     if (tab === 'active') return book.status === 'active';

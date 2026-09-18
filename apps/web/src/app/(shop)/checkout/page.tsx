@@ -76,8 +76,14 @@ export default function CheckoutPage() {
 
   const discountAmount = appliedCoupon ? validatedDiscountAmount : 0;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  // New books carry 8% GST; used books carry 0% GST (P2P student circular economy)
+  const newItemsSubtotal = items.reduce((acc, item) => {
+    const cond = item.listingDetail?.condition || item.bookDetail?.condition;
+    return cond === "new" ? acc + item.quantity * item.priceSnapshot : acc;
+  }, 0);
+  const discountRatio = subtotal > 0 ? discountedSubtotal / subtotal : 1;
+  const estimatedTax = newItemsSubtotal * discountRatio * 0.08;
   const shippingFee = discountedSubtotal > 499 || discountedSubtotal === 0 ? 0 : 49;
-  const estimatedTax = discountedSubtotal * 0.08;
   const total = Math.max(0, discountedSubtotal + shippingFee + estimatedTax);
 
   const {
@@ -694,9 +700,15 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-text-secondary">Estimated Tax</span>
+                    <span className="text-text-secondary">
+                      Estimated Tax {estimatedTax === 0 && subtotal > 0 ? "(P2P Exempt)" : "(8% GST)"}
+                    </span>
                     <span className="font-semibold text-text-primary">
-                      ₹{estimatedTax.toFixed(2)}
+                      {estimatedTax === 0 && subtotal > 0 ? (
+                        <span className="text-emerald-600 font-bold">₹0.00 (Exempt)</span>
+                      ) : (
+                        `₹${estimatedTax.toFixed(2)}`
+                      )}
                     </span>
                   </div>
                   <div className="border-t border-border pt-3 flex justify-between text-sm font-bold text-text-primary">

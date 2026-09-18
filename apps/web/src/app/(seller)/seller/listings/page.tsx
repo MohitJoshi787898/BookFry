@@ -17,19 +17,42 @@ import {
   Pencil,
   Trash2,
   RefreshCw,
+  AlertOctagon,
+  Image as ImageIcon,
+  Sliders,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
+const CONDITION_OPTIONS = [
+  { value: 'new', label: 'Brand New', desc: 'Unused, in perfect condition' },
+  { value: 'like_new', label: 'Like New', desc: 'Cover intact, no markings or bent pages' },
+  { value: 'good', label: 'Good', desc: 'Light notes/highlighting, all pages intact' },
+  { value: 'fair', label: 'Fair', desc: 'Noticeable wear, fully readable' },
+];
 
 export default function SellerListingsPage() {
-  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const isSeller = user?.roles?.includes('seller');
+  const isAdmin = user?.roles?.includes('admin');
+  const hasAccess = isSeller || isAdmin;
 
   const [statusFilter, setStatusFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ title: '', price: 0, stock: 1, condition: 'good' });
+  const [editForm, setEditForm] = useState({
+    title: '',
+    price: 0,
+    stock: 1,
+    condition: 'good',
+    conditionNotes: '',
+  });
 
   const {
     data: listingsRaw,
@@ -38,7 +61,7 @@ export default function SellerListingsPage() {
   } = useQuery<{ listings?: Book[] } | Book[]>({
     queryKey: ['seller-listings-page', statusFilter],
     queryFn: () => apiClient(`/seller/listings?page=1&limit=100&status=${statusFilter}`),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && hasAccess,
   });
 
   const listings: Book[] = Array.isArray(listingsRaw)
@@ -77,14 +100,45 @@ export default function SellerListingsPage() {
     );
   }
 
+  if (!hasAccess) {
+    return (
+      <SellerLayout>
+        <RoleEmptyState
+          title="Become a BookFry Campus Seller"
+          description="You are currently signed in as a student buyer. Register as a campus seller to manage textbook inventory, set custom prices, and earn cash."
+          mascotVariant="reading"
+          action={{
+            label: 'Register as Campus Seller',
+            onClick: () => router.push('/seller/register'),
+          }}
+          secondaryAction={{
+            label: 'Browse Student Marketplace',
+            onClick: () => router.push('/books'),
+          }}
+        />
+      </SellerLayout>
+    );
+  }
+
   const rawListings = listings || [];
   const filteredListings = rawListings.filter((b) => {
     const matchesStatus = !statusFilter || b.status === statusFilter;
-    const matchesSearch =
-      !searchQuery.trim() ||
-      b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.author.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
+    if (!matchesStatus) return false;
+    if (!searchQuery.trim()) return true;
+
+    const q = searchQuery.trim().toLowerCase();
+    const cleanQ = q.replace(/[^0-9x]/gi, '');
+    const cleanIsbn = (b.isbn || '').replace(/[^0-9x]/gi, '').toLowerCase();
+
+    const matchesText =
+      b.title.toLowerCase().includes(q) ||
+      b.author.toLowerCase().includes(q);
+
+    const matchesIsbn =
+      (cleanQ.length >= 3 && cleanIsbn.includes(cleanQ)) ||
+      (b.isbn && b.isbn.toLowerCase().includes(q));
+
+    return matchesText || matchesIsbn;
   });
 
   const filterChips = [
@@ -103,13 +157,12 @@ export default function SellerListingsPage() {
         stats={[
           { label: 'Total Listed', value: rawListings.length, badge: 'Titles', isPositive: true },
           { label: 'Active Live', value: rawListings.filter((b) => b.status === 'active').length, badge: 'Live on Store', isPositive: true },
-          { label: 'Pending Review', value: rawListings.filter((b) => b.status === 'pending').length, badge: 'Moderation', isPositive: false },
-          { label: 'Total Copies', value: rawListings.reduce((sum, b) => sum + (b.stock || 1), 0), badge: 'Stock', isPositive: true },
+          { label: 'Pending Moderation', value: rawListings.filter((b) => b.status === 'pending').length, badge: 'Reviewing', isPositive: false },
         ]}
         actions={
           <Link
             href="/sell"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-secondary text-white text-xs font-black uppercase tracking-wider shadow-md shadow-secondary/20 active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold text-sm transition-all shadow-xs active:scale-95"
           >
             <PlusCircle className="h-4 w-4" />
             <span>List a Book</span>
@@ -120,7 +173,7 @@ export default function SellerListingsPage() {
       <RoleFilterBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Search book title, author, or subject..."
+        searchPlaceholder="Search by title, author, or ISBN (e.g. 978-0-13...)"
         filterChips={filterChips}
         activeFilter={statusFilter}
         onFilterSelect={setStatusFilter}
@@ -150,7 +203,7 @@ export default function SellerListingsPage() {
               key={book.id}
               className="p-4 sm:p-5 rounded-3xl border border-border/80 bg-card hover:border-secondary/40 transition-all shadow-sm flex flex-col justify-between space-y-4"
             >
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
@@ -158,6 +211,8 @@ export default function SellerListingsPage() {
                         ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                         : book.status === 'pending'
                         ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                        : book.status === 'rejected'
+                        ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
                         : 'bg-muted text-muted-foreground border-border'
                     }`}
                   >
@@ -168,12 +223,53 @@ export default function SellerListingsPage() {
                   </span>
                 </div>
 
-                <div>
-                  <h3 className="font-serif text-base font-bold text-foreground line-clamp-1">
-                    {book.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground font-medium">by {book.author}</p>
+                <div className="flex items-start gap-3.5">
+                  <div className="relative h-24 w-18 shrink-0 rounded-2xl overflow-hidden border border-border/80 bg-muted/30">
+                    {book.images?.[0]?.url ? (
+                      <Image
+                        src={book.images[0].url}
+                        alt={book.title}
+                        fill
+                        className="object-cover"
+                        sizes="72px"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-muted-foreground/50">
+                        <ImageIcon className="h-6 w-6" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h3 className="font-serif text-base font-bold text-foreground line-clamp-1">
+                      {book.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground font-medium">by {book.author}</p>
+                    {book.conditionNotes && (
+                      <p className="text-[11px] text-muted-foreground italic line-clamp-1">
+                        &quot;{book.conditionNotes}&quot;
+                      </p>
+                    )}
+                  </div>
                 </div>
+
+                {book.status === 'rejected' && (
+                  <div className="p-3 bg-rose-500/12 border border-rose-500/25 rounded-2xl flex items-start gap-2.5 text-xs">
+                    <AlertOctagon className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                    <div className="space-y-1 flex-1">
+                      <p className="font-bold text-rose-700 dark:text-rose-300">Submission Rejected by Moderator</p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {book.rejectionReason || 'Please review book condition and photos.'}
+                      </p>
+                      <Link
+                        href={`/sell?slug=${book.slug}`}
+                        className="inline-block pt-0.5 font-extrabold text-secondary hover:underline"
+                      >
+                        Fix and Resubmit in Listing Studio &rarr;
+                      </Link>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-1 border-t border-border/50 text-xs">
                   <div>
@@ -201,14 +297,27 @@ export default function SellerListingsPage() {
                 </Link>
 
                 <div className="flex items-center gap-1.5">
+                  <Link
+                    href={`/sell?slug=${book.slug}`}
+                    className="p-2 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-secondary transition-all cursor-pointer"
+                    title="Open in Full Listing Studio"
+                  >
+                    <Sliders className="h-3.5 w-3.5" />
+                  </Link>
                   <button
                     onClick={() => {
                       setSelectedBook(book);
-                      setEditForm({ title: book.title, price: book.price, stock: book.stock || 1, condition: book.condition || 'good' });
+                      setEditForm({
+                        title: book.title,
+                        price: book.price,
+                        stock: book.stock || 1,
+                        condition: book.condition || 'good',
+                        conditionNotes: book.conditionNotes || '',
+                      });
                       setEditModalOpen(true);
                     }}
                     className="p-2 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-secondary transition-all cursor-pointer"
-                    title="Edit Listing"
+                    title="Quick Edit"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
@@ -236,12 +345,21 @@ export default function SellerListingsPage() {
           subtitle={`Adjust parameters for ${selectedBook.title}`}
           icon={<Pencil className="h-5 w-5 text-secondary" />}
           footer={
-            <div className="flex items-center justify-end gap-3 w-full">
-              <button type="button" onClick={() => { setEditModalOpen(false); setSelectedBook(null); }} className="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground rounded-xl">Cancel</button>
-              <button type="submit" form="edit-book-form" disabled={editMutation.isPending} className="px-5 py-2 bg-secondary text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
-                {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
-                <span>Save Changes</span>
-              </button>
+            <div className="flex items-center justify-between w-full">
+              <Link
+                href={`/sell?slug=${selectedBook.slug}`}
+                className="text-xs font-bold text-secondary hover:underline flex items-center gap-1"
+              >
+                <span>Full Studio Editor</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => { setEditModalOpen(false); setSelectedBook(null); }} className="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-foreground rounded-xl cursor-pointer">Cancel</button>
+                <button type="submit" form="edit-book-form" disabled={editMutation.isPending} className="px-5 py-2 bg-secondary text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-secondary/90 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+                  {editMutation.isPending && <RefreshCw className="h-3.5 w-3.5 animate-spin" />}
+                  <span>Save Changes</span>
+                </button>
+              </div>
             </div>
           }
         >
@@ -266,6 +384,38 @@ export default function SellerListingsPage() {
                 <label className="block text-xs font-bold text-foreground mb-1.5">Stock Copies *</label>
                 <input type="number" required min={0} value={editForm.stock} onChange={(e) => setEditForm({ ...editForm, stock: Number(e.target.value) })} className="w-full p-2.5 border border-border/80 rounded-xl bg-background text-foreground text-xs font-mono focus:ring-2 focus:ring-secondary/40 outline-none" />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-foreground mb-1.5">Book Quality Grade *</label>
+              <div className="grid grid-cols-2 gap-2">
+                {CONDITION_OPTIONS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, condition: c.value })}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      editForm.condition === c.value
+                        ? 'border-secondary bg-secondary/10 text-foreground'
+                        : 'border-border/80 bg-background text-muted-foreground hover:border-border'
+                    }`}
+                  >
+                    <p className="font-bold text-xs">{c.label}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{c.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-foreground mb-1.5">Condition Notes &amp; Defects</label>
+              <textarea
+                rows={2}
+                placeholder="Mention any highlights, annotations, or wear on the textbook cover"
+                value={editForm.conditionNotes}
+                onChange={(e) => setEditForm({ ...editForm, conditionNotes: e.target.value })}
+                className="w-full p-2.5 border border-border/80 rounded-xl bg-background text-foreground text-xs focus:ring-2 focus:ring-secondary/40 outline-none"
+              />
             </div>
           </form>
         </AdminDialog>

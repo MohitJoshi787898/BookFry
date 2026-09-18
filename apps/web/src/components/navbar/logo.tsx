@@ -54,7 +54,7 @@ export function BookFryLogo({ className = '', showTagline = false }: BookFryLogo
           Book<span className="text-secondary font-sans font-extrabold tracking-normal">Fry</span>
         </span>
         {showTagline && (
-          <span className="text-[9px] font-semibold text-muted-foreground tracking-wider uppercase mt-0.5">
+          <span className="text-[10px] font-semibold text-muted-foreground tracking-wider uppercase mt-0.5">
             Book Marketplace
           </span>
         )}

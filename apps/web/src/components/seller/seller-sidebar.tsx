@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Sparkles,
   ArrowRight,
+  ShieldAlert,
 } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
 
 export interface SellerSidebarProps {
   user?: { name?: string; email?: string; roles?: string[] } | null;
@@ -155,11 +157,14 @@ function SidebarItem({
 }
 
 export function SellerSidebar({
+  user: propUser,
   collapsed = false,
   onToggleCollapse,
   sellerOnboardingStatus,
   sellerVerificationStatus,
 }: SellerSidebarProps) {
+  const { user: storeUser } = useAuthStore();
+  const user = propUser || storeUser;
   // Compute the sidebar status label from real state — never hardcoded
   const statusConfig = (() => {
     if (sellerOnboardingStatus === 'incomplete') {
@@ -284,6 +289,21 @@ export function SellerSidebar({
                 {statusConfig.label}
               </span>
             </div>
+          )}
+
+          {user?.roles?.includes('admin') && (
+            <Link
+              href="/admin/dashboard"
+              className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-semibold text-rose-600 dark:text-rose-400 transition-all duration-200 hover:bg-rose-500/10 mb-1 ${
+                collapsed ? 'justify-center px-2.5' : ''
+              }`}
+              title="Switch to Admin Control Center"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400">
+                <ShieldAlert className="h-4 w-4" />
+              </span>
+              {!collapsed && <span>Admin Portal</span>}
+            </Link>
           )}
 
           <Link

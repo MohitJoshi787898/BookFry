@@ -13,11 +13,16 @@ import { Transaction } from '@bookmarket/types';
 import { IndianRupee, Download, CheckCircle2, Clock, Wallet, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from '@/stores/toast.store';
 import { normalizeApiError } from '@/lib/error-normalizer';
-
+import { useRouter } from 'next/navigation';
 
 export default function SellerEarningsPage() {
-  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const isSeller = user?.roles?.includes('seller');
+  const isAdmin = user?.roles?.includes('admin');
+  const hasAccess = isSeller || isAdmin;
 
   const { data: ledger = [], isLoading, isError, refetch } = useQuery<Transaction[]>({
     queryKey: ['seller-earnings-ledger'],
@@ -29,7 +34,7 @@ export default function SellerEarningsPage() {
         return [];
       }
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && hasAccess,
   });
 
   const [payoutForm, setPayoutForm] = useState({ upiId: '', accountNumber: '', ifscCode: '', accountName: '' });
@@ -64,6 +69,26 @@ export default function SellerEarningsPage() {
           title="Sign In to View Earnings"
           description="Log in to view your payout statement, commission deduction breakdown, and bank settlement history."
           mascotVariant="reading"
+        />
+      </SellerLayout>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <SellerLayout>
+        <RoleEmptyState
+          title="Become a BookFry Campus Seller"
+          description="You are currently signed in as a student buyer. Register as a campus seller to sell books, track bank settlements, and earn cash."
+          mascotVariant="reading"
+          action={{
+            label: 'Register as Campus Seller',
+            onClick: () => router.push('/seller/register'),
+          }}
+          secondaryAction={{
+            label: 'Browse Student Marketplace',
+            onClick: () => router.push('/books'),
+          }}
         />
       </SellerLayout>
     );

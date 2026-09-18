@@ -10,6 +10,7 @@ import {
   Store,
   Settings,
   ShieldCheck,
+  ShieldAlert,
   UserCircle,
   Package,
   Heart,
@@ -43,7 +44,7 @@ export function DashboardUserMenu({
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { user, isSeller, roleLabel, isLoading } = useCurrentUser();
+  const { user, isSeller, isAdmin, isLoading } = useCurrentUser();
 
   // Close when clicking outside or pressing Escape
   useEffect(() => {
@@ -142,9 +143,21 @@ export function DashboardUserMenu({
                   <p className="text-[11px] text-muted-foreground font-mono truncate">
                     {user?.email || 'No email provided'}
                   </p>
-                  <span className="inline-flex items-center gap-1 mt-1 text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full bg-secondary/15 text-secondary border border-secondary/20">
-                    {roleLabel}
-                  </span>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {isAdmin && (
+                      <span className="inline-flex items-center text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                        Admin
+                      </span>
+                    )}
+                    {isSeller && (
+                      <span className="inline-flex items-center text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-secondary/15 text-secondary border border-secondary/20">
+                        Seller
+                      </span>
+                    )}
+                    <span className="inline-flex items-center text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                      Student
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -267,18 +280,52 @@ export function DashboardUserMenu({
                     <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
                     <span>Used Book Requests</span>
                   </Link>
-                  {isSeller && (
-                    <Link
-                      href="/seller/dashboard"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-foreground hover:bg-muted transition-colors"
-                    >
-                      <Store className="h-4 w-4 text-secondary shrink-0" />
-                      <span>Switch to Seller Hub</span>
-                    </Link>
-                  )}
                 </>
               )}
+
+              {/* Cross-Role Portal Switchers */}
+              <div className="pt-1.5 mt-1 border-t border-border/50 space-y-0.5">
+                {isAdmin && role !== 'admin' && (
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors font-bold"
+                  >
+                    <ShieldAlert className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <span>Admin Control Center</span>
+                  </Link>
+                )}
+                {isSeller && role !== 'seller' && (
+                  <Link
+                    href="/seller/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-secondary hover:bg-secondary/10 transition-colors font-bold"
+                  >
+                    <Store className="h-4 w-4 text-secondary shrink-0" />
+                    <span>Seller Hub &amp; Inventory</span>
+                  </Link>
+                )}
+                {!isSeller && role !== 'seller' && (
+                  <Link
+                    href="/seller/register"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors font-medium"
+                  >
+                    <Store className="h-4 w-4 shrink-0" />
+                    <span>Become a Campus Seller</span>
+                  </Link>
+                )}
+                {role !== 'buyer' && (
+                  <Link
+                    href="/account/orders"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors font-medium"
+                  >
+                    <Package className="h-4 w-4 shrink-0" />
+                    <span>My Buyer Orders</span>
+                  </Link>
+                )}
+              </div>
 
               {/* Public Storefront Link */}
               <Link

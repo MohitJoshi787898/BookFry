@@ -11,6 +11,7 @@ import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { UsedBookRequest } from '@bookmarket/types';
 import { Eye, Phone, Mail, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const STATUS_LABELS: Record<string, string> = {
   requested: 'New Lead',
@@ -37,7 +38,13 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function SellerRequestsPage() {
-  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthStore();
+
+  const isSeller = user?.roles?.includes('seller');
+  const isAdmin = user?.roles?.includes('admin');
+  const hasAccess = isSeller || isAdmin;
+
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedRequest, setSelectedRequest] = useState<UsedBookRequest | null>(null);
@@ -53,7 +60,7 @@ export default function SellerRequestsPage() {
         return [];
       }
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && hasAccess,
   });
 
   if (!isAuthenticated) {
@@ -63,6 +70,26 @@ export default function SellerRequestsPage() {
           title="Sign In to View Buyer Leads"
           description="Log in to view incoming buyer inquiries for your second-hand books."
           mascotVariant="reading"
+        />
+      </SellerLayout>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <SellerLayout>
+        <RoleEmptyState
+          title="Become a BookFry Campus Seller"
+          description="You are currently signed in as a student buyer. Register as a campus seller to receive book purchase leads directly from students in your area."
+          mascotVariant="reading"
+          action={{
+            label: 'Register as Campus Seller',
+            onClick: () => router.push('/seller/register'),
+          }}
+          secondaryAction={{
+            label: 'Browse Student Marketplace',
+            onClick: () => router.push('/books'),
+          }}
         />
       </SellerLayout>
     );

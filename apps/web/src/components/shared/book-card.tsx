@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Book } from '@bookmarket/types';
 import {
   Star,
@@ -13,6 +14,7 @@ import {
   Loader2,
   ShoppingBag,
   Layers,
+  BookOpen,
 } from 'lucide-react';
 
 import { useCartStore } from '@/stores/cart.store';
@@ -51,10 +53,8 @@ export function BookCard({ book, compact = false }: BookCardProps) {
   const isBestseller = book.tags?.includes('bestseller');
   const multiSeller = (book.listingCount ?? 0) > 1;
 
-  const imageUrl = !imgErr
-    ? book.images?.[0]?.url ||
-      `https://placehold.co/300x400/1A3B5C/F8FAFC?text=${encodeURIComponent(book.title ?? 'Book')}`
-    : `https://placehold.co/300x400/1A3B5C/FFFFFF?text=${encodeURIComponent(book.title ?? 'Book')}`;
+  const rawImageUrl = book.images?.[0]?.url || '';
+  const hasImage = Boolean(rawImageUrl) && !imgErr;
 
   /* ─── pricing ──────────────────────────────────────────────────────────── */
   const display  = book.lowestPrice ?? book.price;
@@ -120,28 +120,59 @@ export function BookCard({ book, compact = false }: BookCardProps) {
           ══════════════════════════════════════════ */}
       <div className="relative w-full aspect-[2/3] overflow-hidden bg-muted/40 flex-shrink-0">
 
-        {/* Book cover image */}
-        <Link
-          href={`/books/${book.slug}`}
-          className="absolute inset-0 block"
-          tabIndex={-1}
-          aria-hidden="true"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt={book.title}
-            loading="lazy"
-            onLoad={() => setImgOk(true)}
-            onError={() => setImgErr(true)}
-            className={cn(
-              'h-full w-full object-cover',
-              'transition-transform duration-300 ease-out group-hover:scale-105',
-              imgOk ? 'opacity-100' : 'opacity-0',
-            )}
-          />
-          {!imgOk && <div className="absolute inset-0 bg-muted/60 animate-pulse" />}
-        </Link>
+        {/* Book cover image or editorial cover fallback */}
+        {hasImage ? (
+          <Link
+            href={`/books/${book.slug}`}
+            className="absolute inset-0 block"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <Image
+              src={rawImageUrl}
+              alt={book.title}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 220px"
+              loading="lazy"
+              onLoad={() => setImgOk(true)}
+              onError={() => setImgErr(true)}
+              className={cn(
+                'h-full w-full object-cover',
+                'transition-transform duration-300 ease-out group-hover:scale-105',
+                imgOk ? 'opacity-100' : 'opacity-0'
+              )}
+            />
+            {!imgOk && <div className="absolute inset-0 bg-muted/60 animate-pulse" />}
+          </Link>
+        ) : (
+          <Link
+            href={`/books/${book.slug}`}
+            className="absolute inset-0 flex flex-col justify-between p-3.5 bg-gradient-to-br from-primary-800 via-primary-900 to-primary-950 text-white select-none overflow-hidden"
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <div className="absolute top-0 bottom-0 left-0 w-2 bg-white/10 shadow-inner" />
+            <div className="pl-2 space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-90 block">
+                {typeof book.category === 'object' && book.category !== null
+                  ? (book.category as { name?: string }).name || 'Textbook'
+                  : (book.category as string) || 'Textbook'}
+              </span>
+              <p className="font-serif font-bold text-xs sm:text-sm line-clamp-3 leading-snug text-white">
+                {book.title}
+              </p>
+              {book.author && (
+                <p className="text-[11px] text-slate-300 line-clamp-1 font-sans">
+                  by {book.author}
+                </p>
+              )}
+            </div>
+            <div className="pl-2 flex items-center justify-between text-[10px] font-bold text-slate-400 border-t border-white/10 pt-2">
+              <span>BookFry Verified</span>
+              <BookOpen className="h-3.5 w-3.5 text-secondary" />
+            </div>
+          </Link>
+        )}
 
         {/* Subtle gradient into card body */}
         <div

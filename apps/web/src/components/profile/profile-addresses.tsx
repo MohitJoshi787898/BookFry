@@ -178,7 +178,7 @@ export function ProfileAddresses({
           <div className="flex gap-3 pt-2">
             <button
               type="submit"
-              className="px-5 py-2.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-bold rounded-2xl text-xs transition-all flex items-center gap-2 shadow-md shadow-[#F26522]/20 active:scale-95"
+              className="px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-2xl text-xs transition-all flex items-center gap-2 shadow-md shadow-secondary/20 active:scale-95"
             >
               <Check className="h-4 w-4" />
               <span>Save Address</span>
@@ -292,7 +292,7 @@ export function ProfileAddresses({
           </p>
           <button
             onClick={() => setShowAddressForm(true)}
-            className="inline-flex items-center gap-1.5 mt-2 px-5 py-2.5 bg-[#F26522] hover:bg-[#D64E0F] text-white font-bold rounded-2xl text-xs transition-all shadow-md shadow-[#F26522]/20 active:scale-95"
+            className="inline-flex items-center gap-1.5 mt-2 px-5 py-2.5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-2xl text-xs transition-all shadow-md shadow-secondary/20 active:scale-95"
           >
             <Plus className="h-4 w-4" />
             <span>Add Address</span>
