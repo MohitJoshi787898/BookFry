@@ -8,6 +8,7 @@ import {
   ChevronDown,
   X,
 } from 'lucide-react';
+import { BooksConditionTabs } from './books-condition-tabs';
 
 export interface BooksViewControlsProps {
   totalBooks: number;
@@ -18,6 +19,7 @@ export interface BooksViewControlsProps {
   onOpenMobileFilters: () => void;
   categoryName?: string;
   conditionType: 'all' | 'new' | 'used';
+  onConditionTypeChange?: (v: 'all' | 'new' | 'used') => void;
   conditions: string[];
   minPrice: string;
   maxPrice: string;
@@ -47,6 +49,7 @@ export function BooksViewControls({
   onOpenMobileFilters,
   categoryName,
   conditionType,
+  onConditionTypeChange,
   conditions,
   minPrice,
   maxPrice,
@@ -67,6 +70,14 @@ export function BooksViewControls({
 
   return (
     <div className="space-y-3 font-sans">
+      {/* Quick Condition Tabs (All / New / Old & Used) */}
+      {onConditionTypeChange && (
+        <BooksConditionTabs
+          activeCondition={conditionType}
+          onChange={onConditionTypeChange}
+        />
+      )}
+
       {/* Primary Bar: Mobile Filter Trigger + Result Count + Sort + View Mode */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl border border-border/80 bg-card shadow-xs">
         {/* Mobile Filter Button */}

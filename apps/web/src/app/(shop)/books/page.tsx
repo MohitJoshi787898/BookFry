@@ -166,6 +166,10 @@ function BooksCatalogContent() {
               onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
               categoryName={selectedCategoryObj?.name}
               conditionType={conditionType}
+              onConditionTypeChange={(type) => {
+                setConditionType(type);
+                setPage(1);
+              }}
               conditions={conditions}
               minPrice={minPrice}
               maxPrice={maxPrice}
