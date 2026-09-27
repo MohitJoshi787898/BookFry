@@ -142,7 +142,8 @@ export class AdminController {
   };
 
   updatePlatformSettings = async (req: Request, res: Response): Promise<void> => {
-    const settings = await this.adminService.updatePlatformSettings(req.body);
+    const adminIdentifier = req.user?.id || 'Admin';
+    const settings = await this.adminService.updatePlatformSettings(req.body, adminIdentifier);
     res.status(200).json(ApiResponse.success(settings));
   };
 

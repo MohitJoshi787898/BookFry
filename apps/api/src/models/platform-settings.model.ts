@@ -1,5 +1,13 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export interface ISettingAuditEntry {
+  key: string;
+  oldValue: any;
+  newValue: any;
+  changedBy: string;
+  changedAt: Date;
+}
+
 export interface IPlatformSettingsDocument extends Document {
   commissionPercent: number;
   flatShippingFee: number;
@@ -8,8 +16,22 @@ export interface IPlatformSettingsDocument extends Document {
   maintenanceMode: boolean;
   supportEmail: string;
   supportPhone: string;
+  sellerRegistrationEnabled: boolean;
+  sellerLoginEnabled: boolean;
+  auditLog: ISettingAuditEntry[];
   updatedAt: Date;
 }
+
+const SettingAuditSchema = new Schema<ISettingAuditEntry>(
+  {
+    key: { type: String, required: true },
+    oldValue: { type: Schema.Types.Mixed },
+    newValue: { type: Schema.Types.Mixed },
+    changedBy: { type: String, required: true },
+    changedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
 
 const PlatformSettingsSchema = new Schema<IPlatformSettingsDocument>(
   {
@@ -20,6 +42,9 @@ const PlatformSettingsSchema = new Schema<IPlatformSettingsDocument>(
     maintenanceMode: { type: Boolean, default: false },
     supportEmail: { type: String, default: 'support@bookfry.com' },
     supportPhone: { type: String, default: '+91 98765 43210' },
+    sellerRegistrationEnabled: { type: Boolean, default: false },
+    sellerLoginEnabled: { type: Boolean, default: false },
+    auditLog: { type: [SettingAuditSchema], default: [] },
   },
   { timestamps: true }
 );

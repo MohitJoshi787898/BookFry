@@ -2,11 +2,12 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { env } from '../../config/env';
-import { UnauthorizedError, ValidationError } from '../../utils/AppError';
+import { ForbiddenError, UnauthorizedError, ValidationError } from '../../utils/AppError';
 import { IUserDocument } from '../../models/user.model';
 import { UserRole } from '@bookmarket/types';
 import { otpService } from '../../services/otp.service';
 import { EmailService } from '../../services/email.service';
+import { SellerAccessPolicy } from '../admin/seller-access.policy';
 
 export class AuthService {
   private usersService: UsersService;
@@ -66,6 +67,19 @@ export class AuthService {
       }
       if (needsSave) {
         await user.save();
+      }
+    }
+
+    // Enforce seller login access flag (admins are exempt)
+    const isSeller = user.roles.includes('seller');
+    const isAdmin = user.roles.includes('admin') || email.toLowerCase() === 'admin@bookfry.com';
+    if (isSeller && !isAdmin) {
+      const isLoginEnabled = await SellerAccessPolicy.isSellerLoginEnabled();
+      if (!isLoginEnabled) {
+        throw new ForbiddenError(
+          'Seller access is temporarily unavailable. Please try again later.',
+          'SELLER_LOGIN_DISABLED'
+        );
       }
     }
 

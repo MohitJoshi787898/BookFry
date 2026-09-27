@@ -24,6 +24,7 @@ import {
 import { DashboardAvatar } from './dashboard-avatar';
 import { LogoutConfirmDialog } from './logout-confirm-dialog';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
 export interface DashboardUserMenuProps {
   role?: 'admin' | 'seller' | 'buyer';
@@ -45,6 +46,7 @@ export function DashboardUserMenu({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const { user, isSeller, isAdmin, isLoading } = useCurrentUser();
+  const { sellerRegistrationEnabled, sellerLoginEnabled } = usePlatformSettings();
 
   // Close when clicking outside or pressing Escape
   useEffect(() => {
@@ -295,7 +297,7 @@ export function DashboardUserMenu({
                     <span>Admin Control Center</span>
                   </Link>
                 )}
-                {isSeller && role !== 'seller' && (
+                {isSeller && role !== 'seller' && (isAdmin || sellerLoginEnabled) && (
                   <Link
                     href="/seller/dashboard"
                     onClick={() => setIsOpen(false)}
@@ -305,7 +307,7 @@ export function DashboardUserMenu({
                     <span>Seller Hub &amp; Inventory</span>
                   </Link>
                 )}
-                {!isSeller && role !== 'seller' && (
+                {!isSeller && role !== 'seller' && sellerRegistrationEnabled && (
                   <Link
                     href="/seller/register"
                     onClick={() => setIsOpen(false)}

@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 import { AuthIllustrationPanel } from './auth-illustration-panel';
 import { LoginForm } from './login-form';
 import { SignupForm } from './signup-form';
@@ -13,7 +14,15 @@ import { ResetPasswordForm } from './reset-password-form';
 import { X } from 'lucide-react';
 
 export function AuthModal() {
-  const { isOpen, screen, closeModal } = useAuthModalStore();
+  const { isOpen, screen, closeModal, setScreen } = useAuthModalStore();
+  const { sellerRegistrationEnabled } = usePlatformSettings();
+
+  // If seller registration is disabled and modal is on seller_signup, redirect to buyer signup
+  useEffect(() => {
+    if (!sellerRegistrationEnabled && screen === 'seller_signup') {
+      setScreen('signup');
+    }
+  }, [sellerRegistrationEnabled, screen, setScreen]);
 
   // Close on ESC key listener
   useEffect(() => {

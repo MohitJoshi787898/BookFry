@@ -24,6 +24,7 @@ import {
 import { BookFryLogo } from './logo';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 import { apiClient } from '@/lib/api-client';
 
 interface CategoryGroup {
@@ -112,6 +113,7 @@ export function NavbarMobileDrawer({
 
   const isSeller = user?.roles?.includes('seller');
   const isAdmin = user?.roles?.includes('admin');
+  const { sellerRegistrationEnabled, sellerLoginEnabled } = usePlatformSettings();
   const initial = user?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
@@ -199,7 +201,7 @@ export function NavbarMobileDrawer({
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     )}
-                    {isSeller && (
+                    {isSeller && (isAdmin || sellerLoginEnabled) && (
                       <Link
                         href="/seller/dashboard"
                         onClick={onClose}
@@ -207,12 +209,12 @@ export function NavbarMobileDrawer({
                       >
                         <span className="flex items-center gap-2">
                           <Store className="w-4 h-4" />
-                          <span>Seller Hub & Listings</span>
+                          <span>Seller Hub &amp; Listings</span>
                         </span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     )}
-                    {!isAdmin && !isSeller && (
+                    {!isAdmin && !isSeller && sellerRegistrationEnabled && (
                       <Link
                         href="/seller/register"
                         onClick={onClose}

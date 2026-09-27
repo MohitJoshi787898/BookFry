@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthModalStore } from "@/stores/auth-modal.store";
+import { usePlatformSettings } from "@/hooks/use-platform-settings";
 import { DashboardAvatar, LogoutConfirmDialog } from "@/components/dashboard-nav";
 
 interface NavbarProfileMenuProps {
@@ -76,6 +77,7 @@ export function NavbarProfileMenu({
 
   const isSeller = user.roles?.includes("seller");
   const isAdmin = user.roles?.includes("admin");
+  const { sellerLoginEnabled } = usePlatformSettings();
 
   const roleBadges: { label: string; color: string }[] = [];
   if (isAdmin) {
@@ -150,7 +152,7 @@ export function NavbarProfileMenu({
           <div className="h-px bg-border mx-4" />
 
           {/* Role portals — understated, not colored cards */}
-          {(isSeller || isAdmin) && (
+          {(isAdmin || (isSeller && (isAdmin || sellerLoginEnabled))) && (
             <div className="py-1.5">
               {isAdmin && (
                 <Link
@@ -164,7 +166,7 @@ export function NavbarProfileMenu({
                   </span>
                 </Link>
               )}
-              {isSeller && (
+              {isSeller && (isAdmin || sellerLoginEnabled) && (
                 <Link
                   href="/seller/dashboard"
                   onClick={() => setIsOpen(false)}

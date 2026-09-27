@@ -7,6 +7,8 @@ import { signupSchema, SignupFormData } from '@/lib/validations/auth-schemas';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
+import Link from 'next/link';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 import { PasswordStrength } from './password-strength';
 import { apiClient } from '@/lib/api-client';
 import {
@@ -23,8 +25,9 @@ import {
 import { motion } from 'framer-motion';
 
 export function SignupForm() {
-  const { setScreen, setUserEmail } = useAuthModalStore();
+  const { setScreen, setUserEmail, closeModal } = useAuthModalStore();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const { sellerRegistrationEnabled } = usePlatformSettings();
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -218,19 +221,35 @@ export function SignupForm() {
       </form>
 
       {/* Seller Portal Callout Banner */}
-      <div className="p-3 rounded-2xl bg-secondary/5 border border-secondary/20 flex items-center justify-between gap-3">
-        <div>
-          <p className="font-extrabold text-xs text-foreground">Want to sell your used textbooks?</p>
-          <p className="text-[10px] text-muted-foreground">List books for free & get direct UPI payouts.</p>
+      {sellerRegistrationEnabled ? (
+        <div className="p-3 rounded-2xl bg-secondary/5 border border-secondary/20 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-extrabold text-xs text-foreground">Want to sell your used textbooks?</p>
+            <p className="text-[10px] text-muted-foreground">List books for free &amp; get direct UPI payouts.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setScreen('seller_signup')}
+            className="px-3 py-1.5 rounded-xl bg-secondary text-white font-extrabold text-[11px] hover:bg-secondary/90 shrink-0 transition-all shadow-2xs cursor-pointer"
+          >
+            Register Store →
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setScreen('seller_signup')}
-          className="px-3 py-1.5 rounded-xl bg-secondary text-white font-extrabold text-[11px] hover:bg-secondary/90 shrink-0 transition-all shadow-2xs"
-        >
-          Register Store →
-        </button>
-      </div>
+      ) : (
+        <div className="p-3 rounded-2xl bg-secondary/5 border border-secondary/20 flex items-center justify-between gap-3">
+          <div>
+            <p className="font-extrabold text-xs text-foreground">Have textbooks to sell?</p>
+            <p className="text-[10px] text-muted-foreground">List textbooks directly on the marketplace.</p>
+          </div>
+          <Link
+            href="/sell"
+            onClick={closeModal}
+            className="px-3 py-1.5 rounded-xl bg-secondary text-white font-extrabold text-[11px] hover:bg-secondary/90 shrink-0 transition-all shadow-2xs"
+          >
+            Sell Books →
+          </Link>
+        </div>
+      )}
 
       {/* Switch to Login */}
       <div className="pt-2 border-t border-border/80 text-center text-xs text-muted-foreground font-medium">

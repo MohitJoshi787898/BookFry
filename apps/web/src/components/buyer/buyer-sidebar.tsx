@@ -20,6 +20,7 @@ import {
   Store,
   Search,
 } from 'lucide-react';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
 export interface BuyerSidebarProps {
   user?: { name?: string; email?: string; roles?: string[] } | null;
@@ -62,7 +63,7 @@ function BuyerQuickActionsCard() {
     { label: 'Browse Marketplace', href: '/books' },
     { label: 'Request a Textbook', href: '/account/requests' },
     { label: 'Track Shipments', href: '/account/orders' },
-    { label: 'Sell Your Books', href: '/seller/register' },
+    { label: 'Sell Your Books', href: '/sell' },
   ];
 
   return (
@@ -152,6 +153,7 @@ export function BuyerSidebar({
 }: BuyerSidebarProps) {
   const isSeller = user?.roles?.includes('seller');
   const isAdmin = user?.roles?.includes('admin');
+  const { sellerRegistrationEnabled, sellerLoginEnabled } = usePlatformSettings();
 
   return (
     <aside
@@ -274,7 +276,7 @@ export function BuyerSidebar({
             </Link>
           )}
 
-          {isSeller ? (
+          {isSeller && (isAdmin || sellerLoginEnabled) && (
             <Link
               href="/seller/dashboard"
               className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-secondary transition-all duration-200 hover:bg-secondary/10 mb-1 ${
@@ -287,7 +289,9 @@ export function BuyerSidebar({
               </span>
               {!collapsed && <span>Seller Hub</span>}
             </Link>
-          ) : (
+          )}
+
+          {!isSeller && sellerRegistrationEnabled && (
             <Link
               href="/seller/register"
               className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-secondary transition-all duration-200 hover:bg-secondary/10 mb-1 ${

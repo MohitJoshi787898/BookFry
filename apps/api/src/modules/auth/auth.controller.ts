@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { ApiResponse } from '../../utils/ApiResponse';
-import { UnauthorizedError } from '../../utils/AppError';
+import { ForbiddenError, UnauthorizedError } from '../../utils/AppError';
 import { getRefreshTokenCookieOptions, getClearRefreshTokenCookieOptions } from '../../utils/cookie';
 import { UserRole } from '@bookmarket/types';
+import { SellerAccessPolicy } from '../admin/seller-access.policy';
 
 export class AuthController {
   private authService: AuthService;
@@ -38,6 +39,17 @@ export class AuthController {
     const finalRoles: UserRole[] = safeRoles.includes('seller')
       ? ['customer', 'seller']
       : ['customer'];
+
+    // If attempting to register as seller, verify feature flag
+    if (finalRoles.includes('seller')) {
+      const isRegistrationEnabled = await SellerAccessPolicy.isSellerRegistrationEnabled();
+      if (!isRegistrationEnabled) {
+        throw new ForbiddenError(
+          'Seller registration is temporarily disabled. You can create a buyer account to purchase or list books.',
+          'SELLER_REGISTRATION_DISABLED'
+        );
+      }
+    }
 
     const userDoc = await this.usersService.createUser({
       name,

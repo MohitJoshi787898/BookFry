@@ -5,24 +5,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { AdminHero } from '@/components/admin/admin-hero';
 import { AdminEmptyState } from '@/components/admin/admin-empty-state';
+import { SellerAccessCard } from '@/components/admin/seller-access-card';
+import { SettingsConfirmationDialog } from '@/components/admin/settings-confirmation-dialog';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
-import {
-  Save,
-  CreditCard,
-  Truck,
-  AlertTriangle,
-  RefreshCw,
-  CheckCircle,
-} from 'lucide-react';
-
-interface PlatformSettings {
-  commissionPercent: number;
-  flatShippingFee: number;
-  taxPercent: number;
-  returnWindowDays: number;
-  maintenanceMode: boolean;
-}
+import { PlatformSettings } from '@bookmarket/types';
+import { Save, CreditCard, AlertTriangle, RefreshCw, CheckCircle } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const { user: currentUser } = useAuthStore();
@@ -31,7 +19,7 @@ export default function AdminSettingsPage() {
 
   const { data: settingsData } = useQuery<PlatformSettings>({
     queryKey: ['admin-settings'],
-    queryFn: () => apiClient('/admin/settings'),
+    queryFn: () => apiClient<PlatformSettings>('/admin/settings'),
     enabled: !!isAdmin,
   });
 
@@ -40,7 +28,22 @@ export default function AdminSettingsPage() {
   const [gstRate, setGstRate] = useState(18);
   const [returnWindow, setReturnWindow] = useState(7);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [sellerRegistrationEnabled, setSellerRegistrationEnabled] = useState(false);
+  const [sellerLoginEnabled, setSellerLoginEnabled] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Contextual Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    onConfirm: () => {},
+  });
 
   useEffect(() => {
     if (settingsData) {
@@ -49,6 +52,8 @@ export default function AdminSettingsPage() {
       setGstRate(settingsData.taxPercent ?? 18);
       setReturnWindow(settingsData.returnWindowDays ?? 7);
       setMaintenanceMode(settingsData.maintenanceMode ?? false);
+      setSellerRegistrationEnabled(settingsData.sellerRegistrationEnabled ?? false);
+      setSellerLoginEnabled(settingsData.sellerLoginEnabled ?? false);
     }
   }, [settingsData]);
 
@@ -60,6 +65,7 @@ export default function AdminSettingsPage() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['public-platform-settings'] });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     },
@@ -77,6 +83,40 @@ export default function AdminSettingsPage() {
     );
   }
 
+  const handleToggleRegistration = () => {
+    if (sellerRegistrationEnabled) {
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Disable Seller Registration?',
+        description:
+          'This will prevent new users from registering specifically as dedicated sellers. Existing user accounts, buyer registrations, and buyer book-selling capabilities remain fully functional.',
+        onConfirm: () => {
+          setSellerRegistrationEnabled(false);
+          setConfirmDialog((p) => ({ ...p, isOpen: false }));
+        },
+      });
+    } else {
+      setSellerRegistrationEnabled(true);
+    }
+  };
+
+  const handleToggleLogin = () => {
+    if (sellerLoginEnabled) {
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Disable Seller Login?',
+        description:
+          'This will prevent seller accounts from signing in to the seller hub. Existing seller data, catalogs, listings, customer orders, and payouts will NOT be deleted or modified.',
+        onConfirm: () => {
+          setSellerLoginEnabled(false);
+          setConfirmDialog((p) => ({ ...p, isOpen: false }));
+        },
+      });
+    } else {
+      setSellerLoginEnabled(true);
+    }
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     updateSettingsMutation.mutate({
@@ -85,6 +125,8 @@ export default function AdminSettingsPage() {
       taxPercent: Number(gstRate),
       returnWindowDays: Number(returnWindow),
       maintenanceMode,
+      sellerRegistrationEnabled,
+      sellerLoginEnabled,
     });
   };
 
@@ -92,13 +134,13 @@ export default function AdminSettingsPage() {
     <AdminLayout>
       <AdminHero
         title="Marketplace System & Store Settings"
-        subtitle="Configure platform commission fees, GST tax rates, shipping rates, return window days, and payment gateway options."
+        subtitle="Configure platform commission fees, seller access feature flags, shipping rates, and maintenance mode."
         badgeText="System Control & Parameters"
         stats={[
+          { label: 'Seller Registration', value: sellerRegistrationEnabled ? 'Active' : 'Disabled', badge: sellerRegistrationEnabled ? 'Open' : 'Paused', isPositive: sellerRegistrationEnabled },
+          { label: 'Seller Portal Login', value: sellerLoginEnabled ? 'Active' : 'Disabled', badge: sellerLoginEnabled ? 'Open' : 'Paused', isPositive: sellerLoginEnabled },
           { label: 'Platform Fee', value: `${commission}%`, badge: 'Commission', isPositive: true },
-          { label: 'Shipping Rate', value: `₹${shippingFee}`, badge: 'Flat Delivery', isPositive: true },
-          { label: 'GST Tax Rate', value: `${gstRate}%`, badge: 'Tax Rate', isPositive: true },
-          { label: 'System Mode', value: maintenanceMode ? 'Maintenance' : 'Online Store', badge: maintenanceMode ? 'Alert' : 'Active', isPositive: !maintenanceMode },
+          { label: 'System Mode', value: maintenanceMode ? 'Maintenance' : 'Store Online', badge: maintenanceMode ? 'Alert' : 'Active', isPositive: !maintenanceMode },
         ]}
       />
 
@@ -111,7 +153,16 @@ export default function AdminSettingsPage() {
         )}
 
         <form onSubmit={handleSave} className="space-y-6">
-          {/* Financial & Commission Settings */}
+          {/* 1. Seller Access & Onboarding Controls */}
+          <SellerAccessCard
+            sellerRegistrationEnabled={sellerRegistrationEnabled}
+            sellerLoginEnabled={sellerLoginEnabled}
+            auditLog={settingsData?.auditLog}
+            onToggleRegistration={handleToggleRegistration}
+            onToggleLogin={handleToggleLogin}
+          />
+
+          {/* 2. Financial & Commission Settings */}
           <div className="border border-border/80 bg-card rounded-3xl p-5 sm:p-7 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <h2 className="font-serif text-base sm:text-lg font-bold text-foreground flex items-center space-x-2">
@@ -123,7 +174,7 @@ export default function AdminSettingsPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div>
                 <label className="block font-bold text-muted-foreground mb-1.5 uppercase text-[10px]">
                   BookFry Platform Fee (%)
@@ -162,37 +213,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          {/* Payment Gateways */}
-          <div className="border border-border/80 bg-card rounded-3xl p-5 sm:p-7 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h2 className="font-serif text-base sm:text-lg font-bold text-foreground flex items-center space-x-2">
-                <Truck className="h-5 w-5 text-secondary" />
-                <span>Active Checkout Payout Gateways</span>
-              </h2>
-              <span className="text-[10px] font-black uppercase tracking-wider bg-secondary/15 text-secondary px-2.5 py-0.5 rounded-full border border-secondary/20">
-                Gateways
-              </span>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <label className="flex items-center space-x-3 p-3.5 border border-border/80 rounded-2xl bg-muted/30 cursor-pointer hover:bg-muted/60 transition-all">
-                <input type="checkbox" defaultChecked className="h-4 w-4 text-secondary rounded" />
-                <span className="font-bold text-foreground">UPI Payments (Razorpay / PhonePe / GPay)</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3.5 border border-border/80 rounded-2xl bg-muted/30 cursor-pointer hover:bg-muted/60 transition-all">
-                <input type="checkbox" defaultChecked className="h-4 w-4 text-secondary rounded" />
-                <span className="font-bold text-foreground">Credit / Debit Cards &amp; NetBanking</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3.5 border border-border/80 rounded-2xl bg-muted/30 cursor-pointer hover:bg-muted/60 transition-all">
-                <input type="checkbox" defaultChecked className="h-4 w-4 text-secondary rounded" />
-                <span className="font-bold text-foreground">Campus Cash on Delivery (COD) for Verified Pincodes</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Maintenance Mode Toggle */}
+          {/* 3. Maintenance Mode Toggle */}
           <div className="border border-border/80 bg-card rounded-3xl p-5 sm:p-7 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <h2 className="font-serif text-base sm:text-lg font-bold text-foreground flex items-center space-x-2">
@@ -227,10 +248,18 @@ export default function AdminSettingsPage() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            <span>{updateSettingsMutation.isPending ? 'Saving Settings...' : 'Save Settings'}</span>
+            <span>{updateSettingsMutation.isPending ? 'Saving Settings...' : 'Save Platform Settings'}</span>
           </button>
         </form>
       </div>
+
+      <SettingsConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog((p) => ({ ...p, isOpen: false }))}
+      />
     </AdminLayout>
   );
 }

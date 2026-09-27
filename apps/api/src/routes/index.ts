@@ -16,6 +16,7 @@ import eventsRoutes from '../modules/events/events.routes';
 import recommendationsRoutes from '../modules/recommendations/recommendations.routes';
 import couponsRoutes from '../modules/coupons/coupons.routes';
 import usedBookRequestsRoutes from '../modules/used-book-requests/used-book-requests.routes';
+import settingsRoutes from '../modules/settings/settings.routes';
 
 import healthRoutes from '../modules/health/health.routes';
 import { publicLandingRouter, adminLandingRouter } from '../modules/landing/landing.routes';
@@ -26,6 +27,7 @@ router.use('/health', healthRoutes);
 router.use('/', publicLandingRouter);
 router.use('/admin/landing', adminLandingRouter);
 
+router.use('/settings', settingsRoutes);
 router.use('/auth', authRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/books', booksRoutes);

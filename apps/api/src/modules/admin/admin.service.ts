@@ -438,25 +438,90 @@ export class AdminService {
     const { PlatformSettingsModel } = await import('../../models/platform-settings.model');
     let settings = await PlatformSettingsModel.findOne();
     if (!settings) {
-      settings = await PlatformSettingsModel.create({});
+      settings = await PlatformSettingsModel.create({
+        sellerRegistrationEnabled: false,
+        sellerLoginEnabled: false,
+      });
     }
     return settings;
   }
 
-  async updatePlatformSettings(data: any) {
+  async updatePlatformSettings(data: any, adminIdentifier?: string) {
     const { PlatformSettingsModel } = await import('../../models/platform-settings.model');
+    const { SellerAccessPolicy } = await import('./seller-access.policy');
     let settings = await PlatformSettingsModel.findOne();
     if (!settings) {
-      settings = new PlatformSettingsModel();
+      settings = new PlatformSettingsModel({
+        sellerRegistrationEnabled: false,
+        sellerLoginEnabled: false,
+      });
     }
-    if (data.commissionPercent !== undefined) settings.commissionPercent = data.commissionPercent;
-    if (data.flatShippingFee !== undefined) settings.flatShippingFee = data.flatShippingFee;
-    if (data.taxPercent !== undefined) settings.taxPercent = data.taxPercent;
-    if (data.returnWindowDays !== undefined) settings.returnWindowDays = data.returnWindowDays;
-    if (data.maintenanceMode !== undefined) settings.maintenanceMode = data.maintenanceMode;
-    if (data.supportEmail !== undefined) settings.supportEmail = data.supportEmail;
-    if (data.supportPhone !== undefined) settings.supportPhone = data.supportPhone;
+
+    const changedBy = adminIdentifier || 'Admin';
+    const auditEntries: Array<{ key: string; oldValue: any; newValue: any; changedBy: string; changedAt: Date }> = [];
+
+    const recordChange = (key: string, oldVal: any, newVal: any) => {
+      if (oldVal !== newVal) {
+        auditEntries.push({
+          key,
+          oldValue: oldVal,
+          newValue: newVal,
+          changedBy,
+          changedAt: new Date(),
+        });
+      }
+    };
+
+    if (data.commissionPercent !== undefined) {
+      recordChange('commissionPercent', settings.commissionPercent, data.commissionPercent);
+      settings.commissionPercent = data.commissionPercent;
+    }
+    if (data.flatShippingFee !== undefined) {
+      recordChange('flatShippingFee', settings.flatShippingFee, data.flatShippingFee);
+      settings.flatShippingFee = data.flatShippingFee;
+    }
+    if (data.taxPercent !== undefined) {
+      recordChange('taxPercent', settings.taxPercent, data.taxPercent);
+      settings.taxPercent = data.taxPercent;
+    }
+    if (data.returnWindowDays !== undefined) {
+      recordChange('returnWindowDays', settings.returnWindowDays, data.returnWindowDays);
+      settings.returnWindowDays = data.returnWindowDays;
+    }
+    if (data.maintenanceMode !== undefined) {
+      recordChange('maintenanceMode', settings.maintenanceMode, data.maintenanceMode);
+      settings.maintenanceMode = data.maintenanceMode;
+    }
+    if (data.supportEmail !== undefined) {
+      recordChange('supportEmail', settings.supportEmail, data.supportEmail);
+      settings.supportEmail = data.supportEmail;
+    }
+    if (data.supportPhone !== undefined) {
+      recordChange('supportPhone', settings.supportPhone, data.supportPhone);
+      settings.supportPhone = data.supportPhone;
+    }
+    if (data.sellerRegistrationEnabled !== undefined) {
+      recordChange('sellerRegistrationEnabled', settings.sellerRegistrationEnabled ?? false, data.sellerRegistrationEnabled);
+      settings.sellerRegistrationEnabled = data.sellerRegistrationEnabled;
+    }
+    if (data.sellerLoginEnabled !== undefined) {
+      recordChange('sellerLoginEnabled', settings.sellerLoginEnabled ?? false, data.sellerLoginEnabled);
+      settings.sellerLoginEnabled = data.sellerLoginEnabled;
+    }
+
+    if (auditEntries.length > 0) {
+      if (!settings.auditLog) {
+        settings.auditLog = [];
+      }
+      settings.auditLog.push(...auditEntries);
+      // Keep last 100 audit entries to prevent unbounded growth
+      if (settings.auditLog.length > 100) {
+        settings.auditLog = settings.auditLog.slice(-100);
+      }
+    }
+
     await settings.save();
+    SellerAccessPolicy.invalidateCache();
     return settings;
   }
 

@@ -17,6 +17,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
 export interface BuyerMobileDrawerProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export interface BuyerMobileDrawerProps {
 export function BuyerMobileDrawer({ isOpen, onClose }: BuyerMobileDrawerProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
+  const { sellerRegistrationEnabled, sellerLoginEnabled } = usePlatformSettings();
   const isSeller = user?.roles?.includes('seller');
   const isAdmin = user?.roles?.includes('admin');
 
@@ -120,7 +122,7 @@ export function BuyerMobileDrawer({ isOpen, onClose }: BuyerMobileDrawerProps) {
                 </span>
               </Link>
             )}
-            {isSeller ? (
+            {isSeller && (isAdmin || sellerLoginEnabled) && (
               <Link
                 href="/seller/dashboard"
                 onClick={onClose}
@@ -131,7 +133,8 @@ export function BuyerMobileDrawer({ isOpen, onClose }: BuyerMobileDrawerProps) {
                   <span>Seller Hub &amp; Listings</span>
                 </span>
               </Link>
-            ) : (
+            )}
+            {!isSeller && sellerRegistrationEnabled && (
               <Link
                 href="/seller/register"
                 onClick={onClose}

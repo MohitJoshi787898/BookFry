@@ -471,3 +471,34 @@ export interface SellerAnalytics {
   salesByMonth: { month: string; amount: number }[];
   recentOrders: Order[];
 }
+
+export interface SettingAuditEntry {
+  key: string;
+  oldValue: any;
+  newValue: any;
+  changedBy: string;
+  changedAt: string;
+}
+
+export interface PlatformSettings {
+  commissionPercent: number;
+  flatShippingFee: number;
+  taxPercent: number;
+  returnWindowDays: number;
+  maintenanceMode: boolean;
+  supportEmail: string;
+  supportPhone: string;
+  sellerRegistrationEnabled: boolean;
+  sellerLoginEnabled: boolean;
+  auditLog?: SettingAuditEntry[];
+  updatedAt?: string;
+}
+
+export interface PublicPlatformSettings {
+  sellerRegistrationEnabled: boolean;
+  sellerLoginEnabled: boolean;
+  maintenanceMode: boolean;
+  supportEmail?: string;
+  supportPhone?: string;
+}
+

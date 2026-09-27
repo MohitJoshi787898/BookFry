@@ -27,6 +27,7 @@ import Image from 'next/image';
 import { DashboardAvatar } from './dashboard-avatar';
 import { LogoutConfirmDialog } from './logout-confirm-dialog';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 
 export interface MobileAccountDrawerProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export function MobileAccountDrawer({
 }: MobileAccountDrawerProps) {
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const { user, isSeller, isAdmin, roleLabel } = useCurrentUser();
+  const { sellerRegistrationEnabled, sellerLoginEnabled } = usePlatformSettings();
 
   const displayName =
     user?.name ||
@@ -317,7 +319,7 @@ export function MobileAccountDrawer({
                           <span>Admin Control Center</span>
                         </Link>
                       )}
-                      {isSeller && role !== 'seller' && (
+                      {isSeller && role !== 'seller' && (isAdmin || sellerLoginEnabled) && (
                         <Link
                           href="/seller/dashboard"
                           onClick={onClose}
@@ -329,7 +331,7 @@ export function MobileAccountDrawer({
                           <span>Seller Workspace &amp; Listings</span>
                         </Link>
                       )}
-                      {!isSeller && role !== 'seller' && (
+                      {!isSeller && role !== 'seller' && sellerRegistrationEnabled && (
                         <Link
                           href="/seller/register"
                           onClick={onClose}
