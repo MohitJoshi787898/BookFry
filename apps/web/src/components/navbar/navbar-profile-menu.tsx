@@ -33,6 +33,7 @@ export function NavbarProfileMenu({
 }: NavbarProfileMenuProps) {
   const { user, isAuthenticated } = useAuthStore();
   const { openModal } = useAuthModalStore();
+  const { sellerLoginEnabled } = usePlatformSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -77,7 +78,6 @@ export function NavbarProfileMenu({
 
   const isSeller = user.roles?.includes("seller");
   const isAdmin = user.roles?.includes("admin");
-  const { sellerLoginEnabled } = usePlatformSettings();
 
   const roleBadges: { label: string; color: string }[] = [];
   if (isAdmin) {

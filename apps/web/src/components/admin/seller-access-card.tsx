@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Store, UserX, UserCheck, ShieldCheck, History, CheckCircle2, XCircle } from 'lucide-react';
+import { Store, ShieldCheck, History, CheckCircle2, XCircle } from 'lucide-react';
 import { SettingAuditEntry } from '@bookmarket/types';
 
 interface SellerAccessCardProps {
