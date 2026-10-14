@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Compass, Plus, Heart, User } from 'lucide-react';
+import { Home, Compass, ShoppingBag, Heart, User } from 'lucide-react';
 import { useWishlist } from '@/hooks/use-wishlist';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
@@ -29,7 +29,7 @@ export function MobileNav() {
   const navItems = [
     { label: 'Home', href: '/', icon: Home },
     { label: 'Explore', href: '/books', icon: Compass },
-    { label: 'Sell', href: '/sell', icon: Plus, isPrimaryCta: true },
+    { label: 'Buy', href: '/books', icon: ShoppingBag, isPrimaryCta: true },
     { label: 'Saved', href: '/account/wishlist', icon: Heart, badge: wishlistCount, authProtected: true },
     {
       label: isAuthenticated ? 'Account' : 'Sign In',
@@ -52,29 +52,23 @@ export function MobileNav() {
             item.href !== '#' &&
             (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)));
 
-          // Sell Center Button
+          // Buy Center Button
           if (item.isPrimaryCta) {
             return (
               <Link
                 key={item.label}
-                href="/sell"
-                onClick={(e) => {
-                  if (!isAuthenticated) {
-                    e.preventDefault();
-                    openModal('login', '/sell');
-                  }
-                }}
-                aria-label="Sell your books"
-                className="relative -top-2 flex flex-col items-center group focus-visible:outline-none"
+                href={item.href}
+                aria-label="Buy books"
+                className="relative -top-2 flex flex-col items-center group focus-visible:outline-none focus:ring-2 focus:ring-brand rounded-2xl"
               >
                 <motion.div
                   whileTap={{ scale: 0.88 }}
                   className="w-12 h-12 rounded-2xl bg-secondary text-secondary-foreground shadow-md flex items-center justify-center border-2 border-background ring-2 ring-secondary/30 transition-transform"
                 >
-                  <Plus className="w-6 h-6 stroke-[3]" />
+                  <ShoppingBag className="w-5 h-5 stroke-[2.5]" />
                 </motion.div>
                 <span className="text-[10px] font-black text-secondary tracking-tight mt-0.5 leading-none">
-                  Sell
+                  Buy
                 </span>
               </Link>
             );

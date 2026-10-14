@@ -19,6 +19,32 @@ export interface LiveEventPayload {
   timestamp?: string;
 }
 
+function showNativeNotification(title: string, body: string, url: string = '/account/orders') {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          registration.showNotification(title, {
+            body,
+            icon: '/fox_reading_178491148655455.png',
+            badge: '/favicon.ico',
+            data: { url },
+          } as NotificationOptions);
+        })
+        .catch(() => {
+          new Notification(title, { body, icon: '/fox_reading_178491148655455.png' });
+        });
+    } else {
+      new Notification(title, { body, icon: '/fox_reading_178491148655455.png' });
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+}
+
 export function useLiveEvents() {
   const { isAuthenticated, accessToken } = useAuthStore();
   const queryClient = useQueryClient();
@@ -55,12 +81,17 @@ export function useLiveEvents() {
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
             queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
 
+            const notifTitle = data.title || 'BookFry Notification';
+            const notifBody = data.message || data.body || 'You have a new update.';
+            const notifUrl = data.meta?.url || data.url || '/account/notifications';
+
             // Trigger BookFry toast with info mascot
-            if (data.title || data.message || data.body) {
-              toast.info(data.message || data.body || 'You have a new update.', {
-                title: data.title || 'Notification',
-              });
-            }
+            toast.info(notifBody, {
+              title: notifTitle,
+            });
+
+            // Trigger native OS notification
+            showNativeNotification(notifTitle, notifBody, notifUrl);
 
             // Trigger custom event for notification bell indicator
             window.dispatchEvent(
@@ -84,12 +115,12 @@ export function useLiveEvents() {
 
             if (data.newStatus) {
               const formattedStatus = data.newStatus.replace('_', ' ').toUpperCase();
-              toast.success(
-                data.orderNumber
-                  ? `Order #${data.orderNumber} is now ${formattedStatus}.`
-                  : `Your order status changed to ${formattedStatus}.`,
-                { title: 'Order Update' }
-              );
+              const orderMsg = data.orderNumber
+                ? `Order #${data.orderNumber} is now ${formattedStatus}.`
+                : `Your order status changed to ${formattedStatus}.`;
+
+              toast.success(orderMsg, { title: 'Order Update' });
+              showNativeNotification('BookFry • Order Update', orderMsg, '/account/orders');
             }
 
             window.dispatchEvent(

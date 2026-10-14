@@ -12,6 +12,8 @@ import { env } from '../../src/config/env';
 
 import { BookListingModel } from '../../src/models/book-listing.model';
 import { BookCatalogModel } from '../../src/models/book-catalog.model';
+import { PlatformSettingsModel } from '../../src/models/platform-settings.model';
+import { SellerAccessPolicy } from '../../src/modules/admin/seller-access.policy';
 
 describe('Marketplace Modules Integration Tests', () => {
   let mongoServer: MongoMemoryServer;
@@ -27,6 +29,12 @@ describe('Marketplace Modules Integration Tests', () => {
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);
+
+    await PlatformSettingsModel.create({
+      sellerRegistrationEnabled: true,
+      sellerLoginEnabled: true,
+    });
+    SellerAccessPolicy.invalidateCache();
 
     // Create mock users
     const admin = await UserModel.create({

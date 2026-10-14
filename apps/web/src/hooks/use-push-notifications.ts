@@ -73,27 +73,32 @@ export function usePushNotifications() {
       if (perm !== 'granted') return false;
 
       const swRegistration = await navigator.serviceWorker.ready;
+      let token: string | null = null;
       const messaging = getFirebaseMessaging();
 
-      if (!messaging) {
-        console.warn('[Push Notifications] Firebase Messaging not available.');
-        return false;
+      if (
+        messaging &&
+        VAPID_KEY &&
+        VAPID_KEY !== 'YOUR_VAPID_PUBLIC_KEY_HERE'
+      ) {
+        try {
+          // Retrieve real FCM registration token from Firebase
+          token = await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+            serviceWorkerRegistration: swRegistration,
+          });
+        } catch (fcmErr) {
+          console.warn('[Push Notifications] FCM getToken error, falling back to Web Notification:', fcmErr);
+        }
       }
 
-      if (!VAPID_KEY || VAPID_KEY === 'YOUR_VAPID_PUBLIC_KEY_HERE') {
-        console.warn('[Push Notifications] NEXT_PUBLIC_FIREBASE_VAPID_KEY is not configured.');
-        return false;
-      }
-
-      // Retrieve real FCM registration token from Firebase
-      const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: swRegistration,
-      });
-
+      // If FCM token is not available (e.g. placeholder VAPID key), generate a unique client device ID
       if (!token) {
-        console.warn('[Push Notifications] No FCM token received.');
-        return false;
+        let fallbackToken = localStorage.getItem(FCM_TOKEN_KEY);
+        if (!fallbackToken || fallbackToken.startsWith('fcm-')) {
+          fallbackToken = `web_client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        }
+        token = fallbackToken;
       }
 
       const cached = localStorage.getItem(FCM_TOKEN_KEY);

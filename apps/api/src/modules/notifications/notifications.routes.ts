@@ -17,5 +17,7 @@ router.post('/push-token', requireAuth, asyncHandler(controller.registerPushToke
 router.delete('/push-token', requireAuth, asyncHandler(controller.removePushToken));
 router.get('/preferences', requireAuth, asyncHandler(controller.getPreferences));
 router.patch('/preferences', requireAuth, asyncHandler(controller.updatePreferences));
+router.post('/test-email', requireAuth, asyncHandler(controller.testEmail));
+router.post('/test-push', requireAuth, asyncHandler(controller.testPush));
 
 export default router;

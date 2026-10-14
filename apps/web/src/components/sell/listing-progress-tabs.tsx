@@ -21,32 +21,47 @@ export const LISTING_TABS: ListingTab[] = [
   { id: 'review', stepNumber: 6, label: 'Review & Post', shortLabel: 'Review', icon: CheckCircle2 },
 ];
 
+export function getListingTabs(isAdmin = false): ListingTab[] {
+  const filtered = isAdmin
+    ? LISTING_TABS.filter((tab) => tab.id !== 'condition')
+    : LISTING_TABS;
+
+  return filtered.map((tab, index) => ({
+    ...tab,
+    stepNumber: index + 1,
+  }));
+}
+
 interface ListingProgressTabsProps {
+  tabs?: ListingTab[];
   currentTab: string;
-  completedStepNumbers: number[];
+  completedStepNumbers?: number[];
+  completedTabIds?: string[];
   onSelectTab: (tabId: string) => void;
   tabErrors?: Record<string, boolean>;
 }
 
 export function ListingProgressTabs({
+  tabs = LISTING_TABS,
   currentTab,
-  completedStepNumbers,
+  completedStepNumbers = [],
+  completedTabIds = [],
   onSelectTab,
   tabErrors = {},
 }: ListingProgressTabsProps) {
-  const currentTabObj = LISTING_TABS.find((t) => t.id === currentTab) || LISTING_TABS[0];
-  const progressPercent = Math.round((currentTabObj.stepNumber / LISTING_TABS.length) * 100);
+  const currentTabObj = tabs.find((t) => t.id === currentTab) || tabs[0];
+  const progressPercent = Math.round((currentTabObj.stepNumber / tabs.length) * 100);
 
   return (
-    <div className="w-full space-y-3 font-sans">
+    <div className="w-full space-y-2 font-sans">
       {/* Mobile step status & progress bar */}
-      <div className="flex sm:hidden items-center justify-between px-1 text-xs font-bold text-foreground">
+      <div className="flex sm:hidden items-center justify-between px-1 text-[11px] font-bold text-foreground">
         <span>
-          Step {currentTabObj.stepNumber} of {LISTING_TABS.length}: {currentTabObj.shortLabel}
+          Step {currentTabObj.stepNumber} of {tabs.length}: {currentTabObj.shortLabel}
         </span>
         <span className="font-mono text-secondary">{progressPercent}%</span>
       </div>
-      <div className="sm:hidden w-full h-1.5 bg-muted rounded-full overflow-hidden">
+      <div className="sm:hidden w-full h-1 bg-muted rounded-full overflow-hidden">
         <div
           className="h-full bg-secondary transition-all duration-300 rounded-full"
           style={{ width: `${progressPercent}%` }}
@@ -54,15 +69,16 @@ export function ListingProgressTabs({
       </div>
 
       {/* Responsive Horizontal Scrollable Tabs Bar */}
-      <div className="overflow-x-auto no-scrollbar scroll-smooth -mx-4 sm:mx-0 px-4 sm:px-0">
+      <div className="overflow-x-auto no-scrollbar scroll-smooth -mx-3.5 sm:mx-0 px-3.5 sm:px-0">
         <nav
           role="tablist"
           aria-label="Listing Progress Steps"
-          className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-muted/60 dark:bg-muted/40 border border-border rounded-2xl min-w-max sm:min-w-0 sm:w-full"
+          className="flex items-center gap-1 sm:gap-1.5 p-1 bg-muted/60 dark:bg-muted/40 border border-border/80 rounded-xl min-w-max sm:min-w-0 sm:w-full"
         >
-          {LISTING_TABS.map((tab) => {
+          {tabs.map((tab) => {
             const isActive = currentTab === tab.id;
-            const isCompleted = completedStepNumbers.includes(tab.stepNumber);
+            const isCompleted =
+              completedTabIds.includes(tab.id) || completedStepNumbers.includes(tab.stepNumber);
             const hasError = tabErrors[tab.id];
             const IconComp = tab.icon;
 
@@ -76,18 +92,18 @@ export function ListingProgressTabs({
                 aria-controls={`tabpanel-${tab.id}`}
                 onClick={() => onSelectTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 py-2 px-3 sm:px-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 select-none whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-secondary',
+                  'flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 sm:px-3 rounded-lg text-[11px] sm:text-xs font-semibold transition-all duration-200 select-none whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-secondary',
                   isActive
-                    ? 'bg-background text-foreground shadow-sm font-bold border border-border'
+                    ? 'bg-card text-foreground shadow-2xs font-bold border border-border/80'
                     : isCompleted
-                    ? 'text-foreground hover:bg-background/60 cursor-pointer'
+                    ? 'text-foreground hover:bg-card/60 cursor-pointer'
                     : 'text-muted-foreground hover:text-foreground cursor-pointer'
                 )}
               >
                 {/* Step badge / Checkmark indicator */}
                 <span
                   className={cn(
-                    'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold shrink-0 transition-colors',
+                    'h-4 w-4 rounded-full flex items-center justify-center text-[9px] font-mono font-bold shrink-0 transition-colors',
                     hasError
                       ? 'bg-rose-500 text-white'
                       : isCompleted
@@ -97,10 +113,15 @@ export function ListingProgressTabs({
                       : 'bg-muted text-muted-foreground'
                   )}
                 >
-                  {isCompleted ? <Check className="h-3 w-3" /> : tab.stepNumber}
+                  {isCompleted ? <Check className="h-2.5 w-2.5" /> : tab.stepNumber}
                 </span>
 
-                <IconComp className={cn('h-3.5 w-3.5 hidden md:inline-block', isActive ? 'text-secondary' : 'text-muted-foreground')} />
+                <IconComp
+                  className={cn(
+                    'h-3 w-3 hidden md:inline-block shrink-0',
+                    isActive ? 'text-secondary' : 'text-muted-foreground'
+                  )}
+                />
 
                 <span className="hidden sm:inline">{tab.label}</span>
                 <span className="sm:hidden">{tab.shortLabel}</span>
@@ -114,3 +135,4 @@ export function ListingProgressTabs({
 }
 
 export default ListingProgressTabs;
+

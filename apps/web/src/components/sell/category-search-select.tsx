@@ -57,8 +57,8 @@ export function CategorySearchSelect({
   }, []);
 
   return (
-    <div ref={containerRef} className="relative font-sans space-y-2">
-      <label className="text-sm sm:text-base font-bold text-foreground block">
+    <div ref={containerRef} className="relative font-sans space-y-1.5">
+      <label className="text-xs font-bold text-foreground block">
         Book Category / Genre <span className="text-rose-500">*</span>
       </label>
 
@@ -66,7 +66,7 @@ export function CategorySearchSelect({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className={`w-full h-12 px-4 border rounded-xl bg-background text-left flex items-center justify-between text-sm sm:text-base transition-all active:scale-[0.99] cursor-pointer ${
+        className={`w-full h-10 px-3.5 border rounded-xl bg-background text-left flex items-center justify-between text-xs sm:text-sm transition-all active:scale-[0.99] cursor-pointer ${
           error
             ? 'border-rose-500 ring-2 ring-rose-500/20'
             : open
@@ -74,10 +74,10 @@ export function CategorySearchSelect({
             : 'border-border hover:border-secondary/50'
         }`}
       >
-        <div className="flex items-center space-x-3 truncate">
-          <Layers className="h-5 w-5 text-secondary shrink-0" />
+        <div className="flex items-center space-x-2.5 truncate">
+          <Layers className="h-4 w-4 text-secondary shrink-0" />
           {selectedCategory ? (
-            <span className="font-bold text-foreground truncate">{selectedCategory.name}</span>
+            <span className="font-semibold text-foreground truncate">{selectedCategory.name}</span>
           ) : (
             <span className="text-muted-foreground font-normal">Select or search book category...</span>
           )}
@@ -87,24 +87,24 @@ export function CategorySearchSelect({
 
       {/* Searchable Dropdown Popover */}
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-card border border-border rounded-2xl p-3 shadow-2xl z-50 space-y-2 backdrop-blur-xl font-sans">
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-card border border-border rounded-xl p-2.5 shadow-xl z-50 space-y-2 backdrop-blur-xl font-sans">
           {/* Search Input inside popover */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="text"
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search Engineering, Medical, Novels..."
-              className="w-full pl-10 pr-4 py-2.5 text-sm border border-border/80 rounded-xl bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
+              className="w-full pl-9 pr-3 py-2 text-xs border border-border/80 rounded-lg bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
             />
           </div>
 
           {/* Options List */}
-          <div className="max-h-60 overflow-y-auto space-y-1 pr-1 text-sm">
+          <div className="max-h-52 overflow-y-auto space-y-0.5 pr-1 text-xs">
             {filteredOptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground italic text-center py-4">No categories found matching &quot;{search}&quot;</p>
+              <p className="text-xs text-muted-foreground italic text-center py-3">No categories found matching &quot;{search}&quot;</p>
             ) : (
               filteredOptions.map((opt) => {
                 const isSelected = selectedCategory?.id === opt.id;
@@ -116,14 +116,14 @@ export function CategorySearchSelect({
                       setOpen(false);
                       setSearch('');
                     }}
-                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl cursor-pointer transition-all ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all ${
                       isSelected
                         ? 'bg-secondary/15 text-secondary font-bold'
                         : 'hover:bg-muted text-foreground font-medium'
                     }`}
                   >
                     <span>{opt.name}</span>
-                    {isSelected && <Check className="h-4 w-4 text-secondary" />}
+                    {isSelected && <Check className="h-3.5 w-3.5 text-secondary" />}
                   </div>
                 );
               })
@@ -132,7 +132,7 @@ export function CategorySearchSelect({
         </div>
       )}
 
-      {error && <p className="text-xs text-rose-500 font-medium">{error}</p>}
+      {error && <p className="text-[11px] text-rose-500 font-medium">{error}</p>}
     </div>
   );
 }

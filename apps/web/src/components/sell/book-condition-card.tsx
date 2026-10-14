@@ -50,7 +50,7 @@ interface BookConditionCardProps {
 
 export function BookConditionCardGroup({ value, onChange }: BookConditionCardProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-sans">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 font-sans">
       {conditionOptions.map((opt) => {
         const IconComp = opt.icon;
         const selected = value === opt.id;
@@ -67,42 +67,42 @@ export function BookConditionCardGroup({ value, onChange }: BookConditionCardPro
                 onChange(opt.id);
               }
             }}
-            className={`cursor-pointer rounded-2xl border p-4 sm:p-5 transition-all duration-200 relative flex flex-col justify-between select-none shadow-xs active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary ${
+            className={`cursor-pointer rounded-xl border p-3 sm:p-3.5 transition-all duration-200 relative flex flex-col justify-between select-none shadow-2xs active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary ${
               selected
-                ? 'border-secondary bg-secondary/10 shadow-sm shadow-secondary/10'
-                : 'border-border bg-card hover:border-secondary/40 hover:bg-muted/40'
+                ? 'border-secondary bg-secondary/10 shadow-xs'
+                : 'border-border/80 bg-card hover:border-secondary/40 hover:bg-muted/40'
             }`}
           >
             {/* Header: Icon and Radio */}
             <div className="flex justify-between items-start">
               <div
-                className={`p-2 rounded-xl transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   selected
                     ? 'bg-secondary text-secondary-foreground'
                     : 'bg-muted text-foreground'
                 }`}
               >
-                <IconComp className="h-5 w-5" />
+                <IconComp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
 
               {/* Radio Indicator */}
               <div
-                className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                className={`h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all ${
                   selected
                     ? 'border-secondary bg-secondary'
                     : 'border-border bg-background'
                 }`}
               >
-                {selected && <div className="h-2 w-2 rounded-full bg-secondary-foreground" />}
+                {selected && <div className="h-1.5 w-1.5 rounded-full bg-secondary-foreground" />}
               </div>
             </div>
 
             {/* Body Info */}
-            <div className="my-3 space-y-1">
-              <span className="font-bold text-sm sm:text-base text-foreground block">
+            <div className="my-2 space-y-0.5">
+              <span className="font-bold text-xs sm:text-[13px] text-foreground block leading-snug">
                 {opt.title}
               </span>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground leading-snug line-clamp-2 sm:line-clamp-3">
                 {opt.description}
               </p>
             </div>
@@ -110,7 +110,7 @@ export function BookConditionCardGroup({ value, onChange }: BookConditionCardPro
             {/* Bottom Tag */}
             <div>
               <span
-                className={`inline-block text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border truncate max-w-full ${
                   selected
                     ? 'bg-secondary/20 text-secondary border-secondary/30'
                     : 'bg-muted text-muted-foreground border-border'

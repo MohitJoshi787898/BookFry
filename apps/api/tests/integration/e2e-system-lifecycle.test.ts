@@ -9,6 +9,8 @@ import { BookCatalogModel } from '../../src/models/book-catalog.model';
 import { BookListingModel } from '../../src/models/book-listing.model';
 import { OrderModel } from '../../src/models/order.model';
 import { CartModel } from '../../src/models/cart.model';
+import { PlatformSettingsModel } from '../../src/models/platform-settings.model';
+import { SellerAccessPolicy } from '../../src/modules/admin/seller-access.policy';
 import { otpService } from '../../src/services/otp.service';
 import jwt from 'jsonwebtoken';
 import { env } from '../../src/config/env';
@@ -38,6 +40,12 @@ describe('BookFry Complete End-to-End System Lifecycle & Production Audit Test S
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);
+
+    await PlatformSettingsModel.create({
+      sellerRegistrationEnabled: true,
+      sellerLoginEnabled: true,
+    });
+    SellerAccessPolicy.invalidateCache();
 
     // Setup Category
     const category = await CategoryModel.create({

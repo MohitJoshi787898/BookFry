@@ -30,6 +30,8 @@ export class EmailService {
         });
         this.isConfigured = true;
         logger.info('[EmailService] Nodemailer SMTP transporter initialized with configured credentials.');
+        // Perform non-blocking async verification
+        this.verifyConnection().catch(() => {});
       } else {
         logger.info('[EmailService] Running with placeholder SMTP credentials (simulation mode).');
       }
@@ -38,12 +40,32 @@ export class EmailService {
     }
   }
 
-  private async sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+  /**
+   * Verify SMTP connection handshake with mail server.
+   */
+  async verifyConnection(): Promise<boolean> {
+    if (!this.transporter || !this.isConfigured) {
+      return false;
+    }
+    try {
+      await this.transporter.verify();
+      logger.info(`[EmailService] ✅ SMTP connection verified with ${env.SMTP_HOST}:${env.SMTP_PORT} (${env.SMTP_USER}). Ready for delivery.`);
+      return true;
+    } catch (err: any) {
+      logger.error(`[EmailService] ❌ SMTP verification failed for ${env.SMTP_USER}:`, err?.message || err);
+      return false;
+    }
+  }
+
+  /**
+   * Public send method for custom/test emails with detailed result
+   */
+  async sendRawEmail(to: string, subject: string, html: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
     logger.info(`[Transactional Email Dispatch] To: ${to} | Subject: "${subject}"`);
 
     if (!this.isConfigured || !this.transporter) {
       logger.info(`[Email Simulation] Content dispatched in dev/simulation mode to ${to}.`);
-      return true;
+      return { success: true, messageId: 'simulated_dispatch' };
     }
 
     try {
@@ -54,11 +76,16 @@ export class EmailService {
         html,
       });
       logger.info(`[Email Sent] Message ID: ${info.messageId} to ${to}`);
-      return true;
-    } catch (err) {
-      logger.error(`[Email Dispatch Error] Failed sending email to ${to}:`, err);
-      return false;
+      return { success: true, messageId: info.messageId };
+    } catch (err: any) {
+      logger.error(`[Email Dispatch Error] Failed sending email to ${to}:`, err?.message || err);
+      return { success: false, error: err?.message || 'SMTP delivery failure' };
     }
+  }
+
+  private async sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+    const result = await this.sendRawEmail(to, subject, html);
+    return result.success;
   }
 
   // ==========================================

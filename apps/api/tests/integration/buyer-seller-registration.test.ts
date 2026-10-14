@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import app from '../../src/app';
 import { UserModel } from '../../src/models/user.model';
+import { PlatformSettingsModel } from '../../src/models/platform-settings.model';
+import { SellerAccessPolicy } from '../../src/modules/admin/seller-access.policy';
 import { otpService } from '../../src/services/otp.service';
 
 describe('Buyer vs Seller Registration & Onboarding Lifecycle (20 Production Scenarios)', () => {
@@ -13,6 +15,12 @@ describe('Buyer vs Seller Registration & Onboarding Lifecycle (20 Production Sce
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);
+
+    await PlatformSettingsModel.create({
+      sellerRegistrationEnabled: true,
+      sellerLoginEnabled: true,
+    });
+    SellerAccessPolicy.invalidateCache();
   }, 60000);
 
   afterAll(async () => {

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthModalStore } from '@/stores/auth-modal.store';
+import { usePlatformSettings } from '@/hooks/use-platform-settings';
 import { StatItem } from '../shared/stat-item';
 import { HeroSceneLayered } from './hero-scene-layered';
 import { MascotScrollChoreography } from './mascot-scroll-choreography';
@@ -57,7 +58,36 @@ export function HeroSection({
     { value: '99.4%',   label: 'Quality verified' },
   ],
 }: HeroSectionProps = {}) {
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const { sellerRegistrationEnabled, sellerLoginEnabled } = usePlatformSettings();
+
+  const isSellCta = Boolean(
+    (secondaryCtaUrl && (
+      secondaryCtaUrl === '/sell' ||
+      secondaryCtaUrl.startsWith('/sell?') ||
+      secondaryCtaUrl.startsWith('/seller')
+    )) ||
+    (secondaryCtaLabel && /sell/i.test(secondaryCtaLabel))
+  );
+
+  const isAdmin = Boolean(user?.roles?.includes('admin'));
+  const isSeller = Boolean(user?.roles?.includes('seller'));
+
+  // Source of truth: BookFry platform settings & user session
+  // - Admin can always sell / access listing tools
+  // - Sellers can sell if seller portal login is enabled
+  // - Authenticated buyers can sell used textbooks after login
+  // - Unauthenticated visitors only see Sell CTA when seller registration/selling is enabled in admin settings
+  const canSell = isAdmin
+    ? true
+    : isSeller
+    ? Boolean(sellerLoginEnabled)
+    : isAuthenticated
+    ? true
+    : Boolean(sellerRegistrationEnabled);
+
+  const showSecondaryCta = Boolean(secondaryCtaUrl && secondaryCtaLabel) && (!isSellCta || canSell);
+
   const prefersReducedMotion = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
   const referenceHeadline = (title.split('.')[0] || 'Books you love').trim();
@@ -152,24 +182,26 @@ export function HeroSection({
                 </Link>
               </motion.div>
 
-              <motion.div whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
-                <Link
-                  href={secondaryCtaUrl}
-                  onClick={(e) => {
-                    if (!isAuthenticated) {
-                      e.preventDefault();
-                      useAuthModalStore
-                        .getState()
-                        .openModal('seller_signup', '/seller/dashboard');
-                    }
-                  }}
-                  className="group w-full h-13 px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/15 hover:border-secondary/50 text-white font-bold rounded-2xl text-sm sm:text-base transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-95 backdrop-blur-sm"
-                >
-                  <Store className="h-4 w-4 text-secondary" aria-hidden="true" />
-                  <span>{secondaryCtaLabel}</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                </Link>
-              </motion.div>
+              {showSecondaryCta && (
+                <motion.div whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
+                  <Link
+                    href={secondaryCtaUrl || '/sell'}
+                    onClick={(e) => {
+                      if (!isAuthenticated) {
+                        e.preventDefault();
+                        useAuthModalStore
+                          .getState()
+                          .openModal('seller_signup', '/seller/dashboard');
+                      }
+                    }}
+                    className="group w-full h-13 px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/15 hover:border-secondary/50 text-white font-bold rounded-2xl text-sm sm:text-base transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-95 backdrop-blur-sm"
+                  >
+                    <Store className="h-4 w-4 text-secondary" aria-hidden="true" />
+                    <span>{secondaryCtaLabel}</span>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </Link>
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Live Stats Bar */}

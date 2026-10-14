@@ -124,32 +124,32 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
         onChange={(e) => handleFileSelect(e.target.files)}
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
         {renderSlots.map((slot) => {
           if (slot.type === 'image' && slot.index !== undefined) {
             return (
               <div
                 key={`img-${slot.index}`}
-                className="relative aspect-square sm:aspect-[4/5] rounded-2xl sm:rounded-3xl border border-border/80 overflow-hidden bg-muted/40 shadow-xs group"
+                className="relative aspect-square sm:aspect-[4/5] rounded-xl sm:rounded-2xl border border-border/80 overflow-hidden bg-muted/40 shadow-2xs group"
               >
                 <ImagePreview img={slot.value!} />
 
                 {/* Cover label at top left for first index */}
                 {slot.index === 0 && (
-                  <span className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-secondary text-secondary-foreground text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md">
+                  <span className="absolute top-2 left-2 bg-secondary text-secondary-foreground text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
                     COVER
                   </span>
                 )}
 
-                {/* Remove button at top right - min 40px touch target */}
+                {/* Remove button at top right */}
                 <button
                   type="button"
                   onClick={() => removeImage(slot.index!)}
-                  className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 h-10 w-10 sm:h-9 sm:w-9 rounded-full bg-card/95 border border-border flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-md transition-all active:scale-95 backdrop-blur-md"
+                  className="absolute top-2 right-2 h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-card/95 border border-border flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white shadow-xs transition-all active:scale-95 backdrop-blur-md"
                   title="Remove photo"
                   aria-label="Remove photo"
                 >
-                  <X className="h-5 w-5 sm:h-4 sm:w-4" />
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               </div>
             );
@@ -161,13 +161,13 @@ export function ImageUploader({ images, onChange, maxImages = 4 }: ImageUploader
               key="uploader-slot"
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="cursor-pointer aspect-square sm:aspect-[4/5] rounded-2xl sm:rounded-3xl border-2 border-dashed border-border hover:border-secondary bg-card hover:bg-secondary/5 flex flex-col items-center justify-center text-center p-3 sm:p-4 transition-all active:scale-95 shadow-xs group min-h-[140px]"
+              className="cursor-pointer aspect-square sm:aspect-[4/5] rounded-xl sm:rounded-2xl border-2 border-dashed border-border hover:border-secondary bg-card hover:bg-secondary/5 flex flex-col items-center justify-center text-center p-2.5 sm:p-3 transition-all active:scale-95 shadow-2xs group min-h-[110px]"
             >
-              <div className="h-12 w-12 rounded-2xl bg-secondary/10 group-hover:bg-secondary/20 flex items-center justify-center text-secondary mb-2 sm:mb-2.5 transition-colors">
-                <Plus className="h-6 w-6" />
+              <div className="h-9 w-9 rounded-xl bg-secondary/10 group-hover:bg-secondary/20 flex items-center justify-center text-secondary mb-1.5 transition-colors">
+                <Plus className="h-4 w-4" />
               </div>
-              <span className="text-xs sm:text-sm font-bold text-foreground">Add Photo</span>
-              <span className="text-[11px] text-muted-foreground mt-1 leading-tight font-medium">
+              <span className="text-xs font-bold text-foreground">Add Photo</span>
+              <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight font-medium">
                 JPG, PNG, WebP<br />Max 5MB
               </span>
             </button>

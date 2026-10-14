@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Navbar } from '@/components/shared/navbar';
 import { sellBookSchema, SellBookFormData } from '@/lib/validations/sell-form.schema';
-import { ListingProgressTabs, LISTING_TABS } from '@/components/sell/listing-progress-tabs';
+import { ListingProgressTabs, getListingTabs } from '@/components/sell/listing-progress-tabs';
 import { BasicInfoTab } from '@/components/sell/tabs/basic-info-tab';
 import { ConditionTab } from '@/components/sell/tabs/condition-tab';
 import { PricingTab } from '@/components/sell/tabs/pricing-tab';
@@ -25,11 +25,10 @@ import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { toast } from '@/stores/toast.store';
 import { normalizeApiError } from '@/lib/error-normalizer';
 
-
 const STEP_VALIDATION_FIELDS: Record<string, (keyof SellBookFormData)[]> = {
   basic: ['title', 'author', 'category'],
   condition: ['condition'],
-  pricing: ['price'],
+  pricing: ['price', 'preferredPayment', 'upiId', 'accountHolder', 'bankName', 'accountNumber', 'ifscCode'],
   inventory: ['quantity', 'sellerName', 'sellerEmail', 'sellerPhone', 'pincode', 'city', 'state', 'pickupAddress'],
   images: ['images'],
   review: ['confirmOwnership', 'agreePolicy'],
@@ -44,8 +43,11 @@ function SellBookPageInner() {
   const { isAuthenticated, user } = useAuthStore();
   const { openModal } = useAuthModalStore();
 
+  const isAdmin = Boolean(user?.roles?.includes('admin'));
+  const activeTabs = useMemo(() => getListingTabs(isAdmin), [isAdmin]);
+
   const [currentTab, setCurrentTab] = useState<string>('basic');
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [completedTabIds, setCompletedTabIds] = useState<string[]>([]);
   const [tabErrors, setTabErrors] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingIsbn, setIsFetchingIsbn] = useState(false);
@@ -72,7 +74,7 @@ function SellBookPageInner() {
       publisher: '',
       edition: '',
       category: '',
-      condition: 'good',
+      condition: isAdmin ? 'new' : 'good',
       conditionNotes: '',
       images: [],
       quantity: 1,
@@ -98,29 +100,72 @@ function SellBookPageInner() {
     },
   });
 
-  const { watch, reset, trigger, setValue, handleSubmit } = form;
+  const { watch, reset, trigger, setValue, getValues, setError, clearErrors, handleSubmit } = form;
   const formValues = watch();
 
-  // Restore draft or populate from editBook
+  // Restore draft on initial mount (filtering out non-serializable File objects from images)
   useEffect(() => {
     if (isEditMode) return;
     const savedDraft = localStorage.getItem('bookfry_sell_draft');
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft);
-        reset(parsed);
+        const validImages = Array.isArray(parsed.images)
+          ? parsed.images.filter((img: unknown) => typeof img === 'string' && img.trim().length > 0)
+          : [];
+        reset({
+          ...parsed,
+          images: validImages,
+          condition: isAdmin ? 'new' : (parsed.condition || 'good'),
+          sellerName: parsed.sellerName || user?.name || '',
+          sellerEmail: parsed.sellerEmail || user?.email || '',
+        });
       } catch (err) {
         console.error('Failed to parse sell draft', err);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reset, isEditMode]);
 
+  // Enforce 'new' (Brand New) condition & skip condition tab whenever Admin is logged in
+  useEffect(() => {
+    if (isAdmin) {
+      if (getValues('condition') !== 'new') {
+        setValue('condition', 'new', { shouldValidate: true });
+      }
+      if (currentTab === 'condition') {
+        setCurrentTab('basic');
+      }
+    }
+  }, [isAdmin, currentTab, getValues, setValue]);
+
+  // Populate sellerName & sellerEmail when user profile hydrates or logs in via modal
+  useEffect(() => {
+    if (user?.name && !getValues('sellerName')) {
+      setValue('sellerName', user.name, { shouldValidate: true });
+    }
+    if (user?.email && !getValues('sellerEmail')) {
+      setValue('sellerEmail', user.email, { shouldValidate: true });
+    }
+  }, [user, getValues, setValue]);
+
+  // Persist draft safely (only string URLs for images, never raw File objects)
   useEffect(() => {
     if (isEditMode) return;
     if (formValues.title || (formValues.price && formValues.price > 0)) {
-      localStorage.setItem('bookfry_sell_draft', JSON.stringify(formValues));
+      const serializableImages = Array.isArray(formValues.images)
+        ? formValues.images.filter((img) => typeof img === 'string')
+        : [];
+      localStorage.setItem(
+        'bookfry_sell_draft',
+        JSON.stringify({
+          ...formValues,
+          condition: isAdmin ? 'new' : formValues.condition,
+          images: serializableImages,
+        })
+      );
     }
-  }, [formValues, isEditMode]);
+  }, [formValues, isEditMode, isAdmin]);
 
   useEffect(() => {
     if (editBook) {
@@ -132,7 +177,7 @@ function SellBookPageInner() {
         publisher: editBook.publisher || '',
         edition: editBook.edition || '',
         category: editBook.category || '',
-        condition: (editBook.condition as SellBookFormData['condition']) || 'good',
+        condition: isAdmin ? 'new' : ((editBook.condition as SellBookFormData['condition']) || 'good'),
         conditionNotes: editBook.conditionNotes || '',
         images: editBook.images.map((img) => img.url),
         quantity: editBook.stock,
@@ -157,7 +202,7 @@ function SellBookPageInner() {
         agreePolicy: true,
       });
     }
-  }, [editBook, reset, user]);
+  }, [editBook, reset, user, isAdmin]);
 
   // Pincode lookup
   useEffect(() => {
@@ -306,31 +351,84 @@ function SellBookPageInner() {
     }
   };
 
-  const currentTabIdx = LISTING_TABS.findIndex((t) => t.id === currentTab);
+  const currentTabIdx = Math.max(
+    0,
+    activeTabs.findIndex((t) => t.id === currentTab)
+  );
+  const currentStepNumber = activeTabs[currentTabIdx]?.stepNumber || 1;
 
   const validateCurrentTab = async () => {
     const fields = STEP_VALIDATION_FIELDS[currentTab] || [];
-    const valid = await trigger(fields);
+    let valid = await trigger(fields);
+
+    // Explicitly validate conditional refine rules on Pricing tab (UPI ID or Bank fields)
+    if (currentTab === 'pricing') {
+      const vals = getValues();
+      if (vals.preferredPayment === 'upi') {
+        if (!vals.upiId || !vals.upiId.includes('@')) {
+          setError('upiId', {
+            type: 'manual',
+            message: 'Please enter a valid UPI ID (e.g. username@upi) for payouts',
+          });
+          valid = false;
+        } else {
+          clearErrors('upiId');
+        }
+      } else if (vals.preferredPayment === 'bank') {
+        if (
+          !vals.accountHolder?.trim() ||
+          !vals.bankName?.trim() ||
+          !vals.accountNumber?.trim() ||
+          !vals.ifscCode?.trim()
+        ) {
+          setError('ifscCode', {
+            type: 'manual',
+            message: 'Please complete all bank account fields for payouts',
+          });
+          valid = false;
+        } else {
+          clearErrors('ifscCode');
+        }
+      }
+    }
+
     setTabErrors((prev) => ({ ...prev, [currentTab]: !valid }));
     if (valid) {
-      const stepNum = LISTING_TABS[currentTabIdx].stepNumber;
-      if (!completedSteps.includes(stepNum)) setCompletedSteps((prev) => [...prev, stepNum]);
+      if (!completedTabIds.includes(currentTab)) {
+        setCompletedTabIds((prev) => [...prev, currentTab]);
+      }
     }
     return valid;
   };
 
   const handleNext = async () => {
     const valid = await validateCurrentTab();
-    if (valid && currentTabIdx < LISTING_TABS.length - 1) {
-      setCurrentTab(LISTING_TABS[currentTabIdx + 1].id);
-      window.scrollTo({ top: 400, behavior: 'smooth' });
+    if (valid && currentTabIdx < activeTabs.length - 1) {
+      setCurrentTab(activeTabs[currentTabIdx + 1].id);
+      window.scrollTo({ top: 180, behavior: 'smooth' });
     }
   };
 
   const handlePrev = () => {
     if (currentTabIdx > 0) {
-      setCurrentTab(LISTING_TABS[currentTabIdx - 1].id);
-      window.scrollTo({ top: 400, behavior: 'smooth' });
+      setCurrentTab(activeTabs[currentTabIdx - 1].id);
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+    }
+  };
+
+  const onInvalidSubmit = (errors: FieldErrors<SellBookFormData>) => {
+    const errorKeys = Object.keys(errors) as (keyof SellBookFormData)[];
+    for (const tab of activeTabs) {
+      const tabFields = STEP_VALIDATION_FIELDS[tab.id] || [];
+      if (tabFields.some((f) => errorKeys.includes(f))) {
+        setTabErrors((prev) => ({ ...prev, [tab.id]: true }));
+        setCurrentTab(tab.id);
+        toast.warning(`Please complete the required fields in "${tab.label}".`, {
+          title: 'Incomplete Step',
+        });
+        window.scrollTo({ top: 180, behavior: 'smooth' });
+        return;
+      }
     }
   };
 
@@ -341,19 +439,20 @@ function SellBookPageInner() {
     }
     setIsSubmitting(true);
     try {
+      const finalCondition = isAdmin ? 'new' : data.condition;
       const formData = new FormData();
       formData.append('title', data.title);
       formData.append('author', data.author);
       const cleanIsbn = data.isbn ? data.isbn.replace(/[^0-9X]/gi, '').toUpperCase() : '9780000000000';
       formData.append('isbn', cleanIsbn);
       formData.append('category', data.category);
-      formData.append('condition', data.condition);
-      if (data.conditionNotes) formData.append('conditionNotes', data.conditionNotes);
+      formData.append('condition', finalCondition);
+      if (!isAdmin && data.conditionNotes) formData.append('conditionNotes', data.conditionNotes);
       formData.append(
         'description',
-        data.conditionNotes && data.conditionNotes.trim().length >= 10
+        !isAdmin && data.conditionNotes && data.conditionNotes.trim().length >= 10
           ? data.conditionNotes.trim()
-          : `${data.title} by ${data.author} (${data.condition.toUpperCase()} condition). Available on BookFry.`
+          : `${data.title} by ${data.author} (${finalCondition.toUpperCase()} condition). Available on BookFry.`
       );
       formData.append('price', String(data.price));
       formData.append('stock', String(data.quantity));
@@ -384,7 +483,7 @@ function SellBookPageInner() {
           title: 'Book Listed',
         });
       }
-      router.push('/seller/dashboard');
+      router.push(isAdmin ? '/admin/books' : '/seller/dashboard');
     } catch (err: unknown) {
       const apiErr = err as { status?: number; code?: string; message?: string };
       if (apiErr.status === 401 || !isAuthenticated) {
@@ -403,129 +502,142 @@ function SellBookPageInner() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <Navbar />
-      <SellHero />
 
-      <main className="flex-1 w-full px-3.5 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-8">
-        <div className="space-y-6 max-w-7xl mx-auto">
-          <ListingProgressTabs
-            currentTab={currentTab}
-            completedStepNumbers={completedSteps}
-            onSelectTab={(tabId) => {
-              validateCurrentTab();
-              setCurrentTab(tabId);
-            }}
-            tabErrors={tabErrors}
-          />
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-6 pb-24 lg:pb-10 space-y-4 sm:space-y-5">
+        <SellHero isAdmin={isAdmin} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-            <div className="lg:col-span-7 xl:col-span-8 bg-card border border-border/80 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-xs">
-              <form onSubmit={handleSubmit(onSubmit)}>
-                {currentTab === 'basic' && (
-                  <BasicInfoTab
-                    form={form}
-                    categories={categories}
-                    isFetchingIsbn={isFetchingIsbn}
-                    isbnFoundMsg={isbnFoundMsg}
-                    onFetchIsbn={handleFetchIsbn}
-                  />
-                )}
-                {currentTab === 'condition' && <ConditionTab form={form} />}
-                {currentTab === 'pricing' && <PricingTab form={form} />}
-                {currentTab === 'inventory' && <InventoryTab form={form} />}
-                {currentTab === 'images' && <ImagesTab form={form} />}
-                {currentTab === 'review' && <ReviewTab form={form} />}
+        <ListingProgressTabs
+          tabs={activeTabs}
+          currentTab={currentTab}
+          completedStepNumbers={[]}
+          completedTabIds={completedTabIds}
+          onSelectTab={(tabId) => {
+            validateCurrentTab();
+            setCurrentTab(tabId);
+          }}
+          tabErrors={tabErrors}
+        />
 
-                {/* Form Action Controls Desktop */}
-                <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+          <div className="lg:col-span-8 xl:col-span-9 bg-card border border-border/80 rounded-2xl p-4 sm:p-6 shadow-xs">
+            <form onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}>
+              {currentTab === 'basic' && (
+                <BasicInfoTab
+                  form={form}
+                  categories={categories}
+                  isFetchingIsbn={isFetchingIsbn}
+                  isbnFoundMsg={isbnFoundMsg}
+                  onFetchIsbn={handleFetchIsbn}
+                  isAdmin={isAdmin}
+                  stepNumber={currentStepNumber}
+                />
+              )}
+              {!isAdmin && currentTab === 'condition' && (
+                <ConditionTab form={form} stepNumber={currentStepNumber} />
+              )}
+              {currentTab === 'pricing' && (
+                <PricingTab form={form} stepNumber={currentStepNumber} />
+              )}
+              {currentTab === 'inventory' && (
+                <InventoryTab form={form} stepNumber={currentStepNumber} />
+              )}
+              {currentTab === 'images' && (
+                <ImagesTab form={form} stepNumber={currentStepNumber} />
+              )}
+              {currentTab === 'review' && (
+                <ReviewTab form={form} stepNumber={currentStepNumber} isAdmin={isAdmin} />
+              )}
+
+              {/* Form Action Controls (Desktop Only — Mobile uses Sticky Bottom Dock) */}
+              <div className="hidden lg:flex mt-6 pt-4 border-t border-border/80 items-center justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrev}
+                  disabled={currentTabIdx === 0 || isSubmitting}
+                  className="flex items-center gap-1.5 h-10 px-4 text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Back</span>
+                </Button>
+
+                {currentTabIdx < activeTabs.length - 1 ? (
                   <Button
                     type="button"
-                    variant="outline"
-                    onClick={handlePrev}
-                    disabled={currentTabIdx === 0 || isSubmitting}
-                    className="flex items-center gap-2 h-11 px-5 rounded-xl font-bold cursor-pointer"
+                    onClick={handleNext}
+                    className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-1.5 font-extrabold h-10 px-6 text-xs rounded-xl shadow-xs cursor-pointer active:scale-95"
                   >
-                    <ArrowLeft className="h-4 w-4" />
-                    <span>Back</span>
+                    <span>Continue to Step {currentTabIdx + 2}</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-1.5 font-extrabold h-10 px-6 text-xs rounded-xl shadow-sm cursor-pointer active:scale-95"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Publishing Listing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span>{isEditMode ? 'Update Listing' : 'Publish Book to Marketplace'}</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </div>
 
-                  {currentTabIdx < LISTING_TABS.length - 1 ? (
-                    <Button
-                      type="button"
-                      onClick={handleNext}
-                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-2 font-extrabold h-11 px-7 rounded-xl shadow-xs cursor-pointer active:scale-95"
-                    >
-                      <span>Continue</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground flex items-center gap-2 font-extrabold h-11 px-8 rounded-xl shadow-md cursor-pointer active:scale-95"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Publishing Listing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4" />
-                          <span>{isEditMode ? 'Update Listing' : 'Publish Book to Marketplace'}</span>
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </div>
-
-            <div className="hidden lg:block lg:col-span-5 xl:col-span-4 sticky top-24">
-              <ListingPreviewCard formValues={formValues} />
-            </div>
+          <div className="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-20">
+            <ListingPreviewCard formValues={formValues} isAdmin={isAdmin} />
           </div>
         </div>
       </main>
 
       {/* Mobile Sticky Bottom Dock with Safe Area Support */}
       <div
-        className="lg:hidden fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-card/95 backdrop-blur-md border-t border-border/80 z-40 flex items-center justify-between gap-3 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
-        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 p-2.5 sm:p-3 bg-card/95 backdrop-blur-md border-t border-border/80 z-40 flex items-center justify-between gap-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]"
+        style={{ paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <button
           type="button"
           onClick={handlePrev}
           disabled={currentTabIdx === 0 || isSubmitting}
-          className="h-12 w-12 rounded-2xl border border-border/80 bg-background hover:bg-muted flex items-center justify-center text-foreground disabled:opacity-30 shrink-0 transition-all active:scale-90 cursor-pointer"
+          className="h-10 w-10 rounded-xl border border-border/80 bg-background hover:bg-muted flex items-center justify-center text-foreground disabled:opacity-30 shrink-0 transition-all active:scale-90 cursor-pointer"
           aria-label="Previous step"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="flex-1">
-          {currentTabIdx < LISTING_TABS.length - 1 ? (
+          {currentTabIdx < activeTabs.length - 1 ? (
             <button
               type="button"
               onClick={handleNext}
-              className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-sm uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer"
+              className="w-full h-10 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-98 cursor-pointer"
             >
-              <span>Continue (Step {currentTabIdx + 2} of {LISTING_TABS.length})</span>
-              <ArrowRight className="h-4 w-4" />
+              <span>Continue (Step {currentTabIdx + 2} of {activeTabs.length})</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </button>
           ) : (
             <button
               type="button"
-              onClick={handleSubmit(onSubmit)}
+              onClick={handleSubmit(onSubmit, onInvalidSubmit)}
               disabled={isSubmitting}
-              className="w-full h-12 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black text-sm uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer disabled:opacity-60"
+              className="w-full h-10 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-98 cursor-pointer disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Publishing...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-5 w-5 fill-current" />
+                  <Sparkles className="h-4 w-4 fill-current" />
                   <span>{isEditMode ? 'Update Listing' : 'Publish Book Now'}</span>
                 </>
               )}
@@ -533,7 +645,6 @@ function SellBookPageInner() {
           )}
         </div>
       </div>
-
     </div>
   );
 }
@@ -543,7 +654,7 @@ export default function SellBookPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-background">
-          <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+          <Loader2 className="h-7 w-7 animate-spin text-secondary" />
         </div>
       }
     >

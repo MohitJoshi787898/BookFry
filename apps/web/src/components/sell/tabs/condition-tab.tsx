@@ -7,9 +7,10 @@ import { BookConditionCardGroup } from '@/components/sell/book-condition-card';
 
 interface ConditionTabProps {
   form: UseFormReturn<SellBookFormData>;
+  stepNumber?: number;
 }
 
-export function ConditionTab({ form }: ConditionTabProps) {
+export function ConditionTab({ form, stepNumber = 2 }: ConditionTabProps) {
   const {
     control,
     register,
@@ -17,20 +18,20 @@ export function ConditionTab({ form }: ConditionTabProps) {
   } = form;
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-4 sm:space-y-5 font-sans">
       {/* Header */}
-      <div className="border-b border-border pb-4">
-        <h3 className="font-serif text-xl sm:text-2xl font-bold text-foreground">
-          Step 2: Book Condition Assessment
+      <div className="border-b border-border/80 pb-3">
+        <h3 className="font-serif text-base sm:text-lg font-bold text-foreground">
+          Step {stepNumber}: Book Condition Assessment
         </h3>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
           Accurately grade your book. Honest ratings ensure trusted buyer reviews and eliminate return disputes.
         </p>
       </div>
 
       {/* 4 Canonical Condition Cards */}
-      <div className="space-y-3">
-        <label className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1">
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-foreground flex items-center gap-1">
           Physical Condition Tier <span className="text-rose-500">*</span>
         </label>
         <Controller
@@ -41,27 +42,27 @@ export function ConditionTab({ form }: ConditionTabProps) {
           )}
         />
         {errors.condition && (
-          <p className="text-xs text-rose-500 font-medium">{errors.condition.message}</p>
+          <p className="text-[11px] text-rose-500 font-medium">{errors.condition.message}</p>
         )}
       </div>
 
       {/* Seller Condition Notes */}
-      <div className="space-y-2 pt-2">
-        <label htmlFor="condition-notes" className="text-sm sm:text-base font-bold text-foreground block">
+      <div className="space-y-1.5 pt-1">
+        <label htmlFor="condition-notes" className="text-xs font-bold text-foreground block">
           Seller Condition Notes &amp; Highlights (Optional)
         </label>
         <textarea
           id="condition-notes"
-          rows={3}
-          placeholder="Mention specific details: e.g., 'First 2 chapters highlighted with yellow marker; corners slightly rounded; binding solid; name written inside cover.'"
+          rows={2}
+          placeholder="Mention specific details: e.g., 'First 2 chapters highlighted with yellow marker; corners slightly rounded; binding solid.'"
           {...register('conditionNotes')}
-          className="w-full px-4 py-3 sm:py-3.5 text-base border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary leading-relaxed placeholder:text-muted-foreground"
+          className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-secondary leading-relaxed placeholder:text-muted-foreground"
         />
-        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          Buyers appreciate transparent condition notes. This text will be shown directly on your listing offer.
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Buyers appreciate transparent condition notes. Shown directly on your listing offer.
         </p>
         {errors.conditionNotes && (
-          <p className="text-xs text-rose-500 font-medium">{errors.conditionNotes.message}</p>
+          <p className="text-[11px] text-rose-500 font-medium">{errors.conditionNotes.message}</p>
         )}
       </div>
     </div>

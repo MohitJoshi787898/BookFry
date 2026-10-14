@@ -9,10 +9,19 @@ let firebaseApp: App | null = null;
 let isFirebaseInitialized = false;
 
 try {
+  const hasValidPrivateKey =
+    typeof env.FIREBASE_PRIVATE_KEY === 'string' &&
+    env.FIREBASE_PRIVATE_KEY.includes('-----BEGIN PRIVATE KEY-----');
+  const hasValidClientEmail =
+    typeof env.FIREBASE_CLIENT_EMAIL === 'string' &&
+    env.FIREBASE_CLIENT_EMAIL.includes('@') &&
+    !env.FIREBASE_CLIENT_EMAIL.includes('YOUR_SERVICE_ACCOUNT');
+
   if (
     env.FIREBASE_PROJECT_ID &&
     env.FIREBASE_PROJECT_ID !== 'bookfry-app-dummy' &&
-    env.FIREBASE_PRIVATE_KEY !== 'dummy-firebase-private-key'
+    hasValidPrivateKey &&
+    hasValidClientEmail
   ) {
     if (getApps().length === 0) {
       firebaseApp = initializeApp({
@@ -28,10 +37,10 @@ try {
     isFirebaseInitialized = true;
     logger.info('[PushNotificationService] Firebase Admin SDK initialized successfully.');
   } else {
-    logger.info('[PushNotificationService] Running with placeholder Firebase credentials (simulation mode).');
+    logger.info('[PushNotificationService] Running in Web Push / SSE fallback mode (Firebase Admin SDK credentials not configured).');
   }
-} catch (err) {
-  logger.warn('[PushNotificationService] Firebase Admin SDK init warning:', err);
+} catch (err: any) {
+  logger.warn('[PushNotificationService] Firebase Admin SDK initialization bypassed:', err?.message || err);
 }
 
 export interface PushNotificationPayload {

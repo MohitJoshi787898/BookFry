@@ -8,42 +8,43 @@ import { Camera, AlertCircle } from 'lucide-react';
 
 interface ImagesTabProps {
   form: UseFormReturn<SellBookFormData>;
+  stepNumber?: number;
 }
 
-export function ImagesTab({ form }: ImagesTabProps) {
+export function ImagesTab({ form, stepNumber = 5 }: ImagesTabProps) {
   const {
     control,
     formState: { errors },
   } = form;
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-4 sm:space-y-5 font-sans">
       {/* Header */}
-      <div className="border-b border-border pb-4">
-        <h3 className="font-serif text-xl sm:text-2xl font-bold text-foreground">
-          Step 5: Book Photos &amp; Visual Evidence
+      <div className="border-b border-border/80 pb-3">
+        <h3 className="font-serif text-base sm:text-lg font-bold text-foreground">
+          Step {stepNumber}: Book Photos &amp; Visual Evidence
         </h3>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
           Upload clear, well-lit photos of the actual book. The first image serves as the primary storefront cover photo.
         </p>
       </div>
 
       {/* Guidelines Box */}
-      <div className="p-4 sm:p-5 bg-muted/40 border border-border rounded-2xl flex items-start gap-3.5">
-        <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-secondary shrink-0 mt-0.5" />
-        <div className="text-xs sm:text-sm text-muted-foreground space-y-1.5">
-          <p className="font-bold text-foreground text-sm sm:text-base">Photography Tips for Higher Conversion:</p>
-          <ul className="list-disc pl-4 space-y-1">
+      <div className="p-3 sm:p-4 bg-muted/40 border border-border/80 rounded-xl flex items-start gap-2.5">
+        <Camera className="h-4 w-4 sm:h-5 sm:w-5 text-secondary shrink-0 mt-0.5" />
+        <div className="text-[11px] sm:text-xs text-muted-foreground space-y-1">
+          <p className="font-bold text-foreground text-xs">Photography Tips for Higher Conversion:</p>
+          <ul className="list-disc pl-4 space-y-0.5">
             <li>Place book on a clean, solid background with good daylight.</li>
-            <li>Take photo 1: Front cover; photo 2: Spine; photo 3: Open sample page or any wear.</li>
+            <li>Photo 1: Front cover; Photo 2: Spine; Photo 3: Open sample page or any wear.</li>
             <li>Maximum 4 photos allowed (JPG, PNG, or WebP up to 5MB each).</li>
           </ul>
         </div>
       </div>
 
       {/* Image Uploader */}
-      <div className="space-y-3 pt-2">
-        <label className="text-sm sm:text-base font-bold text-foreground flex items-center gap-1.5">
+      <div className="space-y-2 pt-1">
+        <label className="text-xs font-bold text-foreground flex items-center gap-1">
           Upload Book Photos (Max 4) <span className="text-rose-500">*</span>
         </label>
         
@@ -56,8 +57,8 @@ export function ImagesTab({ form }: ImagesTabProps) {
         />
         
         {errors.images && (
-          <p className="text-xs sm:text-sm text-rose-500 font-medium flex items-center gap-1.5">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+          <p className="text-[11px] text-rose-500 font-medium flex items-center gap-1.5">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>{errors.images.message}</span>
           </p>
         )}
