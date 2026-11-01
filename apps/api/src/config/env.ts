@@ -19,9 +19,9 @@ const envSchema = z.object({
   RAZORPAY_KEY_ID: z.string().optional().default('rzp_test_TICcDeMBJTUp1s'),
   RAZORPAY_KEY_SECRET: z.string().optional().default('0s1af9MFdhAM5dgL0933qeiH'),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
-  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
-  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
-  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
   // SMTP & Email Configuration
   SMTP_HOST: z.string().default('smtp.gmail.com'),
   SMTP_PORT: z.coerce.number().default(587),
