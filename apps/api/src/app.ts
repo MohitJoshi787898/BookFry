@@ -6,10 +6,18 @@ import { env } from "./config/env";
 import routes from "./routes";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
 import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
+
+import hpp from "hpp";
+import { xssMiddleware } from "./middlewares/xss.middleware";
 
 const app = express();
 
 app.use(helmet());
+app.use(mongoSanitize());
+
+app.use(xssMiddleware());
+app.use(hpp());
 
 const allowedOrigins = [env.FRONTEND_URL, "http://localhost:3000"].filter(
   Boolean,
