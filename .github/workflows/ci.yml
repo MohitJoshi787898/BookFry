@@ -40,8 +40,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Approve builds for binary compilation
-        run: pnpm approve-builds
+
+
 
       - name: Run Linter
         run: pnpm lint
